@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registration Submitted - DigiBank</title>
+<link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+<link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+
+<div class="pillnav">
+  <div class="pillnav-inner">
+    <a th:href="@{/}">Home</a>
+    <a th:href="@{/login}">Login</a>
+    <a th:href="@{/open-account}" class="current">Register</a>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="page-title">
+    <div class="brand-logo">
+      <img th:src="@{/images/logo/logo.png}" alt="DigiBank logo">
+    </div>
+    <h1>Registration Submitted</h1>
+    <p>Your application is ready for staff review</p>
+  </div>
+
+  <div class="panel" th:if="${registrationResult != null}" th:object="${registrationResult}">
+    <div class="panel-head">
+      <h2 th:text="'Welcome, ' + *{customerFullName}">Welcome</h2>
+      <p>Bank staff must activate your account before you can start banking.</p>
+    </div>
+    <div class="panel-body">
+      <div class="detail-card">
+        <div class="detail-head">Application Details</div>
+        <div class="detail-row">
+          <span class="dlabel">Customer Number</span>
+          <span class="dvalue" th:text="*{maskedCustomerNumber}">CUS2026***</span>
+        </div>
+        <div class="detail-row">
+          <span class="dlabel">Account Number</span>
+          <span class="dvalue" th:text="*{maskedAccountNumber}">********9012</span>
+        </div>
+        <div class="detail-row">
+          <span class="dlabel">Account Type</span>
+          <span class="dvalue" th:text="*{accountType}">SAVINGS</span>
+        </div>
+        <div class="detail-row">
+          <span class="dlabel">Currency</span>
+          <span class="dvalue" th:text="*{currency}">LKR</span>
+        </div>
+        <div class="detail-row">
+          <span class="dlabel">Status</span>
+          <span class="status-pill" th:text="*{accountStatus}">PENDING_ACTIVATION</span>
+        </div>
+      </div>
+      <div class="notice">
+        <div class="ic">i</div>
+        <div>
+          <h3>Activation pending</h3>
+          <p>Your registration was saved securely. A bank staff member must verify the application and activate the account before login and transactions are available.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn btn-prev" th:href="@{/}">Back to Home</a>
+        <a class="btn btn-gotologin" th:href="@{/login}">Go to Login</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" th:unless="${registrationResult != null}">
+    <div class="panel-head">
+      <h2>No Registration Details</h2>
+      <p>Please submit the registration form first.</p>
+    </div>
+    <div class="panel-body">
+      <a class="btn btn-gotologin" th:href="@{/open-account}">Open an Account</a>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

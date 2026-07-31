@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title">
+  <title id="title">Girl profile avatar</title>
+  <defs>
+    <linearGradient id="bg" x1="29" y1="24" x2="213" y2="221" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1B4B43"/>
+      <stop offset="1" stop-color="#00D9A3"/>
+    </linearGradient>
+    <linearGradient id="top" x1="61" y1="158" x2="179" y2="228" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00B88A"/>
+      <stop offset="1" stop-color="#0F332D"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="56" fill="url(#bg)"/>
+  <path d="M62 136c0-64 27-96 58-96s58 32 58 96c0 27 11 46 25 59-23 10-50 15-83 15s-60-5-83-15c14-13 25-32 25-59Z" fill="#14201D"/>
+  <circle cx="120" cy="113" r="50" fill="#F2BE9B"/>
+  <path d="M71 103c9-40 33-60 72-60 18 13 30 32 36 57-23-3-46-16-65-39-10 20-24 34-43 42Z" fill="#14201D"/>
+  <circle cx="100" cy="116" r="6" fill="#14201D"/>
+  <circle cx="141" cy="116" r="6" fill="#14201D"/>
+  <path d="M104 140c11 10 22 10 33 0" fill="none" stroke="#14201D" stroke-width="7" stroke-linecap="round"/>
+  <path d="M49 219c8-39 35-61 71-61s63 22 71 61H49Z" fill="url(#top)"/>
+  <circle cx="120" cy="166" r="7" fill="#FFFFFF"/>
+</svg>

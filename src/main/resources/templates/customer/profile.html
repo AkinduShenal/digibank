@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Profile - DigiBank</title>
+<link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+<link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+<link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+
+<main class="customer-layout">
+  <div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+
+  <section class="customer-content" th:object="${profile}">
+    <div th:replace="~{fragments/customer-layout :: alerts}"></div>
+
+    <div class="welcome-band">
+      <div>
+        <p class="eyebrow">My Profile</p>
+        <h1 th:text="*{fullName}">Customer Name</h1>
+        <span class="mono" th:text="*{customerNumber}">CUS2026000123</span>
+      </div>
+      <div class="welcome-actions">
+        <div class="avatar" th:if="*{profileImagePath == null}" th:text="*{initials}">DB</div>
+        <img class="avatar image" th:if="*{profileImagePath != null}" th:src="*{profileImagePath}" alt="Profile picture">
+        <a class="btn btn-gotologin" th:href="@{/customer/profile/edit}">Edit Profile</a>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+      <article class="info-card">
+        <h2>Personal Details</h2>
+        <div class="kv"><span>Identity Type</span><strong th:text="*{identityType}">NATIONAL_ID</strong></div>
+        <div class="kv"><span>Identity Number</span><strong th:text="*{maskedIdentityNumber}">******789V</strong></div>
+        <div class="kv"><span>Date of Birth</span><strong th:text="*{#temporals.format(dateOfBirth, 'dd MMM yyyy')}">01 Jan 1998</strong></div>
+        <div class="kv"><span>Age</span><strong th:text="*{age}">28</strong></div>
+        <div class="kv"><span>Gender</span><strong th:text="*{gender}">MALE</strong></div>
+        <div class="kv"><span>Nationality</span><strong th:text="*{nationality}">Sri Lankan</strong></div>
+      </article>
+
+      <article class="info-card">
+        <h2>Contact & Status</h2>
+        <div class="kv"><span>Email</span><strong th:text="*{email}">customer@example.com</strong></div>
+        <div class="kv"><span>Mobile</span><strong th:text="*{mobileNumber}">+94712345678</strong></div>
+        <div class="kv"><span>Alternative Phone</span><strong th:text="*{alternativePhone}">-</strong></div>
+        <div class="kv"><span>Status</span><strong class="status-pill" th:text="*{customerStatus}">ACTIVE</strong></div>
+        <div class="kv"><span>Joined</span><strong th:text="*{joinedAt != null ? #temporals.format(joinedAt, 'dd MMM yyyy') : '-'}">-</strong></div>
+      </article>
+
+      <article class="info-card wide">
+        <h2>Address</h2>
+        <p class="address-copy" th:text="*{fullAddress}">No 1 Main Street, Colombo, Sri Lanka</p>
+      </article>
+
+      <article class="info-card wide">
+        <h2>Account Summary</h2>
+        <div class="account-list">
+          <a th:each="account : *{accounts}" th:href="@{/customer/accounts/{accountNumber}(accountNumber=${account.accountNumber})}">
+            <span th:text="${account.accountType}">SAVINGS</span>
+            <strong th:text="${account.maskedAccountNumber}">********9012</strong>
+            <em th:text="${account.accountStatus}">PENDING_ACTIVATION</em>
+          </a>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<div th:replace="~{fragments/customer-layout :: footer}"></div>
+</body>
+</html>

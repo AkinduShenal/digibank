@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beneficiaries - DigiBank</title>
+<link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+<link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+<link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+
+<main class="customer-layout">
+  <div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+
+  <section class="customer-content">
+    <div th:replace="~{fragments/customer-layout :: alerts}"></div>
+
+    <div class="welcome-band">
+      <div>
+        <p class="eyebrow">Beneficiary Management</p>
+        <h1>Saved Beneficiaries</h1>
+        <span class="mono">Manage trusted accounts without exposing full account numbers.</span>
+      </div>
+      <a class="btn btn-gotologin" th:href="@{/customer/beneficiaries/new}">Add Beneficiary</a>
+    </div>
+
+    <form class="filter-card" method="get" th:action="@{/customer/beneficiaries}" th:object="${criteria}">
+      <label>
+        <span>Search</span>
+        <input type="search" th:field="*{query}" placeholder="Name, nickname, bank or bank code" autocomplete="off">
+      </label>
+      <label>
+        <span>Type</span>
+        <select th:field="*{type}">
+          <option value="">All types</option>
+          <option th:each="type : ${beneficiaryTypes}" th:value="${type}" th:text="${type}">EXTERNAL</option>
+        </select>
+      </label>
+      <label>
+        <span>Status</span>
+        <select th:field="*{status}">
+          <option value="">Active and inactive</option>
+          <option th:each="status : ${beneficiaryStatuses}" th:value="${status}" th:text="${status}">ACTIVE</option>
+        </select>
+      </label>
+      <label>
+        <span>Favourite</span>
+        <select th:field="*{favourite}">
+          <option value="">All</option>
+          <option value="true">Favourites</option>
+          <option value="false">Not favourite</option>
+        </select>
+      </label>
+      <label>
+        <span>Sort</span>
+        <select th:field="*{sort}">
+          <option value="beneficiaryName">Name</option>
+          <option value="bankName">Bank</option>
+          <option value="beneficiaryType">Type</option>
+          <option value="status">Status</option>
+          <option value="favourite">Favourite</option>
+          <option value="createdAt">Created</option>
+          <option value="updatedAt">Updated</option>
+        </select>
+      </label>
+      <label>
+        <span>Direction</span>
+        <select th:field="*{direction}">
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+      </label>
+      <input type="hidden" th:field="*{size}">
+      <div class="filter-actions">
+        <button class="btn btn-gotologin" type="submit">Apply</button>
+        <a class="btn btn-prev" th:href="@{/customer/beneficiaries}">Clear</a>
+      </div>
+    </form>
+
+    <div class="empty-state" th:if="${beneficiaries.empty}">
+      <h2>No beneficiaries found.</h2>
+      <p>Add your first beneficiary, or clear the filters and try again.</p>
+      <a class="btn btn-gotologin" th:href="@{/customer/beneficiaries/new}">Add Beneficiary</a>
+    </div>
+
+    <div class="beneficiary-grid" th:unless="${beneficiaries.empty}">
+      <article class="beneficiary-card" th:each="beneficiary : ${beneficiaries.content}">
+        <div class="beneficiary-card-head">
+          <div>
+            <p class="eyebrow" th:text="${beneficiary.beneficiaryType}">EXTERNAL</p>
+            <h2 th:text="${beneficiary.beneficiaryName}">Kasun Perera</h2>
+            <span th:if="${beneficiary.nickname}" th:text="${beneficiary.nickname}">Rent</span>
+          </div>
+          <span class="status-pill" th:text="${beneficiary.status}">ACTIVE</span>
+        </div>
+        <div class="kv"><span>Bank</span><strong th:text="${beneficiary.bankName}">Example Bank</strong></div>
+        <div class="kv"><span>Account</span><strong th:text="${beneficiary.maskedAccountNumber}">********9012</strong></div>
+        <div class="kv"><span>Account Type</span><strong th:text="${beneficiary.accountType}">SAVINGS</strong></div>
+        <div class="kv"><span>Favourite</span><strong th:text="${beneficiary.favourite ? 'Yes' : 'No'}">No</strong></div>
+        <div class="kv"><span>Created</span><strong th:text="${beneficiary.createdAt != null ? #temporals.format(beneficiary.createdAt, 'dd MMM yyyy') : '-'}">-</strong></div>
+        <div class="action-row">
+          <a class="btn btn-gotologin" th:href="@{/customer/beneficiaries/{id}(id=${beneficiary.id})}">View</a>
+          <a class="btn btn-prev" th:href="@{/customer/beneficiaries/{id}/edit(id=${beneficiary.id})}">Edit</a>
+          <form th:if="${beneficiary.status.name() == 'ACTIVE' && !beneficiary.favourite}" th:action="@{/customer/beneficiaries/{id}/favourite(id=${beneficiary.id})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="btn btn-prev" type="submit" aria-label="Mark beneficiary as favourite">Favourite</button>
+          </form>
+          <form th:if="${beneficiary.status.name() == 'ACTIVE' && beneficiary.favourite}" th:action="@{/customer/beneficiaries/{id}/unfavourite(id=${beneficiary.id})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="btn btn-prev" type="submit" aria-label="Remove beneficiary from favourites">Unfavourite</button>
+          </form>
+          <form th:if="${beneficiary.status.name() == 'ACTIVE'}" th:action="@{/customer/beneficiaries/{id}/deactivate(id=${beneficiary.id})}" method="post" data-confirm="Deactivate this beneficiary?">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="btn btn-prev" type="submit">Deactivate</button>
+          </form>
+          <form th:if="${beneficiary.status.name() == 'INACTIVE'}" th:action="@{/customer/beneficiaries/{id}/reactivate(id=${beneficiary.id})}" method="post" data-confirm="Reactivate this beneficiary?">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="btn btn-prev" type="submit">Reactivate</button>
+          </form>
+          <form th:action="@{/customer/beneficiaries/{id}/delete(id=${beneficiary.id})}" method="post" data-confirm="Remove this beneficiary from your list?">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="btn btn-danger" type="submit">Delete</button>
+          </form>
+        </div>
+      </article>
+    </div>
+
+    <nav class="pagination-bar" th:if="${beneficiaries.totalPages > 1}" aria-label="Beneficiary pages">
+      <a class="btn btn-prev" th:if="${beneficiaries.hasPrevious()}" th:href="@{/customer/beneficiaries(query=${criteria.query},type=${criteria.type},status=${criteria.status},favourite=${criteria.favourite},sort=${criteria.sort},direction=${criteria.direction},size=${criteria.size},page=${beneficiaries.number - 1})}">Previous</a>
+      <span th:text="'Page ' + ${beneficiaries.number + 1} + ' of ' + ${beneficiaries.totalPages}">Page 1 of 1</span>
+      <a class="btn btn-prev" th:if="${beneficiaries.hasNext()}" th:href="@{/customer/beneficiaries(query=${criteria.query},type=${criteria.type},status=${criteria.status},favourite=${criteria.favourite},sort=${criteria.sort},direction=${criteria.direction},size=${criteria.size},page=${beneficiaries.number + 1})}">Next</a>
+    </nav>
+  </section>
+</main>
+
+<div th:replace="~{fragments/customer-layout :: footer}"></div>
+<script th:src="@{/js/beneficiaries.js}"></script>
+</body>
+</html>

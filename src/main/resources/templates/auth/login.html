@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign In - DigiBank</title>
+<link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+<link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+
+<div class="pillnav">
+  <div class="pillnav-inner">
+    <a th:href="@{/}">Home</a>
+    <a th:href="@{/login}" class="current">Login</a>
+    <a th:href="@{/open-account}">Register</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="page-title">
+    <div class="brand-logo">
+      <img th:src="@{/images/logo/logo.png}" alt="DigiBank logo">
+    </div>
+    <h1>DigiBank</h1>
+    <p>Secure Online Banking</p>
+  </div>
+
+  <div class="notice">
+    <div class="ic">i</div>
+    <div>
+      <h3>Important Notice</h3>
+      <p>Only authorized DigiBank customers, staff and administrators should proceed. Your session is protected and monitored for security.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Sign In to Your Account</h2>
+      <p>Use your username or email address</p>
+    </div>
+    <div class="panel-body">
+      <div class="auth-alert error" th:if="${param.error}">
+        Invalid username/email or password.
+      </div>
+      <div class="auth-alert error" th:if="${param.disabled}">
+        This profile is deactivated. Please contact DigiBank support.
+      </div>
+      <div class="auth-alert error" th:if="${param.locked}">
+        This account is locked or suspended. Please contact DigiBank support.
+      </div>
+      <div class="auth-alert ok" th:if="${param.logout}">
+        You have been signed out successfully.
+      </div>
+
+      <form id="loginForm" th:action="@{/login}" method="post" novalidate>
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="field">
+          <label for="username">Username or Email</label>
+          <input type="text" id="username" name="username" placeholder="you@example.com" autocomplete="username">
+          <div class="errmsg">Enter your username or email address.</div>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password">
+            <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password">Show</button>
+          </div>
+          <div class="errmsg">Enter your password.</div>
+        </div>
+
+        <div class="row-between">
+          <label class="remember">
+            <input type="checkbox" name="remember-device" autocomplete="off">
+            Remember this device
+          </label>
+          <a class="forgot" th:href="@{/forgot-password}">Forgot password? Future feature</a>
+        </div>
+
+        <button class="btn" type="submit">Sign In Securely</button>
+        <div class="toast" id="loginToast"></div>
+      </form>
+
+      <div class="signin-note">
+        Don't have an account? <a th:href="@{/open-account}">Open Account</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <span>256-bit SSL Encryption</span>
+    <span>Session Timeout: 30 minutes</span>
+    <span>24/7 Support</span>
+  </div>
+</footer>
+
+<script th:src="@{/js/login.js}"></script>
+</body>
+</html>

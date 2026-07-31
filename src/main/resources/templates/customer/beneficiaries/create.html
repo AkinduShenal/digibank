@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add Beneficiary - DigiBank</title>
+<link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+<link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+<link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout">
+  <div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+  <section class="customer-content">
+    <div th:replace="~{fragments/customer-layout :: alerts}"></div>
+    <div class="welcome-band">
+      <div>
+        <p class="eyebrow">New Beneficiary</p>
+        <h1>Add a trusted account</h1>
+        <span class="mono">DigiBank stores only normalized account identifiers and shows masked values later.</span>
+      </div>
+      <a class="btn btn-prev" th:href="@{/customer/beneficiaries}">Back to List</a>
+    </div>
+
+    <form class="edit-card beneficiary-form" th:action="@{/customer/beneficiaries}" method="post" th:object="${beneficiaryCreateRequest}">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <div class="form-error" th:if="${#fields.hasGlobalErrors()}" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</div>
+
+      <label>
+        <span>Beneficiary Type</span>
+        <select th:field="*{beneficiaryType}" th:errorclass="invalid" data-beneficiary-type>
+          <option value="">Select type</option>
+          <option th:each="type : ${beneficiaryTypes}" th:value="${type}" th:text="${type}">EXTERNAL</option>
+        </select>
+        <em th:errors="*{beneficiaryType}"></em>
+      </label>
+
+      <div class="beneficiary-help internal-help">
+        Internal beneficiaries must be active DigiBank accounts. DigiBank verifies the account and derives bank details.
+      </div>
+      <div class="beneficiary-help external-help">
+        External account ownership is not verified through an external API in this academic version.
+      </div>
+
+      <label>
+        <span>Beneficiary Name</span>
+        <input th:field="*{beneficiaryName}" th:errorclass="invalid" autocomplete="name" maxlength="120">
+        <em th:errors="*{beneficiaryName}"></em>
+      </label>
+      <label>
+        <span>Nickname</span>
+        <input th:field="*{nickname}" th:errorclass="invalid" autocomplete="off" maxlength="80">
+        <em th:errors="*{nickname}"></em>
+      </label>
+
+      <div class="external-fields">
+        <label>
+          <span>Bank Name</span>
+          <input th:field="*{bankName}" th:errorclass="invalid" autocomplete="organization" maxlength="120">
+          <em th:errors="*{bankName}"></em>
+        </label>
+        <label>
+          <span>Bank Code</span>
+          <input th:field="*{bankCode}" th:errorclass="invalid" autocomplete="off" maxlength="20">
+          <em th:errors="*{bankCode}"></em>
+        </label>
+      </div>
+
+      <label>
+        <span>Branch Name</span>
+        <input th:field="*{branchName}" th:errorclass="invalid" autocomplete="off" maxlength="120">
+        <em th:errors="*{branchName}"></em>
+      </label>
+      <label>
+        <span>Branch Code</span>
+        <input th:field="*{branchCode}" th:errorclass="invalid" autocomplete="off" maxlength="20">
+        <em th:errors="*{branchCode}"></em>
+      </label>
+      <label>
+        <span>Account Number</span>
+        <input th:field="*{accountNumber}" th:errorclass="invalid" autocomplete="off" inputmode="numeric" maxlength="40">
+        <em th:errors="*{accountNumber}"></em>
+      </label>
+      <label>
+        <span>Account Type</span>
+        <select th:field="*{accountType}" th:errorclass="invalid">
+          <option value="">Select account type</option>
+          <option th:each="type : ${accountTypes}" th:value="${type}" th:text="${type}">SAVINGS</option>
+        </select>
+        <em th:errors="*{accountType}"></em>
+      </label>
+
+      <div class="form-actions">
+        <button class="btn btn-gotologin" type="submit">Save Beneficiary</button>
+        <a class="btn btn-prev" th:href="@{/customer/beneficiaries}">Cancel</a>
+      </div>
+    </form>
+  </section>
+</main>
+<div th:replace="~{fragments/customer-layout :: footer}"></div>
+<script th:src="@{/js/beneficiaries.js}"></script>
+</body>
+</html>

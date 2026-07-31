@@ -1,0 +1,55 @@
+:root {
+	--digibank-blue: #0f62fe;
+	--digibank-blue-dark: #063f9f;
+	--digibank-bg: #f4f8ff;
+	--digibank-text: #102033;
+	--digibank-white: #ffffff;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	font-family: Arial, Helvetica, sans-serif;
+	color: var(--digibank-text);
+	background: var(--digibank-bg);
+}
+
+.page-shell {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem;
+}
+
+.hero {
+	width: min(100%, 720px);
+	padding: 3rem;
+	text-align: center;
+	background: var(--digibank-white);
+	border: 1px solid #d9e6ff;
+	border-radius: 8px;
+	box-shadow: 0 16px 40px rgba(15, 98, 254, 0.12);
+}
+
+.eyebrow {
+	margin: 0 0 0.75rem;
+	font-weight: 700;
+	color: var(--digibank-blue);
+	text-transform: uppercase;
+}
+
+h1 {
+	margin: 0;
+	font-size: 2.5rem;
+	color: var(--digibank-blue-dark);
+}
+
+.status-message {
+	margin: 1rem 0 0;
+	font-size: 1.125rem;
+	line-height: 1.6;
+}

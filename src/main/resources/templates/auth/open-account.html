@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open an Account - DigiBank</title>
+<link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+<link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+
+<div class="pillnav">
+  <div class="pillnav-inner">
+    <a th:href="@{/}">Home</a>
+    <a th:href="@{/login}">Login</a>
+    <a th:href="@{/open-account}" class="current">Register</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="page-title">
+    <div class="brand-logo">
+      <img th:src="@{/images/logo/logo.png}" alt="DigiBank logo">
+    </div>
+    <h1>DigiBank</h1>
+    <p>Online Account Opening</p>
+  </div>
+
+  <div class="notice">
+    <div class="ic">+</div>
+    <div>
+      <h3>Welcome to DigiBank</h3>
+      <p>Open a Sri Lankan LKR account online. Your application will be reviewed by bank staff before activation.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Create Your Account</h2>
+      <p>Complete your registration in five secure steps</p>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="steps-row" id="stepsRow">
+        <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Personal Info</div></div>
+        <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Address</div></div>
+        <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Account</div></div>
+        <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">KYC Review</div></div>
+        <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">Security</div></div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <form id="regForm" th:action="@{/open-account}" th:object="${registrationRequest}" method="post" novalidate>
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <div class="server-error" th:if="${#fields.hasAnyErrors()}">
+        <strong>Please review these fields and submit again.</strong>
+        <ul class="server-error-list">
+          <li th:each="error : ${#fields.allErrors()}" th:text="${error}">Validation message</li>
+        </ul>
+      </div>
+      <div class="panel-body">
+
+        <div class="step-panel" data-panel="1"
+             th:attr="data-has-error=${#fields.hasErrors('firstName') || #fields.hasErrors('lastName') || #fields.hasErrors('email') || #fields.hasErrors('mobileNumber') || #fields.hasErrors('alternativePhone') || #fields.hasErrors('dateOfBirth') || #fields.hasErrors('gender') || #fields.hasErrors('nationality')}">
+          <div class="step-head">
+            <div class="titlerow"><h3>Personal Information</h3></div>
+            <p>Tell us about yourself</p>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="firstName">First Name <span class="req">*</span></label>
+              <input id="firstName" type="text" th:field="*{firstName}" th:errorclass="err" autocomplete="given-name" placeholder="Lakshitha">
+              <div class="errmsg" th:errors="*{firstName}"></div>
+            </div>
+            <div class="field">
+              <label for="lastName">Last Name <span class="req">*</span></label>
+              <input id="lastName" type="text" th:field="*{lastName}" th:errorclass="err" autocomplete="family-name" placeholder="Dilshan">
+              <div class="errmsg" th:errors="*{lastName}"></div>
+            </div>
+            <div class="field">
+              <label for="email">Email Address <span class="req">*</span></label>
+              <input id="email" type="email" th:field="*{email}" th:errorclass="err" autocomplete="email" placeholder="hello@example.com">
+              <div class="errmsg" th:errors="*{email}"></div>
+            </div>
+            <div class="field">
+              <label for="mobileNumber">Mobile Number <span class="req">*</span></label>
+              <input id="mobileNumber" type="tel" th:field="*{mobileNumber}" th:errorclass="err" autocomplete="tel" placeholder="0712345678">
+              <div class="hint">Use 07XXXXXXXX or +947XXXXXXXX.</div>
+              <div class="errmsg" th:errors="*{mobileNumber}"></div>
+            </div>
+            <div class="field">
+              <label for="alternativePhone">Alternative Phone</label>
+              <input id="alternativePhone" type="tel" th:field="*{alternativePhone}" th:errorclass="err" autocomplete="tel" placeholder="+94771234567">
+              <div class="errmsg" th:errors="*{alternativePhone}"></div>
+            </div>
+            <div class="field">
+              <label for="dateOfBirth">Date of Birth <span class="req">*</span></label>
+              <input id="dateOfBirth" type="date" th:field="*{dateOfBirth}" th:errorclass="err" autocomplete="bday">
+              <div class="errmsg" th:errors="*{dateOfBirth}"></div>
+            </div>
+            <div class="field">
+              <label for="gender">Gender <span class="req">*</span></label>
+              <select id="gender" th:field="*{gender}" th:errorclass="err" autocomplete="sex">
+                <option value="">Select Gender</option>
+                <option th:each="genderOption : ${genderOptions}" th:value="${genderOption}" th:text="${genderOption}"></option>
+              </select>
+              <div class="errmsg" th:errors="*{gender}"></div>
+            </div>
+            <div class="field">
+              <label for="nationality">Nationality</label>
+              <input id="nationality" type="text" th:field="*{nationality}" th:errorclass="err" autocomplete="country-name" placeholder="Sri Lankan">
+              <div class="errmsg" th:errors="*{nationality}"></div>
+            </div>
+          </div>
+          <div class="actions">
+            <span></span>
+            <button type="button" class="btn btn-next" data-next="2">Next Step</button>
+          </div>
+        </div>
+
+        <div class="step-panel" data-panel="2" hidden
+             th:attr="data-has-error=${#fields.hasErrors('addressLine1') || #fields.hasErrors('addressLine2') || #fields.hasErrors('city') || #fields.hasErrors('district') || #fields.hasErrors('province') || #fields.hasErrors('postalCode') || #fields.hasErrors('country')}">
+          <div class="step-head">
+            <div class="titlerow"><h3>Address Information</h3></div>
+            <p>Where can we reach you?</p>
+          </div>
+          <div class="form-grid">
+            <div class="field full">
+              <label for="addressLine1">Address Line 1 <span class="req">*</span></label>
+              <input id="addressLine1" type="text" th:field="*{addressLine1}" th:errorclass="err" autocomplete="address-line1" placeholder="No 1 Main Street">
+              <div class="errmsg" th:errors="*{addressLine1}"></div>
+            </div>
+            <div class="field full">
+              <label for="addressLine2">Address Line 2</label>
+              <input id="addressLine2" type="text" th:field="*{addressLine2}" th:errorclass="err" autocomplete="address-line2" placeholder="Apartment, lane or landmark">
+              <div class="errmsg" th:errors="*{addressLine2}"></div>
+            </div>
+            <div class="field">
+              <label for="city">City <span class="req">*</span></label>
+              <input id="city" type="text" th:field="*{city}" th:errorclass="err" autocomplete="address-level2" placeholder="Colombo">
+              <div class="errmsg" th:errors="*{city}"></div>
+            </div>
+            <div class="field">
+              <label for="district">District</label>
+              <input id="district" type="text" th:field="*{district}" th:errorclass="err" autocomplete="address-level2" placeholder="Colombo">
+              <div class="errmsg" th:errors="*{district}"></div>
+            </div>
+            <div class="field">
+              <label for="province">Province</label>
+              <input id="province" type="text" th:field="*{province}" th:errorclass="err" autocomplete="address-level1" placeholder="Western">
+              <div class="errmsg" th:errors="*{province}"></div>
+            </div>
+            <div class="field">
+              <label for="postalCode">Postal Code</label>
+              <input id="postalCode" type="text" th:field="*{postalCode}" th:errorclass="err" autocomplete="postal-code" placeholder="00100">
+              <div class="errmsg" th:errors="*{postalCode}"></div>
+            </div>
+            <div class="field">
+              <label for="country">Country <span class="req">*</span></label>
+              <input id="country" type="text" th:field="*{country}" th:errorclass="err" autocomplete="country-name" placeholder="Sri Lanka">
+              <div class="errmsg" th:errors="*{country}"></div>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-prev" data-prev="1">Previous</button>
+            <button type="button" class="btn btn-next" data-next="3">Next Step</button>
+          </div>
+        </div>
+
+        <div class="step-panel" data-panel="3" hidden
+             th:attr="data-has-error=${#fields.hasErrors('identityType') || #fields.hasErrors('identityNumber') || #fields.hasErrors('accountType') || #fields.hasErrors('branchCode') || #fields.hasErrors('initialDeposit')}">
+          <div class="step-head">
+            <div class="titlerow"><h3>Account Information</h3></div>
+            <p>Choose account type, branch and identity details</p>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="identityType">Identity Type <span class="req">*</span></label>
+              <select id="identityType" th:field="*{identityType}" th:errorclass="err" autocomplete="off">
+                <option value="">Select Identity Type</option>
+                <option th:each="identityTypeOption : ${identityTypeOptions}" th:value="${identityTypeOption}" th:text="${identityTypeOption}"></option>
+              </select>
+              <div class="errmsg" th:errors="*{identityType}"></div>
+            </div>
+            <div class="field">
+              <label for="identityNumber">NIC or Passport Number <span class="req">*</span></label>
+              <input id="identityNumber" type="text" th:field="*{identityNumber}" th:errorclass="err" autocomplete="off" placeholder="123456789V or N1234567">
+              <div class="errmsg" th:errors="*{identityNumber}"></div>
+            </div>
+            <div class="field">
+              <label for="accountType">Account Type <span class="req">*</span></label>
+              <select id="accountType" th:field="*{accountType}" th:errorclass="err" autocomplete="off">
+                <option value="">Select Account Type</option>
+                <option th:each="accountTypeOption : ${accountTypeOptions}" th:value="${accountTypeOption}" th:text="${accountTypeOption}"></option>
+              </select>
+              <div class="errmsg" th:errors="*{accountType}"></div>
+            </div>
+            <div class="field">
+              <label for="branchCode">Branch <span class="req">*</span></label>
+              <select id="branchCode" th:field="*{branchCode}" th:errorclass="err" autocomplete="off">
+                <option value="">Select Branch</option>
+                <option th:each="branchOption : ${branchOptions}" th:value="${branchOption.key}" th:text="${branchOption.value}"></option>
+              </select>
+              <div class="errmsg" th:errors="*{branchCode}"></div>
+            </div>
+            <div class="field">
+              <label for="initialDeposit">Initial Deposit <span class="req">*</span></label>
+              <input id="initialDeposit" type="number" step="0.01" min="1000" th:field="*{initialDeposit}" th:errorclass="err" autocomplete="off" placeholder="1000.00">
+              <div class="hint" id="depositHint">Savings accounts require an initial deposit of at least LKR 1,000.</div>
+              <div class="errmsg" th:errors="*{initialDeposit}"></div>
+            </div>
+            <div class="field">
+              <label>Currency</label>
+              <input type="text" name="displayCurrency" value="LKR" readonly autocomplete="off">
+              <div class="hint">DigiBank currently opens Member 1 accounts in Sri Lankan Rupees.</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-prev" data-prev="2">Previous</button>
+            <button type="button" class="btn btn-next" data-next="4">Next Step</button>
+          </div>
+        </div>
+
+        <div class="step-panel" data-panel="4" hidden>
+          <div class="step-head">
+            <div class="titlerow"><h3>KYC Verification</h3></div>
+            <p>Documents are reviewed in the staff-verification phase</p>
+          </div>
+          <div class="field-note">
+            <div class="ic">i</div>
+            <div>
+              <h3>No document upload is required in this phase</h3>
+              <p>Your NIC or passport number is captured now. Staff-side document upload and verification will be implemented in a later phase.</p>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-prev" data-prev="3">Previous</button>
+            <button type="button" class="btn btn-next" data-next="5">Next Step</button>
+          </div>
+        </div>
+
+        <div class="step-panel" data-panel="5" hidden
+             th:attr="data-has-error=${#fields.hasErrors('username') || #fields.hasErrors('password') || #fields.hasErrors('confirmPassword') || #fields.hasErrors('transactionPin') || #fields.hasErrors('confirmTransactionPin') || #fields.hasErrors('termsAccepted') || #fields.hasErrors('privacyAccepted')}">
+          <div class="step-head">
+            <div class="titlerow"><h3>Security Credentials</h3></div>
+            <p>Create secure login and transaction credentials</p>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="username">Username <span class="req">*</span></label>
+              <input id="username" type="text" th:field="*{username}" th:errorclass="err" autocomplete="username" placeholder="lakshitha_01">
+              <div class="errmsg" th:errors="*{username}"></div>
+            </div>
+            <div class="field">
+              <label for="password">Password <span class="req">*</span></label>
+              <input id="password" type="password" th:field="*{password}" th:errorclass="err" autocomplete="new-password" placeholder="Password">
+              <div class="password-rules">8-72 characters, uppercase, lowercase, number and special character.</div>
+              <div class="strength-meter"><span class="strength-fill" id="strengthFill"></span></div>
+              <span class="strength-label" id="strengthLabel">Enter a password</span>
+              <div class="errmsg" th:errors="*{password}"></div>
+            </div>
+            <div class="field">
+              <label for="confirmPassword">Confirm Password <span class="req">*</span></label>
+              <input id="confirmPassword" type="password" th:field="*{confirmPassword}" th:errorclass="err" autocomplete="new-password" placeholder="Confirm Password">
+              <div class="errmsg" th:errors="*{confirmPassword}"></div>
+            </div>
+            <div class="field">
+              <label for="transactionPin">4 Digit Transaction PIN <span class="req">*</span></label>
+              <input id="transactionPin" type="password" maxlength="4" inputmode="numeric" th:field="*{transactionPin}" th:errorclass="err" autocomplete="off" placeholder="2468">
+              <div class="hint">PIN will be securely encoded before storage.</div>
+              <div class="errmsg" th:errors="*{transactionPin}"></div>
+            </div>
+            <div class="field">
+              <label for="confirmTransactionPin">Confirm Transaction PIN <span class="req">*</span></label>
+              <input id="confirmTransactionPin" type="password" maxlength="4" inputmode="numeric" th:field="*{confirmTransactionPin}" th:errorclass="err" autocomplete="off" placeholder="2468">
+              <div class="errmsg" th:errors="*{confirmTransactionPin}"></div>
+            </div>
+            <div class="field full">
+              <div class="checkbox-field">
+                <input id="termsAccepted" type="checkbox" th:field="*{termsAccepted}" th:errorclass="err" autocomplete="off">
+                <label for="termsAccepted">I accept the DigiBank account terms and conditions. <span class="req">*</span></label>
+              </div>
+              <div class="errmsg" th:errors="*{termsAccepted}"></div>
+            </div>
+            <div class="field full">
+              <div class="checkbox-field">
+                <input id="privacyAccepted" type="checkbox" th:field="*{privacyAccepted}" th:errorclass="err" autocomplete="off">
+                <label for="privacyAccepted">I accept the DigiBank privacy policy. <span class="req">*</span></label>
+              </div>
+              <div class="errmsg" th:errors="*{privacyAccepted}"></div>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-prev" data-prev="4">Previous</button>
+            <button type="submit" class="btn btn-create" id="createBtn">Create Account</button>
+          </div>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+  <div class="signin-note">
+    Already have an account? <a th:href="@{/login}">Sign in</a> to your account
+  </div>
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <span>256-bit SSL Encryption</span>
+    <span>Data Protection Compliant</span>
+    <span>24/7 Support</span>
+  </div>
+</footer>
+
+<script th:src="@{/js/registration.js}"></script>
+</body>
+</html>

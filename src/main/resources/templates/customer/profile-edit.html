@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit Profile - DigiBank</title>
+<link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+<link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+<link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+
+<main class="customer-layout">
+  <div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+
+  <section class="customer-content">
+    <div class="welcome-band" th:object="${profile}">
+      <div>
+        <p class="eyebrow">Edit Profile</p>
+        <h1 th:text="*{fullName}">Customer Name</h1>
+        <span class="mono">Email and identity changes require staff support</span>
+      </div>
+      <div class="avatar" th:if="*{profileImagePath == null}" th:text="*{initials}">DB</div>
+      <img class="avatar image" th:if="*{profileImagePath != null}" th:src="*{profileImagePath}" alt="Profile picture">
+    </div>
+
+    <form class="edit-card" th:action="@{/customer/profile/edit}" th:object="${profileUpdateRequest}" method="post" novalidate>
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <div class="server-error" th:if="${#fields.hasAnyErrors()}">Please fix the highlighted profile fields.</div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="firstName">First Name</label>
+          <input id="firstName" type="text" th:field="*{firstName}" th:errorclass="err" autocomplete="given-name">
+          <div class="errmsg" th:errors="*{firstName}"></div>
+        </div>
+        <div class="field">
+          <label for="lastName">Last Name</label>
+          <input id="lastName" type="text" th:field="*{lastName}" th:errorclass="err" autocomplete="family-name">
+          <div class="errmsg" th:errors="*{lastName}"></div>
+        </div>
+        <div class="field">
+          <label for="mobileNumber">Mobile Number</label>
+          <input id="mobileNumber" type="tel" th:field="*{mobileNumber}" th:errorclass="err" autocomplete="tel">
+          <div class="errmsg" th:errors="*{mobileNumber}"></div>
+        </div>
+        <div class="field">
+          <label for="alternativePhone">Alternative Phone</label>
+          <input id="alternativePhone" type="tel" th:field="*{alternativePhone}" th:errorclass="err" autocomplete="tel">
+          <div class="errmsg" th:errors="*{alternativePhone}"></div>
+        </div>
+        <div class="field full">
+          <label for="addressLine1">Address Line 1</label>
+          <input id="addressLine1" type="text" th:field="*{addressLine1}" th:errorclass="err" autocomplete="address-line1">
+          <div class="errmsg" th:errors="*{addressLine1}"></div>
+        </div>
+        <div class="field full">
+          <label for="addressLine2">Address Line 2</label>
+          <input id="addressLine2" type="text" th:field="*{addressLine2}" th:errorclass="err" autocomplete="address-line2">
+          <div class="errmsg" th:errors="*{addressLine2}"></div>
+        </div>
+        <div class="field">
+          <label for="city">City</label>
+          <input id="city" type="text" th:field="*{city}" th:errorclass="err" autocomplete="address-level2">
+          <div class="errmsg" th:errors="*{city}"></div>
+        </div>
+        <div class="field">
+          <label for="district">District</label>
+          <input id="district" type="text" th:field="*{district}" th:errorclass="err" autocomplete="address-level2">
+          <div class="errmsg" th:errors="*{district}"></div>
+        </div>
+        <div class="field">
+          <label for="province">Province</label>
+          <input id="province" type="text" th:field="*{province}" th:errorclass="err" autocomplete="address-level1">
+          <div class="errmsg" th:errors="*{province}"></div>
+        </div>
+        <div class="field">
+          <label for="postalCode">Postal Code</label>
+          <input id="postalCode" type="text" th:field="*{postalCode}" th:errorclass="err" autocomplete="postal-code">
+          <div class="errmsg" th:errors="*{postalCode}"></div>
+        </div>
+        <div class="field">
+          <label for="nationality">Nationality</label>
+          <input id="nationality" type="text" th:field="*{nationality}" th:errorclass="err" autocomplete="country-name">
+          <div class="errmsg" th:errors="*{nationality}"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn btn-prev" th:href="@{/customer/profile}">Cancel</a>
+        <button class="btn btn-gotologin" type="submit">Save Profile</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<div th:replace="~{fragments/customer-layout :: footer}"></div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title">
+  <title id="title">Boy profile avatar</title>
+  <defs>
+    <linearGradient id="bg" x1="32" y1="28" x2="210" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1B4B43"/>
+      <stop offset="1" stop-color="#00D9A3"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="63" y1="161" x2="177" y2="226" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F332D"/>
+      <stop offset="1" stop-color="#1B4B43"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="56" fill="url(#bg)"/>
+  <circle cx="120" cy="111" r="52" fill="#F4C9A3"/>
+  <path d="M73 112c2-45 24-67 62-67 34 0 57 22 62 64-16-6-31-18-42-34-20 22-47 34-82 37Z" fill="#14201D"/>
+  <circle cx="99" cy="113" r="6" fill="#14201D"/>
+  <circle cx="141" cy="113" r="6" fill="#14201D"/>
+  <path d="M103 137c11 10 23 10 34 0" fill="none" stroke="#14201D" stroke-width="7" stroke-linecap="round"/>
+  <path d="M48 219c8-41 35-63 72-63s64 22 72 63H48Z" fill="url(#shirt)"/>
+  <path d="M91 162 120 196l29-34" fill="none" stroke="#00D9A3" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

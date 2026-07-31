@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customer Records - DigiBank</title>
+<link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+<link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
+<link rel="stylesheet" th:href="@{/css/auth.css}">
+<link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-content narrow staff-wide">
+  <div th:replace="~{fragments/customer-layout :: alerts}"></div>
+  <div class="welcome-band">
+    <div>
+      <p class="eyebrow">Staff Console</p>
+      <h1>Customer Records</h1>
+      <span class="mono">Read-only list with controlled actions inside each record.</span>
+    </div>
+  </div>
+  <section class="info-card">
+    <div class="staff-table">
+      <a th:each="customer : ${customers}" th:href="@{/staff/customers/{customerNumber}(customerNumber=${customer.customerNumber})}">
+        <span th:text="${customer.customerNumber}">CUS2026000123</span>
+        <strong th:text="${customer.fullName}">Customer Name</strong>
+        <em th:text="${customer.customerStatus}">ACTIVE</em>
+      </a>
+    </div>
+  </section>
+</main>
+<div th:replace="~{fragments/customer-layout :: footer}"></div>
+</body>
+</html>

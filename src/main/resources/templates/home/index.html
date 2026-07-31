@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DigiBank — Modern Digital Banking</title>
+<link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+<link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
+<style>
+  :root{
+    --ink:#0B2036;
+    --forest:#0E5C97;
+    --forest-2:#1372B8;
+    --paper:#F3F8FC;
+    --paper-2:#E6F1F9;
+    --lime:#5AC8FA;
+    --lime-dim:#D8F0FC;
+    --gold:#2E86AB;
+    --line: rgba(11,32,54,0.14);
+    --white:#FFFFFF;
+    --muted: rgba(11,32,54,0.62);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:Inter, Arial, Helvetica, sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{
+    font-family:Georgia, 'Times New Roman', serif;
+    margin:0;
+    line-height:1.05;
+    font-weight:600;
+  }
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+  .mono{font-family:'SFMono-Regular', Consolas, monospace;}
+
+  /* PAGE LOADER */
+  body:not(.page-loaded){overflow:hidden;}
+  .page-loader{
+    position:fixed;
+    inset:0;
+    z-index:2000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 42% 34%, rgba(90,200,250,.16), transparent 28%),
+      linear-gradient(135deg, #F3F8FC 0%, #FFFFFF 52%, #E6F1F9 100%);
+    transition:opacity .55s cubic-bezier(.2,.7,.2,1), visibility .55s ease;
+  }
+  body.page-loaded .page-loader{
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+  }
+  .loader-shell{
+    width:min(320px, calc(100vw - 48px));
+    display:grid;
+    place-items:center;
+    gap:22px;
+    color:var(--ink);
+  }
+  .loader-mark{
+    width:82px;
+    height:82px;
+    border-radius:24px;
+    position:relative;
+    display:grid;
+    place-items:center;
+    background:#0B2036;
+    box-shadow:0 28px 64px -34px rgba(11,32,54,.58);
+    animation:loaderFloat 1.8s ease-in-out infinite;
+  }
+  .loader-mark::before{
+    content:"";
+    position:absolute;
+    inset:-8px;
+    border-radius:30px;
+    border:1px solid rgba(14,92,151,.22);
+    animation:loaderRing 1.45s ease-out infinite;
+  }
+  .loader-mark svg{
+    width:38px;
+    height:38px;
+  }
+  .loader-mark img{
+    width:52px;
+    height:52px;
+    object-fit:contain;
+    display:block;
+  }
+  .loader-brand{
+    font-family:Georgia, 'Times New Roman', serif;
+    font-size:28px;
+    font-weight:700;
+    letter-spacing:0;
+  }
+  .loader-line{
+    width:100%;
+    height:4px;
+    border-radius:999px;
+    overflow:hidden;
+    background:rgba(11,32,54,.10);
+  }
+  .loader-line span{
+    display:block;
+    width:46%;
+    height:100%;
+    border-radius:inherit;
+    background:linear-gradient(90deg, var(--forest), var(--lime));
+    animation:loaderProgress 1.15s cubic-bezier(.65,0,.35,1) infinite;
+  }
+  .loader-copy{
+    font-family:'SFMono-Regular', Consolas, monospace;
+    color:var(--muted);
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  @keyframes loaderFloat{
+    0%,100%{transform:translateY(0) rotate(0);}
+    50%{transform:translateY(-8px) rotate(2deg);}
+  }
+  @keyframes loaderRing{
+    0%{opacity:.85;transform:scale(.88);}
+    100%{opacity:0;transform:scale(1.28);}
+  }
+  @keyframes loaderProgress{
+    0%{transform:translateX(-110%);}
+    100%{transform:translateX(235%);}
+  }
+
+  /* TYPEWRITER */
+  .tw-cursor{
+    display:inline-block;
+    margin-left:2px;
+    color:var(--forest);
+    animation:twBlink 0.9s step-end infinite;
+  }
+  .tw-cursor.done{animation:twBlink 0.9s step-end 4;}
+  @keyframes twBlink{
+    0%,100%{opacity:1;}
+    50%{opacity:0;}
+  }
+
+  /* SCROLL REVEAL */
+  .reveal{
+    opacity:0;
+    transform:translateY(28px);
+    transition:opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1);
+  }
+  .reveal.in-view{opacity:1;transform:translateY(0);}
+  .reveal-stagger.in-view .reveal-child:nth-child(1){transition-delay:0s;}
+  .reveal-stagger.in-view .reveal-child:nth-child(2){transition-delay:.1s;}
+  .reveal-stagger.in-view .reveal-child:nth-child(3){transition-delay:.2s;}
+  .reveal-stagger.in-view .reveal-child:nth-child(4){transition-delay:.3s;}
+
+  /* LETTER ZOOM CURSOR */
+  .letter-zoom-cursor{
+    position:fixed;
+    left:0;
+    top:0;
+    width:86px;
+    height:86px;
+    border-radius:50%;
+    background:#020202;
+    overflow:hidden;
+    pointer-events:none;
+    z-index:999;
+    opacity:0;
+    transform:translate3d(-50%,-50%,0) scale(.72);
+    transition:opacity .18s ease, transform .18s cubic-bezier(.2,.7,.2,1);
+    box-shadow:0 18px 36px rgba(0,0,0,.18);
+  }
+  .letter-zoom-cursor.is-visible{
+    opacity:1;
+    transform:translate3d(-50%,-50%,0) scale(1);
+  }
+  .letter-zoom-cursor span{
+    position:absolute;
+    display:block;
+    white-space:normal;
+    color:#f3e56b;
+    transform:scale(1.18);
+    transform-origin:0 0;
+    will-change:left, top;
+  }
+  .letter-zoom-cursor span,
+  .letter-zoom-cursor span *{
+    color:#f3e56b !important;
+  }
+
+  /* FLOAT */
+  @keyframes floaty{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-14px);}
+  }
+  .float{animation:floaty 5.5s ease-in-out infinite;}
+  .float-slow{animation:floaty 7.5s ease-in-out infinite;}
+  .float-delay{animation-delay:1.2s;}
+
+  /* HOVER LIFT (generic) */
+  .lift{transition:transform .28s cubic-bezier(.2,.7,.2,1), box-shadow .28s ease;}
+  .lift:hover{transform:translateY(-6px);box-shadow:0 22px 40px -18px rgba(14,31,23,.28);}
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal{opacity:1 !important;transform:none !important;transition:none !important;}
+    .float,.float-slow{animation:none !important;}
+    .lift:hover{transform:none;}
+    .marquee{animation:none !important;}
+    .play-btn{animation:none !important;}
+    .letter-zoom-cursor{display:none !important;}
+    body:not(.page-loaded){overflow:auto;}
+    .page-loader{transition:opacity .15s ease, visibility .15s ease;}
+    .loader-mark,
+    .loader-mark::before,
+    .loader-line span{animation:none !important;}
+    .tab,
+    .tab::after,
+    .tab.active .arrow,
+    .tabpanel.active,
+    .tabpanel.active .expertise-media img,
+    .tabpanel.active .expertise-chip,
+    .tabpanel.active .expertise-copy .mini,
+    .tabpanel.active .expertise-copy h3,
+    .tabpanel.active .expertise-copy p,
+    .tabpanel.active .expertise-metric,
+    .tabpanel.active .expertise-copy li,
+    .tabpanel.active .expertise-copy .btn,
+    .service-grid.in-view .service-card,
+    .service-grid.in-view .service-card .icon,
+    .service-grid.in-view .service-card .go::after,
+    .why-grid.in-view .why-card,
+    .why-grid.in-view .why-card .content,
+    .why-grid.in-view .why-card .idx,
+    .why-card:hover .bg,
+    .why-card::before,
+    .services::before,
+    .services::after{
+      animation:none !important;
+      transform:none !important;
+    }
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+  .eyebrow{
+    font-family:'SFMono-Regular', Consolas, monospace;
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    font-size:12px;
+    color:var(--forest);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:18px;height:1px;background:var(--forest);
+    display:inline-block;
+  }
+  /* ledger rule - signature device */
+  .ledger{
+    position:relative;
+    height:1px;
+    background:var(--line);
+    margin: 64px 0;
+  }
+  .ledger::before{
+    content:"";
+    position:absolute; left:0; top:-3px;
+    width:7px;height:7px;border-radius:50%;
+    background:var(--lime); border:1px solid var(--forest);
+  }
+  .ledger.tickless{background:transparent;}
+
+  /* TOPBAR */
+  .topbar{
+    background:var(--ink);
+    color:rgba(255,255,255,.75);
+    font-size:13px;
+  }
+  .topbar .wrap{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:9px 32px;
+  }
+  /* NAV */
+  header.site{
+    background:var(--paper);
+    border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(6px);
+  }
+  nav.wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    height:78px;
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;
+    font-family:Georgia, 'Times New Roman', serif;font-weight:700;font-size:21px;
+  }
+  .logo .mark{
+    width:34px;height:34px;border-radius:9px;
+    background:var(--white);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    box-shadow:0 8px 18px -12px rgba(11,32,54,.35);
+  }
+  .logo .mark svg{width:18px;height:18px;}
+  .logo .mark img{width:28px;height:28px;object-fit:contain;}
+  .navlinks{display:flex;gap:34px;font-size:14.5px;font-weight:500;}
+  .navlinks a{color:var(--ink);opacity:.82;position:relative;}
+  .navlinks a:hover{opacity:1;}
+  .navcta{display:flex;align-items:center;gap:14px;}
+  .btn{
+    font-family:Inter, Arial, Helvetica, sans-serif;
+    font-weight:600;font-size:14px;
+    padding:12px 22px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:8px;
+    cursor:pointer;border:1px solid transparent;
+    transition:transform .15s ease, background .2s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--forest);color:var(--white);}
+  .btn-primary:hover{background:var(--forest-2);}
+  .btn-lime{background:var(--lime);color:var(--ink);}
+  .btn-ghost{border-color:var(--line);color:var(--ink);}
+  .btn-outline-light{border-color:rgba(255,255,255,.35);color:var(--white);}
+
+  /* HERO */
+  .hero{
+    padding:88px 0 60px;
+    position:relative;
+    overflow:hidden;
+    background:
+      linear-gradient(90deg, rgba(243,248,252,.96) 0%, rgba(243,248,252,.90) 48%, rgba(243,248,252,.52) 100%),
+      url('/images/hero/modern-banking-hero-1.jpg') center right / cover no-repeat;
+  }
+  .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center;}
+  .hero h1{
+    font-size:56px;letter-spacing:-0.01em;margin:18px 0 22px;
+  }
+  .hero h1 em{font-style:italic;color:var(--forest);}
+  .hero p.lead{font-size:17px;color:var(--muted);max-width:520px;line-height:1.65;margin-bottom:30px;}
+  .hero-ctas{display:flex;gap:14px;margin-bottom:44px;}
+  .pill-stats{display:flex;gap:0;border-top:1px solid var(--line);padding-top:22px;}
+  .pill-stats div{flex:1;padding-right:18px;border-right:1px solid var(--line);}
+  .pill-stats div:last-child{border-right:none;}
+  .pill-stats .num{font-family:Georgia, 'Times New Roman', serif;font-weight:600;font-size:26px;color:var(--forest);}
+  .pill-stats .lbl{font-size:12.5px;color:var(--muted);margin-top:2px;}
+
+  /* passbook card - signature visual */
+  .passbook{
+    background:var(--ink);
+    border-radius:22px;
+    padding:30px;
+    color:var(--white);
+    position:relative;
+    box-shadow:0 30px 60px -20px rgba(14,31,23,.45);
+    transition:transform .15s ease-out;
+    will-change:transform;
+  }
+  .passbook::before{
+    content:"";position:absolute;inset:0;border-radius:22px;
+    background:linear-gradient(135deg, rgba(198,241,53,.10), transparent 55%);
+    pointer-events:none;
+  }
+  .passbook .row1{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;}
+  .passbook .tag{
+    font-family:'SFMono-Regular', Consolas, monospace;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:rgba(255,255,255,.55);
+  }
+  .passbook .balance{font-family:Georgia, 'Times New Roman', serif;font-size:40px;font-weight:600;margin:6px 0 2px;}
+  .passbook .delta{color:var(--lime);font-family:'SFMono-Regular', Consolas, monospace;font-size:13px;}
+  .passbook .divider{height:1px;background:rgba(255,255,255,.14);margin:22px 0;position:relative;}
+  .passbook .divider .dot{position:absolute;top:-2.5px;width:5px;height:5px;border-radius:50%;background:var(--lime);}
+  .ledgerline{display:flex;justify-content:space-between;font-size:13.5px;padding:9px 0;border-bottom:1px dashed rgba(255,255,255,.12);}
+  .ledgerline span:last-child{font-family:'SFMono-Regular', Consolas, monospace;color:rgba(255,255,255,.85);}
+  .passbook .actions{display:flex;gap:10px;margin-top:22px;}
+  .passbook .actions .btn{flex:1;justify-content:center;font-size:13px;padding:11px;}
+
+  /* MARQUEE */
+  .marquee-wrap{
+    background:var(--forest);
+    color:var(--white);
+    overflow:hidden;
+    padding:15px 0;
+  }
+  .marquee{display:flex;white-space:nowrap;animation:scroll 32s linear infinite;}
+  .marquee span{
+    font-family:'SFMono-Regular', Consolas, monospace;font-size:13px;letter-spacing:.05em;
+    padding:0 26px;opacity:.9;display:flex;align-items:center;gap:10px;
+  }
+  .marquee span::before{content:"◆";color:var(--lime);font-size:9px;}
+  @keyframes scroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+  section{padding:96px 0;}
+  .section-head{max-width:640px;margin-bottom:56px;}
+  .section-head h2{font-size:38px;margin-top:16px;letter-spacing:-.01em;}
+  .section-head p{color:var(--muted);margin-top:16px;line-height:1.65;font-size:16px;}
+  .section-head.center{margin-left:auto;margin-right:auto;text-align:center;}
+
+  /* ABOUT */
+  .about-section{
+    background:var(--white);
+    color:#15245f;
+    padding:86px 0 64px;
+  }
+  .about-section .wrap{
+    max-width:1320px;
+    padding:0 34px;
+  }
+  .about-head{
+    display:grid;
+    grid-template-columns:1.08fr .92fr;
+    gap:54px;
+    align-items:start;
+    margin-bottom:48px;
+  }
+  .about-kicker{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:18px;
+    color:#172236;
+    font-size:16px;
+    font-weight:800;
+  }
+  .about-kicker .asterisk{
+    color:#0f5f5a;
+    font-size:26px;
+    line-height:1;
+    transform:translateY(2px);
+  }
+  .about-title{
+    position:relative;
+    display:inline-block;
+    font-family:Inter, Arial, Helvetica, sans-serif;
+    color:#172a7c;
+    font-size:48px;
+    line-height:1.08;
+    font-weight:800;
+    letter-spacing:0;
+    min-height:52px;
+  }
+  .about-title::after{
+    content:"";
+    position:absolute;
+    top:-12px;
+    left:42%;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#dbe87c;
+  }
+  .about-summary{
+    margin:32px 0 0;
+    color:#4d4d55;
+    font-size:18px;
+    line-height:1.7;
+    font-weight:600;
+  }
+  .about-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  .about-card{
+    min-height:260px;
+    background:var(--white);
+    border:1px solid rgba(11,32,54,.13);
+    border-radius:18px;
+    padding:34px 30px 32px;
+    box-shadow:0 18px 48px -34px rgba(11,32,54,.30);
+  }
+  .about-icon{
+    width:58px;
+    height:58px;
+    border-radius:14px;
+    background:#239af0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:28px;
+  }
+  .about-icon svg{
+    width:31px;
+    height:31px;
+    stroke:#0c4c62;
+  }
+  .about-card h3{
+    font-family:Inter, Arial, Helvetica, sans-serif;
+    color:#172a7c;
+    font-size:22px;
+    line-height:1.2;
+    font-weight:800;
+    margin-bottom:16px;
+  }
+  .about-card p{color:#4f4f55;font-size:17px;line-height:1.55;font-weight:500;margin:0;}
+
+  /* ABOUT VIDEO */
+  .about-video{
+    margin-top:40px;
+    position:relative;
+    border-radius:34px;
+    overflow:hidden;
+    height:560px;
+    background:#0B2036;
+    border:1px solid rgba(11,32,54,.10);
+    box-shadow:0 30px 90px -42px rgba(11,32,54,.45);
+  }
+  .about-video::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(circle at 50% 45%, black, transparent 75%);
+  }
+  .about-video img,
+  .about-video iframe,
+  .about-video video{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    border:0;
+  }
+  .about-video iframe,
+  .about-video video{
+    z-index:1;
+  }
+  .about-video::after{
+    content:"";position:absolute;inset:0;z-index:2;
+    background:linear-gradient(180deg, rgba(11,32,54,.18), rgba(11,32,54,.74));
+    pointer-events:none;
+  }
+  .about-video .frame-top,.about-video .play-btn,.about-video .frame-bottom{z-index:3;}
+  .about-video .frame-top{
+    position:absolute;top:22px;left:26px;right:26px;
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:'SFMono-Regular', Consolas, monospace;font-size:12px;letter-spacing:.08em;
+    color:rgba(255,255,255,.55);text-transform:uppercase;
+  }
+  .about-video .frame-top .rec{display:flex;align-items:center;gap:8px;color:var(--lime);}
+  .about-video .frame-top .rec::before{
+    content:"";width:7px;height:7px;border-radius:50%;background:var(--lime);
+  }
+  .play-btn{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:78px;height:78px;border-radius:50%;
+    background:var(--lime);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    box-shadow:0 0 0 0 rgba(198,241,53,.5);
+    animation:pulse 2.6s ease-out infinite;
+  }
+  .play-btn svg{width:24px;height:24px;margin-left:3px;}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(198,241,53,.45);}
+    70%{box-shadow:0 0 0 26px rgba(198,241,53,0);}
+    100%{box-shadow:0 0 0 0 rgba(198,241,53,0);}
+  }
+  .about-video .frame-bottom{
+    position:absolute;bottom:0;left:0;right:0;
+    padding:22px 26px;
+    display:flex;justify-content:space-between;align-items:center;
+    background:linear-gradient(0deg, rgba(0,0,0,.55), transparent);
+  }
+  .about-video .caption h4{color:var(--white);font-size:17px;margin-bottom:4px;}
+  .about-video .caption p{color:rgba(255,255,255,.6);font-size:13px;margin:0;}
+  .about-video .timecode{
+    font-family:'SFMono-Regular', Consolas, monospace;font-size:12.5px;color:rgba(255,255,255,.55);
+    display:flex;align-items:center;gap:10px;
+  }
+  .about-video .scrub{width:120px;height:3px;background:rgba(255,255,255,.2);border-radius:2px;position:relative;overflow:hidden;}
+  .about-video .scrub::before{content:"";position:absolute;left:0;top:0;bottom:0;width:24%;background:var(--lime);}
+
+  .about-video.is-playing::after,
+  .about-video.is-playing .play-btn,
+  .about-video.is-playing .frame-top,
+  .about-video.is-playing .frame-bottom{
+    opacity:0;
+    pointer-events:none;
+  }
+  .about-video::after,
+  .about-video .play-btn,
+  .about-video .frame-top,
+  .about-video .frame-bottom{transition:opacity .22s ease, transform .2s ease;}
+
+  /* SERVICES */
+  .services{
+    position:relative;
+    overflow:hidden;
+    background:
+      radial-gradient(circle at 18% 22%, rgba(90,200,250,.18), transparent 26%),
+      linear-gradient(135deg, #0e5c97 0%, #0b2036 100%);
+    color:var(--white);
+  }
+  .services::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+    background-size:54px 54px;
+    mask-image:linear-gradient(180deg, transparent 0%, black 18%, black 82%, transparent 100%);
+    animation:servicesGridDrift 18s linear infinite;
+  }
+  .services::after{
+    content:"";
+    position:absolute;
+    top:12%;
+    right:-18%;
+    width:46%;
+    height:76%;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:50%;
+    transform:rotate(-18deg);
+    animation:servicesRingFloat 8s ease-in-out infinite;
+  }
+  .services .wrap{position:relative;z-index:1;}
+  .services .section-head p{color:rgba(255,255,255,.68);}
+  .services .section-head .eyebrow{color:var(--lime);}
+  .services .section-head .eyebrow::before{background:var(--lime);}
+  .service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .service-card{
+    position:relative;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:18px;padding:30px;
+    transition:background .25s ease, transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+    overflow:hidden;
+    transform-style:preserve-3d;
+    will-change:transform;
+    box-shadow:0 26px 70px -44px rgba(0,0,0,.55);
+  }
+  .service-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(120deg, transparent 12%, rgba(255,255,255,.16), transparent 34%);
+    transform:translateX(-120%);
+    opacity:0;
+    pointer-events:none;
+  }
+  .service-card::after{
+    content:"";
+    position:absolute;
+    left:30px;
+    right:30px;
+    bottom:0;
+    height:3px;
+    background:linear-gradient(90deg, var(--lime), rgba(255,255,255,.18));
+    transform:scaleX(0);
+    transform-origin:left;
+    transition:transform .35s ease;
+  }
+  .service-card .media{
+    position:relative;
+    margin:-30px -30px 24px;
+    height:160px;
+    overflow:hidden;
+    background:rgba(255,255,255,.08);
+  }
+  .service-card .media::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, transparent 34%, rgba(11,32,54,.34));
+  }
+  .service-card .media img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    transform:scale(1.04);
+    transition:transform .65s cubic-bezier(.2,.7,.2,1), filter .35s ease;
+  }
+  .service-card:hover{
+    background:rgba(255,255,255,.10);
+    border-color:rgba(90,200,250,.45);
+    transform:translateY(-8px);
+    box-shadow:0 36px 84px -42px rgba(0,0,0,.68);
+  }
+  .service-card:hover::before{
+    opacity:1;
+    animation:serviceSheen .9s ease;
+  }
+  .service-card:hover::after{transform:scaleX(1);}
+  .service-card:hover .media img{
+    transform:scale(1.14) translateX(2%);
+    filter:saturate(1.08) contrast(1.04);
+  }
+  .service-card .icon{
+    position:relative;
+    width:46px;height:46px;border-radius:12px;background:var(--lime);
+    display:flex;align-items:center;justify-content:center;margin-bottom:22px;
+    box-shadow:0 0 0 0 rgba(90,200,250,.32);
+  }
+  .service-card .icon::after{
+    content:"";
+    position:absolute;
+    inset:-6px;
+    border:1px solid rgba(90,200,250,.32);
+    border-radius:16px;
+    opacity:0;
+    transform:scale(.76);
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .service-card .icon svg{width:22px;height:22px;color:var(--ink);}
+  .service-card:hover .icon{
+    animation:serviceIconPulse 1.4s ease-in-out infinite;
+  }
+  .service-card:hover .icon::after{
+    opacity:1;
+    transform:scale(1);
+  }
+  .service-card h3{font-size:19px;margin-bottom:10px;color:var(--white);}
+  .service-card p{color:rgba(255,255,255,.62);font-size:14px;line-height:1.6;margin:0 0 18px;}
+  .service-card .go{
+    position:relative;
+    font-size:13px;
+    font-weight:600;
+    color:var(--lime);
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .service-card .go::after{
+    content:"";
+    width:18px;
+    height:1px;
+    background:var(--lime);
+    transform:scaleX(0);
+    transform-origin:left;
+    transition:transform .25s ease;
+  }
+  .service-card:hover .go::after{
+    transform:scaleX(1);
+    animation:serviceLinkPulse 1.2s ease-in-out infinite;
+  }
+  .service-grid.in-view .service-card{
+    animation:serviceCardIn .72s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .service-grid.in-view .service-card:nth-child(2){animation-delay:.1s;}
+  .service-grid.in-view .service-card:nth-child(3){animation-delay:.2s;}
+  .service-grid.in-view .service-card .icon{
+    animation:serviceIconIn .62s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .service-grid.in-view .service-card:nth-child(2) .icon{animation-delay:.18s;}
+  .service-grid.in-view .service-card:nth-child(3) .icon{animation-delay:.28s;}
+  @keyframes servicesGridDrift{
+    0%{background-position:0 0, 0 0;}
+    100%{background-position:54px 54px, 54px 54px;}
+  }
+  @keyframes servicesRingFloat{
+    0%,100%{transform:translateY(0) rotate(-18deg);}
+    50%{transform:translateY(-18px) rotate(-14deg);}
+  }
+  @keyframes serviceCardIn{
+    0%{opacity:0;transform:translateY(34px) scale(.96);}
+    100%{opacity:1;transform:translateY(0) scale(1);}
+  }
+  @keyframes serviceIconIn{
+    0%{opacity:0;transform:translateY(12px) rotate(-10deg) scale(.72);}
+    100%{opacity:1;transform:translateY(0) rotate(0) scale(1);}
+  }
+  @keyframes serviceSheen{
+    0%{transform:translateX(-120%);}
+    100%{transform:translateX(120%);}
+  }
+  @keyframes serviceIconPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(90,200,250,.28);}
+    50%{box-shadow:0 0 0 12px rgba(90,200,250,0);}
+  }
+  @keyframes serviceLinkPulse{
+    0%,100%{opacity:.45;}
+    50%{opacity:1;}
+  }
+
+  /* EXPERTISE */
+  .expertise-section{
+    position:relative;
+    overflow:hidden;
+    background:
+      linear-gradient(180deg, var(--white) 0%, #eef7ff 100%);
+    padding:74px 0 82px;
+  }
+  .expertise-section::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(11,32,54,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(11,32,54,.045) 1px, transparent 1px);
+    background-size:56px 56px;
+    mask-image:linear-gradient(180deg, transparent 0%, black 22%, black 78%, transparent 100%);
+    pointer-events:none;
+  }
+  .expertise-section .wrap{position:relative;}
+  .expertise-head{
+    display:grid;
+    grid-template-columns:.95fr 1.05fr;
+    gap:48px;
+    align-items:end;
+    margin-bottom:34px;
+  }
+  .expertise-head .eyebrow::before{background:#0f5f5a;}
+  .expertise-head h2{
+    font-family:Inter, Arial, Helvetica, sans-serif;
+    color:#172a7c;
+    font-size:42px;
+    line-height:1.08;
+    font-weight:800;
+    margin-top:18px;
+    letter-spacing:0;
+  }
+  .expertise-head p{
+    color:#4d4d55;
+    font-size:17px;
+    line-height:1.65;
+    font-weight:600;
+    margin:0;
+  }
+  .expertise{
+    display:grid;
+    grid-template-columns:.72fr 1.28fr;
+    gap:18px;
+    align-items:stretch;
+  }
+  .tabs{
+    display:grid;
+    gap:10px;
+  }
+  .tab{
+    position:relative;
+    min-height:74px;
+    padding:16px 18px;
+    border:1px solid rgba(11,32,54,.12);
+    border-radius:18px;
+    cursor:pointer;
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    gap:12px;
+    align-items:center;
+    background:rgba(255,255,255,.82);
+    color:#172236;
+    box-shadow:0 20px 54px -38px rgba(11,32,54,.45);
+    transition:transform .25s ease, background .25s ease, border-color .25s ease, color .25s ease;
+    overflow:hidden;
+  }
+  .tab::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(120deg, rgba(35,154,240,.16), transparent 62%);
+    opacity:0;
+    transition:opacity .25s ease;
+  }
+  .tab::after{
+    content:"";
+    position:absolute;
+    top:-40%;
+    bottom:-40%;
+    width:48px;
+    left:-72px;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent);
+    transform:rotate(18deg);
+    opacity:0;
+    pointer-events:none;
+  }
+  .tab:hover{transform:translateY(-2px);}
+  .tab.active{
+    background:#0B2036;
+    color:var(--white);
+    border-color:#0B2036;
+    transform:translateY(-2px);
+  }
+  .tab.active::before{opacity:1;}
+  .tab.active::after{animation:expertiseTabSweep 1.2s ease both;}
+  .tab .idx,
+  .tab .arrow,
+  .tab span:not(.idx):not(.arrow){
+    position:relative;
+    z-index:1;
+  }
+  .tab .idx{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#239af0;
+    color:var(--white);
+    font-family:'SFMono-Regular', Consolas, monospace;
+    font-size:12px;
+    font-weight:800;
+  }
+  .tab span:not(.idx):not(.arrow){
+    font-family:Inter, Arial, Helvetica, sans-serif;
+    font-size:16px;
+    font-weight:800;
+  }
+  .tab .arrow{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#172a7c;
+    background:#e7f4ff;
+    transition:transform .25s ease, background .25s ease, color .25s ease;
+  }
+  .tab.active .arrow{
+    color:#0B2036;
+    background:#5AC8FA;
+    transform:rotate(-35deg);
+    animation:expertiseArrowPulse 1.8s ease-in-out infinite;
+  }
+  .tabcontent{
+    min-height:430px;
+    position:relative;
+  }
+  .tabpanel{
+    display:none;
+    min-height:430px;
+    border-radius:22px;
+    overflow:hidden;
+    border:1px solid rgba(11,32,54,.12);
+    background:var(--white);
+    box-shadow:0 34px 90px -48px rgba(11,32,54,.55);
+  }
+  .tabpanel.active{
+    display:grid;
+    grid-template-columns:.82fr 1.18fr;
+    animation:expertisePanel .45s cubic-bezier(.2,.7,.2,1) both;
+  }
+  @keyframes expertisePanel{
+    from{opacity:0;transform:translateY(18px) scale(.985);}
+    to{opacity:1;transform:translateY(0) scale(1);}
+  }
+  @keyframes expertiseTabSweep{
+    0%{left:-72px;opacity:0;}
+    25%{opacity:.75;}
+    100%{left:112%;opacity:0;}
+  }
+  @keyframes expertiseArrowPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(90,200,250,.35);}
+    50%{box-shadow:0 0 0 8px rgba(90,200,250,0);}
+  }
+  @keyframes expertiseFadeUp{
+    from{opacity:0;transform:translateY(16px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  @keyframes expertiseImageIn{
+    from{opacity:.72;transform:scale(1.08) translateX(-10px);}
+    to{opacity:1;transform:scale(1.02) translateX(0);}
+  }
+  @keyframes expertiseChipIn{
+    from{opacity:0;transform:translateY(12px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .expertise-media{
+    position:relative;
+    min-height:430px;
+    overflow:hidden;
+    background:#0B2036;
+  }
+  .expertise-media img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center;
+    transition:transform .65s cubic-bezier(.2,.7,.2,1);
+  }
+  .tabpanel.active .expertise-media img{animation:expertiseImageIn .72s cubic-bezier(.2,.7,.2,1) both;}
+  .expertise-media::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(11,32,54,.08), rgba(11,32,54,.74));
+  }
+  .expertise-chip{
+    position:absolute;
+    left:18px;
+    bottom:18px;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 14px;
+    border-radius:999px;
+    background:rgba(255,255,255,.9);
+    color:#172a7c;
+    font-size:12px;
+    font-weight:800;
+    box-shadow:0 16px 40px -24px rgba(0,0,0,.55);
+  }
+  .expertise-chip::before{
+    content:"";
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#239af0;
+  }
+  .tabpanel.active .expertise-chip{animation:expertiseChipIn .5s .18s cubic-bezier(.2,.7,.2,1) both;}
+  .expertise-copy{
+    padding:34px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .expertise-copy .mini{
+    font-family:'SFMono-Regular', Consolas, monospace;
+    color:#239af0;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    margin-bottom:12px;
+  }
+  .expertise-copy h3{
+    font-family:Inter, Arial, Helvetica, sans-serif;
+    color:#172a7c;
+    font-size:30px;
+    line-height:1.12;
+    font-weight:800;
+    margin-bottom:14px;
+  }
+  .expertise-copy p{color:#4d4d55;line-height:1.6;font-size:15px;margin:0 0 18px;}
+  .expertise-copy ul{list-style:none;padding:0;margin:0 0 22px;}
+  .expertise-copy li{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    padding:9px 0;
+    border-top:1px solid rgba(11,32,54,.10);
+    color:#172236;
+    font-size:14px;
+    font-weight:700;
+  }
+  .expertise-copy li::before{
+    content:"";
+    width:18px;
+    height:18px;
+    flex:none;
+    border-radius:50%;
+    background:#e6f4ff;
+    box-shadow:inset 0 0 0 5px #239af0;
+  }
+  .expertise-metrics{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .expertise-metric{
+    padding:11px 12px;
+    border-radius:14px;
+    background:#f3f9ff;
+    border:1px solid rgba(11,32,54,.08);
+  }
+  .expertise-metric strong{
+    display:block;
+    color:#172a7c;
+    font-family:'SFMono-Regular', Consolas, monospace;
+    font-size:16px;
+    margin-bottom:4px;
+  }
+  .expertise-metric span{color:#5d6570;font-size:12px;font-weight:700;}
+  .tabpanel.active .expertise-copy .mini,
+  .tabpanel.active .expertise-copy h3,
+  .tabpanel.active .expertise-copy p,
+  .tabpanel.active .expertise-metric,
+  .tabpanel.active .expertise-copy li,
+  .tabpanel.active .expertise-copy .btn{
+    animation:expertiseFadeUp .48s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .tabpanel.active .expertise-copy .mini{animation-delay:.04s;}
+  .tabpanel.active .expertise-copy h3{animation-delay:.08s;}
+  .tabpanel.active .expertise-copy p{animation-delay:.12s;}
+  .tabpanel.active .expertise-metric:nth-child(1){animation-delay:.16s;}
+  .tabpanel.active .expertise-metric:nth-child(2){animation-delay:.20s;}
+  .tabpanel.active .expertise-metric:nth-child(3){animation-delay:.24s;}
+  .tabpanel.active .expertise-copy li:nth-child(1){animation-delay:.28s;}
+  .tabpanel.active .expertise-copy li:nth-child(2){animation-delay:.32s;}
+  .tabpanel.active .expertise-copy li:nth-child(3){animation-delay:.36s;}
+  .tabpanel.active .expertise-copy .btn{animation-delay:.40s;}
+
+  /* WHY CHOOSE */
+  #why{
+    position:relative;
+    overflow:hidden;
+    background:var(--white);
+    padding:70px 0 76px;
+  }
+  #why::before{
+    content:"";
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:74px;
+    background:#0B2036;
+    pointer-events:none;
+  }
+  #why .wrap{position:relative;z-index:1;}
+  .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .why-card{
+    position:relative;
+    border-radius:20px;
+    overflow:hidden;
+    height:342px;
+    color:var(--white);
+    isolation:isolate;
+    box-shadow:0 20px 52px -38px rgba(11,32,54,.52);
+    transform:perspective(900px) rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg));
+    transition:transform .28s cubic-bezier(.2,.7,.2,1), box-shadow .28s ease;
+    will-change:transform;
+  }
+  .why-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:2;
+    background:linear-gradient(120deg, transparent 18%, rgba(255,255,255,.26), transparent 42%);
+    transform:translateX(-130%);
+    opacity:0;
+    pointer-events:none;
+  }
+  .why-card::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:2;
+    background:radial-gradient(circle at var(--pointer-x, 50%) var(--pointer-y, 45%), rgba(255,255,255,.26), transparent 28%);
+    opacity:0;
+    transition:opacity .25s ease;
+    pointer-events:none;
+  }
+  .why-card .bg{
+    position:absolute;
+    inset:0;
+    background-size:cover;
+    background-position:center 38%;
+    transform:translate3d(var(--image-x, 0px), var(--image-y, 0px), 0) scale(1.02);
+    transition:transform .75s cubic-bezier(.2,.7,.2,1), filter .35s ease;
+    will-change:transform;
+  }
+  .why-card:nth-child(1) .bg{background-position:center 28%;}
+  .why-card:nth-child(2) .bg{background-position:center 42%;}
+  .why-card:nth-child(3) .bg{background-position:center 24%;}
+  .why-card .bg::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(180deg, rgba(11,32,54,.02) 16%, rgba(11,32,54,.42) 100%),
+      radial-gradient(circle at 18% 12%, rgba(255,255,255,.30), transparent 22%);
+  }
+  .why-card .content{
+    position:absolute;
+    left:16px;
+    right:16px;
+    bottom:16px;
+    z-index:3;
+    min-height:116px;
+    padding:18px 20px 20px;
+    border:1px solid rgba(255,255,255,.24);
+    border-radius:16px;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.30), rgba(11,32,54,.52) 46%, rgba(14,92,151,.34));
+    box-shadow:0 22px 46px -28px rgba(0,0,0,.65);
+    backdrop-filter:blur(18px) saturate(1.2);
+    -webkit-backdrop-filter:blur(18px) saturate(1.2);
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    overflow:hidden;
+    transform:translateY(8px);
+    transition:transform .32s cubic-bezier(.2,.7,.2,1), background .32s ease;
+  }
+  .why-card .content::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg, rgba(255,255,255,.18), transparent 38%, rgba(90,200,250,.14));
+    opacity:.8;
+    pointer-events:none;
+  }
+  .why-card .idx{
+    position:absolute;
+    top:18px;
+    left:18px;
+    z-index:4;
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'SFMono-Regular', Consolas, monospace;
+    color:#172a7c;
+    background:#239af0;
+    font-size:15px;
+    font-weight:800;
+    box-shadow:0 16px 32px -18px rgba(0,0,0,.6);
+  }
+  .why-card:nth-child(2) .idx{background:#0B2036;color:var(--white);}
+  .why-card h3,
+  .why-card p,
+  .why-card .glass-arrow{
+    position:relative;
+    z-index:1;
+  }
+  .why-card h3{
+    font-family:Inter, Arial, Helvetica, sans-serif;
+    font-size:18px;
+    line-height:1.15;
+    margin-bottom:8px;
+    font-weight:800;
+    text-transform:none;
+    color:var(--white);
+  }
+  .why-card p{
+    font-size:13.25px;
+    color:rgba(255,255,255,.88);
+    margin:0;
+    line-height:1.45;
+    font-weight:600;
+  }
+  .why-card .glass-arrow{
+    position:absolute;
+    right:18px;
+    bottom:16px;
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#239af0;
+    color:#0B2036;
+    font-size:18px;
+    font-weight:700;
+    opacity:0;
+    transform:translateY(8px) scale(.92);
+    transition:opacity .25s ease, transform .25s ease, background .25s ease;
+  }
+  .why-card:hover{
+    transform:translateY(-6px) perspective(900px) rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg));
+    box-shadow:0 32px 72px -42px rgba(11,32,54,.68);
+  }
+  .why-card:hover::after{opacity:1;}
+  .why-card:hover::before{
+    opacity:1;
+    animation:whyGlassSheen .95s ease;
+  }
+  .why-card:hover .bg{
+    transform:translate3d(var(--image-x, 0px), var(--image-y, 0px), 0) scale(1.07);
+    filter:saturate(1.08) contrast(1.04);
+  }
+  .why-card:hover .content{transform:translateY(0);}
+  .why-card:hover .glass-arrow{
+    opacity:1;
+    transform:translateY(0) rotate(-32deg);
+    background:#5AC8FA;
+  }
+  .why-grid.in-view .why-card{
+    animation:whyCardIn .78s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .why-grid.in-view .why-card:nth-child(2){animation-delay:.12s;}
+  .why-grid.in-view .why-card:nth-child(3){animation-delay:.24s;}
+  .why-grid.in-view .why-card .content{
+    animation:whyGlassIn .72s cubic-bezier(.2,.7,.2,1) both;
+    animation-delay:.22s;
+  }
+  .why-grid.in-view .why-card:nth-child(2) .content{animation-delay:.34s;}
+  .why-grid.in-view .why-card:nth-child(3) .content{animation-delay:.46s;}
+  .why-grid.in-view .why-card .idx{
+    animation:whyBadgeIn .58s cubic-bezier(.3,1.6,.5,1) both;
+    animation-delay:.14s;
+  }
+  .why-grid.in-view .why-card:nth-child(2) .idx{animation-delay:.26s;}
+  .why-grid.in-view .why-card:nth-child(3) .idx{animation-delay:.38s;}
+  @keyframes whyCardIn{
+    0%{opacity:0;transform:translateY(36px) scale(.96);}
+    100%{opacity:1;transform:translateY(0) scale(1);}
+  }
+  @keyframes whyGlassIn{
+    0%{opacity:0;transform:translateY(28px);backdrop-filter:blur(0);}
+    100%{opacity:1;transform:translateY(0);backdrop-filter:blur(18px) saturate(1.2);}
+  }
+  @keyframes whyBadgeIn{
+    0%{opacity:0;transform:scale(.55) rotate(-18deg);}
+    78%{opacity:1;transform:scale(1.1) rotate(5deg);}
+    100%{opacity:1;transform:scale(1) rotate(0);}
+  }
+  @keyframes whyGlassSheen{
+    0%{transform:translateX(-130%);}
+    100%{transform:translateX(130%);}
+  }
+
+  /* WISDOM STATS */
+  .wisdom-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+  .wisdom-card{
+    background:var(--white);border:1px solid var(--line);border-radius:16px;
+    padding:26px;
+  }
+  .wisdom-card .big{font-family:Georgia, 'Times New Roman', serif;font-size:44px;color:var(--forest);}
+  .wisdom-card p{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.5;}
+
+  /* PLANS */
+  .plans-toggle{display:flex;gap:8px;background:var(--paper-2);padding:6px;border-radius:999px;width:max-content;margin:0 auto 44px;}
+  .plans-toggle button{
+    border:none;background:transparent;padding:10px 22px;border-radius:999px;
+    font-weight:600;font-size:14px;cursor:pointer;color:var(--muted);font-family:Inter, Arial, Helvetica, sans-serif;
+  }
+  .plans-toggle button.active{background:var(--forest);color:var(--white);}
+  .plans-set{display:none;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .plans-set.active{display:grid;}
+  .plan-card{
+    border:1px solid var(--line);border-radius:20px;padding:32px;background:var(--white);
+    display:flex;flex-direction:column;
+  }
+  .plan-card.featured{background:var(--forest);color:var(--white);border-color:var(--forest);position:relative;}
+  .plan-card.featured .plan-badge{
+    position:absolute;top:-13px;right:28px;background:var(--lime);color:var(--ink);
+    font-size:11px;font-weight:700;padding:5px 12px;border-radius:999px;letter-spacing:.05em;
+  }
+  .plan-card h3{font-size:19px;margin-bottom:6px;}
+  .plan-card .sub{font-size:13.5px;color:var(--muted);margin-bottom:22px;}
+  .plan-card.featured .sub{color:rgba(255,255,255,.65);}
+  .plan-card .rate{font-family:Georgia, 'Times New Roman', serif;font-size:44px;color:var(--forest);}
+  .plan-card.featured .rate{color:var(--lime);}
+  .plan-card .rate-lbl{font-size:12.5px;color:var(--muted);margin-bottom:22px;}
+  .plan-card.featured .rate-lbl{color:rgba(255,255,255,.6);}
+  .plan-card .specs{list-style:none;padding:0;margin:0 0 26px;flex:1;}
+  .plan-card .specs li{
+    display:flex;justify-content:space-between;font-size:13.5px;padding:10px 0;border-top:1px solid var(--line);
+  }
+  .plan-card.featured .specs li{border-top:1px solid rgba(255,255,255,.15);}
+  .plan-card .specs li:first-child{border-top:none;}
+  .plan-card .specs li span:last-child{font-family:'SFMono-Regular', Consolas, monospace;}
+
+  /* TESTIMONIALS */
+  .test-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .test-card{
+    background:var(--white);border:1px solid var(--line);border-radius:18px;padding:30px;
+    position:relative;
+    overflow:hidden;
+  }
+  .test-card::before{
+    content:"";
+    position:absolute;top:0;left:-60%;width:40%;height:100%;
+    background:linear-gradient(120deg, transparent, rgba(90,200,250,.16), transparent);
+    transform:skewX(-20deg);
+    transition:left .65s ease;
+    pointer-events:none;
+  }
+  .test-card:hover::before{left:130%;}
+  .test-card .quote-mark{
+    position:absolute;top:14px;right:20px;
+    font-family:Georgia, 'Times New Roman', serif;font-size:64px;line-height:1;
+    color:var(--paper-2);
+    font-weight:700;
+    z-index:-1;
+    animation:quoteFloat 5s ease-in-out infinite;
+  }
+  @keyframes quoteFloat{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-6px);}
+  }
+  .test-card .stars{
+    display:flex;gap:4px;margin-bottom:14px;position:relative;z-index:1;
+  }
+  .test-card .stars svg{
+    width:15px;height:15px;color:var(--gold);
+    opacity:0;
+    transform:scale(0.3) rotate(-25deg);
+  }
+  .test-strip.in-view .stars svg{
+    animation:starPop .45s cubic-bezier(.3,1.6,.5,1) forwards;
+  }
+  .test-strip.in-view .test-card:nth-child(1) .stars svg:nth-child(1){animation-delay:.15s;}
+  .test-strip.in-view .test-card:nth-child(1) .stars svg:nth-child(2){animation-delay:.25s;}
+  .test-strip.in-view .test-card:nth-child(1) .stars svg:nth-child(3){animation-delay:.35s;}
+  .test-strip.in-view .test-card:nth-child(1) .stars svg:nth-child(4){animation-delay:.45s;}
+  .test-strip.in-view .test-card:nth-child(1) .stars svg:nth-child(5){animation-delay:.55s;}
+  .test-strip.in-view .test-card:nth-child(2) .stars svg:nth-child(1){animation-delay:.25s;}
+  .test-strip.in-view .test-card:nth-child(2) .stars svg:nth-child(2){animation-delay:.35s;}
+  .test-strip.in-view .test-card:nth-child(2) .stars svg:nth-child(3){animation-delay:.45s;}
+  .test-strip.in-view .test-card:nth-child(2) .stars svg:nth-child(4){animation-delay:.55s;}
+  .test-strip.in-view .test-card:nth-child(2) .stars svg:nth-child(5){animation-delay:.65s;}
+  .test-strip.in-view .test-card:nth-child(3) .stars svg:nth-child(1){animation-delay:.35s;}
+  .test-strip.in-view .test-card:nth-child(3) .stars svg:nth-child(2){animation-delay:.45s;}
+  .test-strip.in-view .test-card:nth-child(3) .stars svg:nth-child(3){animation-delay:.55s;}
+  .test-strip.in-view .test-card:nth-child(3) .stars svg:nth-child(4){animation-delay:.65s;}
+  .test-strip.in-view .test-card:nth-child(3) .stars svg:nth-child(5){animation-delay:.75s;}
+  @keyframes starPop{
+    0%{opacity:0;transform:scale(0.3) rotate(-25deg);}
+    70%{opacity:1;transform:scale(1.15) rotate(4deg);}
+    100%{opacity:1;transform:scale(1) rotate(0deg);}
+  }
+  .test-card .quote{font-family:Georgia, 'Times New Roman', serif;font-style:italic;font-size:16.5px;line-height:1.55;margin-bottom:22px;}
+  .test-card .person{display:flex;align-items:center;gap:12px;}
+  .test-card .avatar{
+    width:44px;height:44px;border-radius:50%;background:var(--paper-2);
+    display:flex;align-items:center;justify-content:center;font-family:Georgia, 'Times New Roman', serif;font-weight:700;color:var(--forest);
+  }
+  .test-card .name{font-weight:600;font-size:14.5px;}
+  .test-card .role{font-size:12.5px;color:var(--muted);}
+
+  /* CTA BAND */
+  .cta-band{
+    background:var(--ink);color:var(--white);border-radius:28px;
+    padding:64px;display:flex;justify-content:space-between;align-items:center;gap:40px;
+    margin:0 32px;
+  }
+  .cta-band h2{font-size:32px;max-width:460px;color:var(--white);}
+  .cta-band p{color:rgba(255,255,255,.6);margin-top:14px;max-width:420px;font-size:15px;}
+
+  /* FOOTER */
+  footer{background:var(--forest);color:rgba(255,255,255,.72);padding:80px 0 30px;}
+  .foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px;margin-bottom:60px;}
+  footer h4{color:var(--white);font-family:Inter, Arial, Helvetica, sans-serif;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:20px;font-weight:600;}
+  footer ul{list-style:none;padding:0;margin:0;}
+  footer li{margin-bottom:12px;font-size:14.5px;}
+  footer li a:hover{color:var(--lime);}
+  .foot-logo{display:flex;align-items:center;gap:10px;font-family:Georgia, 'Times New Roman', serif;font-weight:700;font-size:21px;color:var(--white);margin-bottom:18px;}
+  .foot-bottom{
+    border-top:1px solid rgba(255,255,255,.14);padding-top:26px;
+    display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.5);
+  }
+
+  @media(max-width:980px){
+    .hero .wrap{grid-template-columns:1fr;}
+    .about-grid,.service-grid,.why-grid,.test-strip{grid-template-columns:1fr;}
+    .why-card{height:330px;}
+    .about-section .wrap{max-width:1180px;padding:0 32px;}
+    .about-head{grid-template-columns:1fr;gap:22px;margin-bottom:48px;}
+    .about-title{font-size:42px;min-height:44px;}
+    .about-summary{margin-top:0;font-size:18px;}
+    .expertise-head{grid-template-columns:1fr;gap:20px;}
+    .expertise-head h2{font-size:38px;}
+    .expertise-head p{font-size:17px;}
+    .expertise{grid-template-columns:1fr;}
+    .tabs{grid-template-columns:repeat(2,1fr);}
+    .tabpanel.active{grid-template-columns:1fr;}
+    .tabpanel,.tabcontent,.expertise-media{min-height:0;}
+    .expertise-media{height:260px;}
+    .expertise-copy{padding:34px;}
+    .expertise-metrics{grid-template-columns:1fr 1fr 1fr;}
+    .wisdom-grid{grid-template-columns:repeat(2,1fr);}
+    .plans-set.active{grid-template-columns:1fr;}
+    .navlinks{display:none;}
+    .foot-grid{grid-template-columns:1fr 1fr;}
+    .cta-band{flex-direction:column;text-align:center;padding:44px 26px;}
+    .hero h1{font-size:38px;}
+    .about-video{height:340px;border-radius:24px;}
+    .about-video .frame-bottom{flex-direction:column;align-items:flex-start;gap:14px;}
+  }
+  @media(max-width:640px){
+    .letter-zoom-cursor{display:none;}
+    .about-section{padding:76px 0 54px;}
+    .about-section .wrap{padding:0 22px;}
+    .about-title{font-size:34px;min-height:36px;}
+    .about-card{padding:34px 28px;min-height:0;}
+    .about-card p{font-size:17px;}
+    .why-card{height:340px;border-radius:20px;}
+    .why-card .content{left:16px;right:16px;bottom:16px;min-height:116px;padding:18px 20px 20px;}
+    .why-card .idx{top:18px;left:18px;width:48px;height:48px;font-size:16px;}
+    .why-card h3{font-size:20px;}
+    .why-card p{font-size:14.5px;}
+    .expertise-head h2{font-size:32px;}
+    .tabs{grid-template-columns:1fr;}
+    .tab{min-height:76px;padding:18px;}
+    .tab span:not(.idx):not(.arrow){font-size:15px;}
+    .expertise-media{height:220px;}
+    .expertise-copy{padding:26px;}
+    .expertise-copy h3{font-size:26px;}
+    .expertise-metrics{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="page-loader" id="pageLoader" aria-hidden="true">
+  <div class="loader-shell">
+    <div class="loader-mark">
+      <img th:src="@{/images/logo/logo.png}" alt="">
+    </div>
+    <div class="loader-brand">DigiBank</div>
+    <div class="loader-line"><span></span></div>
+    <div class="loader-copy">Preparing secure banking</div>
+  </div>
+</div>
+<div class="letter-zoom-cursor" id="letterZoomCursor" aria-hidden="true"><span></span></div>
+
+<div class="topbar">
+  <div class="wrap">
+    <span>World-class service from your true international community bank</span>
+    <span class="mono">Support@digibank.com</span>
+  </div>
+</div>
+
+<header class="site">
+  <nav class="wrap">
+    <a class="logo" href="#">
+      <span class="mark">
+        <img th:src="@{/images/logo/logo.png}" alt="DigiBank logo">
+      </span>
+      DigiBank
+    </a>
+    <div class="navlinks">
+      <a href="#hero">Home</a>
+      <a href="#about">About</a>
+      <a href="#services">Services</a>
+      <a href="#plans">Investment</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="navcta">
+      <a class="btn btn-ghost" th:href="@{/login}">Login</a>
+      <a class="btn btn-primary" th:href="@{/open-account}">Open an Account</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero" id="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">21st-Century Digital Banking</span>
+      <h1 data-zoom-text="Banking that keeps an honest ledger of your money.">Banking that keeps <em>an honest ledger</em> of your money.</h1>
+      <p class="lead">DigiBank pairs modern financial tools with the discipline of a hand-kept passbook — real-time transfers, transparent rates, and a balance you can always trace back to its source.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-lime" th:href="@{/open-account}">Get Started Now</a>
+        <a class="btn btn-ghost" href="#about">Learn More</a>
+      </div>
+      <div class="pill-stats">
+        <div><div class="num counter" data-count-to="70" data-count-suffix="k+">0</div><div class="lbl">Customers Served</div></div>
+        <div><div class="num counter" data-count-to="2.4" data-count-decimals="1" data-count-prefix="$" data-count-suffix="B">$0</div><div class="lbl">Assets Managed</div></div>
+        <div><div class="num counter" data-count-to="99.98" data-count-decimals="2" data-count-suffix="%">0</div><div class="lbl">Uptime, Every Quarter</div></div>
+      </div>
+    </div>
+    <div class="float">
+      <div class="passbook" id="passbookCard">
+        <div class="row1">
+          <div>
+            <div class="tag">Digital Passbook</div>
+            <div class="balance">$25,430.00</div>
+            <div class="delta">▲ +$2,340.00 this month</div>
+          </div>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#5AC8FA" stroke-width="1.4"/><path d="M8 12H16M12 8V16" stroke="#5AC8FA" stroke-width="1.4"/></svg>
+        </div>
+        <div class="divider"><span class="dot" style="left:0"></span></div>
+        <div class="ledgerline"><span>Payroll — Acme Studio</span><span>+$4,120.00</span></div>
+        <div class="ledgerline"><span>Rent — Autopay</span><span>−$1,850.00</span></div>
+        <div class="ledgerline"><span>Investment Sweep</span><span>+$310.40</span></div>
+        <div class="ledgerline"><span>Card — Groceries</span><span>−$96.12</span></div>
+        <div class="actions">
+          <a class="btn btn-lime" href="#">Transfer</a>
+          <a class="btn btn-outline-light" href="#">Pay Bills</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee-wrap">
+  <div class="marquee">
+    <span>International Banking</span><span>Flexible Mortgage</span><span>Low Rate Loans</span><span>Secured Payments</span><span>Market Data</span><span>Credit &amp; Debit Cards</span><span>Insurance</span><span>Business Loans</span><span>Offshore Accounts</span>
+    <span>International Banking</span><span>Flexible Mortgage</span><span>Low Rate Loans</span><span>Secured Payments</span><span>Market Data</span><span>Credit &amp; Debit Cards</span><span>Insurance</span><span>Business Loans</span><span>Offshore Accounts</span>
+  </div>
+</div>
+
+<section class="about-section" id="about">
+  <div class="wrap">
+    <div class="about-head reveal">
+      <div>
+        <div class="about-kicker">
+          <span class="asterisk">*</span>
+          <span>About Us</span>
+        </div>
+        <h2 class="about-title" data-zoom-text="About Modern Banking System">
+          <span id="aboutTypewriter" data-full-text="About Modern Banking System">About Modern Banking System</span><span class="tw-cursor" id="aboutCursor">|</span>
+        </h2>
+      </div>
+      <p class="about-summary">
+        Access deposits, transfers, cards, loans, investments, statements, notifications and support from one secure digital banking platform.
+      </p>
+    </div>
+    <div class="about-grid reveal-stagger reveal">
+      <div class="about-card reveal-child lift">
+        <div class="about-icon">
+          <svg viewBox="0 0 48 48" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="24" cy="17" r="10"></circle>
+            <circle cx="24" cy="17" r="5"></circle>
+            <path d="M24 11v12M20 15h7a3 3 0 0 1 0 6h-6"></path>
+            <path d="M17 26v15l7-4 7 4V26"></path>
+          </svg>
+        </div>
+        <h3 data-zoom-text="Our Mission">Our Mission</h3>
+        <p>Make everyday banking secure, simple and accessible with digital tools for deposits, transfers, cards, loans and account support.</p>
+      </div>
+      <div class="about-card reveal-child lift">
+        <div class="about-icon">
+          <svg viewBox="0 0 48 48" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M24 6c-8 0-14 6-14 14 0 5 3 9 7 12v5h14v-5c4-3 7-7 7-12 0-8-6-14-14-14Z"></path>
+            <path d="M18 39h12M19 43h10"></path>
+            <path d="m18 20 4 4 8-8"></path>
+          </svg>
+        </div>
+        <h3 data-zoom-text="Our Vision">Our Vision</h3>
+        <p>To deliver a modern online banking experience where customers can manage money confidently from any device.</p>
+      </div>
+      <div class="about-card reveal-child lift">
+        <div class="about-icon">
+          <svg viewBox="0 0 48 48" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 8h18l6 6v25H12z"></path>
+            <path d="M30 8v7h6"></path>
+            <path d="M17 18h12M17 24h10M17 30h7"></path>
+            <circle cx="34" cy="33" r="7"></circle>
+            <path d="m31 33 2 2 4-5"></path>
+          </svg>
+        </div>
+        <h3 data-zoom-text="A Brief History About Us">A Brief History About Us</h3>
+        <p>Built around practical banking workflows, our platform helps financial teams serve customers faster with connected digital services.</p>
+      </div>
+    </div>
+
+    <div class="about-video" id="aboutVideo">
+      <video
+        id="aboutVideoFrame"
+        title="DigiBank video preview"
+        muted
+        loop
+        playsinline
+        preload="metadata">
+        <source th:src="@{/images/video/videoBANK.mp4}" type="video/mp4">
+      </video>
+      <div class="frame-top">
+        <span class="rec">Video Preview</span>
+        <span>DigiBank · Modern Banking</span>
+      </div>
+      <div class="play-btn" id="playBtn">
+        <svg viewBox="0 0 24 24" fill="#0B2036"><path d="M6 4L20 12L6 20V4Z"/></svg>
+      </div>
+      <div class="frame-bottom">
+        <div class="caption">
+          <h4>Watch the banking experience</h4>
+          <p>A quick visual guide for modern online banking workflows.</p>
+        </div>
+        <div class="timecode">
+          <span>DigiBank</span>
+          <div class="scrub"></div>
+          <span>HD</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="services" id="services">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Our Services</span>
+      <h2 data-zoom-text="Digital banking built for everyday account needs.">Digital banking built for everyday account needs.</h2>
+      <p>Move funds between accounts, schedule transfers, and send secure payments quickly. Track balances, automate bill pay, and set up alerts — all from one dashboard.</p>
+    </div>
+    <div class="service-grid reveal-stagger reveal">
+      <div class="service-card reveal-child lift">
+        <div class="media"><img th:src="@{/images/services/service-box-image-1.png}" alt="DigiBank card services"></div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="14" rx="2" stroke="#0B2036" stroke-width="1.6"/><path d="M2 10H22" stroke="#0B2036" stroke-width="1.6"/></svg></div>
+        <h3>Credit Cards for Every Lifestyle</h3>
+        <p>Flexible cards with transparent fees, real-time spend tracking, and rewards that fit how you actually spend.</p>
+        <a class="go" href="#">View credit cards →</a>
+      </div>
+      <div class="service-card reveal-child lift">
+        <div class="media"><img th:src="@{/images/services/service-box-image-2.png}" alt="DigiBank loan services"></div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none"><path d="M3 21H21M5 21V10L12 4L19 10V21" stroke="#0B2036" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+        <h3>Personal and Business Loans</h3>
+        <p>Straightforward lending with clear terms — from home loans to working capital for growing businesses.</p>
+        <a class="go" href="#">Explore loans →</a>
+      </div>
+      <div class="service-card reveal-child lift">
+        <div class="media"><img th:src="@{/images/services/service-box-image-3.png}" alt="DigiBank investment planning"></div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none"><path d="M3 17L9 11L13 15L21 7" stroke="#0B2036" stroke-width="1.6" stroke-linecap="round"/><path d="M15 7H21V13" stroke="#0B2036" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3>Investment Services &amp; Planning</h3>
+        <p>Diversified portfolios and ongoing monitoring, guided by advisors who explain every recommendation.</p>
+        <a class="go" href="#">See investment plans →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="expertise-section" id="expertise">
+  <div class="wrap">
+    <div class="expertise-head reveal">
+      <div>
+        <span class="eyebrow">Our Expertise</span>
+        <h2 data-zoom-text="Driving innovation across every account.">Driving innovation across every account.</h2>
+      </div>
+      <p>DigiBank Invent combines modern interfaces, smart banking workflows, and secure data practices to meet rapidly evolving customer expectations.</p>
+    </div>
+    <div class="expertise reveal">
+      <div class="tabs">
+        <div class="tab active" data-tab="0"><span class="idx">01</span><span>Account Management</span><span class="arrow">→</span></div>
+        <div class="tab" data-tab="1"><span class="idx">02</span><span>Business Banking</span><span class="arrow">→</span></div>
+        <div class="tab" data-tab="2"><span class="idx">03</span><span>Risk Management</span><span class="arrow">→</span></div>
+        <div class="tab" data-tab="3"><span class="idx">04</span><span>Investment Management</span><span class="arrow">→</span></div>
+      </div>
+      <div class="tabcontent">
+        <div class="tabpanel active" data-panel="0">
+          <div class="expertise-media">
+            <img th:src="@{/images/hero/modern-banking-hero-3.jpg}" alt="Digital account management dashboard">
+            <div class="expertise-chip">Real-time account control</div>
+          </div>
+          <div class="expertise-copy">
+            <div class="mini">Digital Core</div>
+            <h3>Accounts that feel clear from the first tap.</h3>
+            <p>Secure tools for balances, statements, notifications, deposits and transfer records — built around a simple passbook-style customer experience.</p>
+            <div class="expertise-metrics">
+              <div class="expertise-metric"><strong>24/7</strong><span>Access</span></div>
+              <div class="expertise-metric"><strong>1 View</strong><span>All accounts</span></div>
+              <div class="expertise-metric"><strong>Live</strong><span>Alerts</span></div>
+            </div>
+            <ul>
+              <li>Balance visibility with clean statement trails</li>
+              <li>Deposits, cards, and transfers in one workspace</li>
+              <li>Customer notifications designed for fast action</li>
+            </ul>
+            <a class="btn btn-primary" th:href="@{/open-account}">Open Account</a>
+          </div>
+        </div>
+        <div class="tabpanel" data-panel="1">
+          <div class="expertise-media">
+            <img th:src="@{/images/companywisdom/company-wisdom-img-2.jpg}" alt="Business banking consultation">
+            <div class="expertise-chip">Business-ready workflows</div>
+          </div>
+          <div class="expertise-copy">
+            <div class="mini">Growth Banking</div>
+            <h3>Banking flows for teams that move money daily.</h3>
+            <p>Practical workflows for business accounts, approvals, transfers, loans, deposits and support, shaped for organizations that need speed and control.</p>
+            <div class="expertise-metrics">
+              <div class="expertise-metric"><strong>Multi</strong><span>User roles</span></div>
+              <div class="expertise-metric"><strong>Fast</strong><span>Approvals</span></div>
+              <div class="expertise-metric"><strong>Smart</strong><span>Reports</span></div>
+            </div>
+            <ul>
+              <li>Operational efficiency and process optimization</li>
+              <li>Business transfer and loan request visibility</li>
+              <li>Digital transformation with banking controls</li>
+            </ul>
+            <a class="btn btn-primary" href="#">View Loan Options</a>
+          </div>
+        </div>
+        <div class="tabpanel" data-panel="2">
+          <div class="expertise-media">
+            <img th:src="@{/images/hero/modern-banking-hero-4.jpg}" alt="Banking security and risk controls">
+            <div class="expertise-chip">Protected by design</div>
+          </div>
+          <div class="expertise-copy">
+            <div class="mini">Risk Intelligence</div>
+            <h3>Protection that sits inside every transaction.</h3>
+            <p>Layered risk assessment and mitigation strategies help protect customer assets while giving staff the signals they need to respond quickly.</p>
+            <div class="expertise-metrics">
+              <div class="expertise-metric"><strong>Risk</strong><span>Scoring</span></div>
+              <div class="expertise-metric"><strong>KYC</strong><span>Checks</span></div>
+              <div class="expertise-metric"><strong>Audit</strong><span>Trails</span></div>
+            </div>
+            <ul>
+              <li>Comprehensive risk assessment and analysis</li>
+              <li>Cybersecurity-aware account protection flows</li>
+              <li>Compliance records for customer and staff actions</li>
+            </ul>
+            <a class="btn btn-primary" href="#">Get Risk Management</a>
+          </div>
+        </div>
+        <div class="tabpanel" data-panel="3">
+          <div class="expertise-media">
+            <img th:src="@{/images/companywisdom/company-wisdom-img-4.jpg}" alt="Investment management planning">
+            <div class="expertise-chip">Portfolio clarity</div>
+          </div>
+          <div class="expertise-copy">
+            <div class="mini">Investment Suite</div>
+            <h3>Investment views that make performance easier to read.</h3>
+            <p>Professional investment management tailored to customer goals and risk tolerance, with diversified portfolios and ongoing performance monitoring.</p>
+            <div class="expertise-metrics">
+              <div class="expertise-metric"><strong>360°</strong><span>Portfolio</span></div>
+              <div class="expertise-metric"><strong>Daily</strong><span>Signals</span></div>
+              <div class="expertise-metric"><strong>Auto</strong><span>Review</span></div>
+            </div>
+            <ul>
+              <li>Portfolio diversification and asset allocation</li>
+              <li>Market research and investment analysis</li>
+              <li>Performance monitoring and rebalancing</li>
+            </ul>
+            <a class="btn btn-primary" href="#">Get Investment Management</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Why Choose Us</span>
+      <h2 data-zoom-text="Secure, connected banking for customers and admins.">Secure, connected banking for customers and admins.</h2>
+      <p>Customers get clear self-service banking, while admins manage accounts, transactions, cards, loans, tickets and content from one dashboard.</p>
+    </div>
+    <div class="why-grid reveal-stagger reveal">
+      <div class="why-card reveal-child lift">
+        <div class="bg" style="background-image:url('/images/whychoose/why-choose-image-1.jpg');"></div>
+        <div class="idx">01</div>
+        <div class="content">
+          <h3>Unparalleled Expertise</h3>
+          <p>Secure account workflows help customers bank with confidence at every step.</p>
+          <span class="glass-arrow" aria-hidden="true">→</span>
+        </div>
+      </div>
+      <div class="why-card reveal-child lift">
+        <div class="bg" style="background-image:url('/images/whychoose/why-choose-image-2.jpg');"></div>
+        <div class="idx">02</div>
+        <div class="content">
+          <h3>Cash Flow Optimization</h3>
+          <p>Improve cash flow through structured savings and practical budgeting techniques.</p>
+          <span class="glass-arrow" aria-hidden="true">→</span>
+        </div>
+      </div>
+      <div class="why-card reveal-child lift">
+        <div class="bg" style="background-image:url('/images/whychoose/why-choose-image-3.jpg');"></div>
+        <div class="idx">03</div>
+        <div class="content">
+          <h3>Financial Accountability</h3>
+          <p>Stay on track with your goals through regular check-ins and clear reporting.</p>
+          <span class="glass-arrow" aria-hidden="true">→</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="wisdom">
+  <div class="wrap">
+    <div class="section-head center reveal" style="margin-bottom:44px;">
+      <span class="eyebrow" style="justify-content:center;">Financial Wisdom</span>
+      <h2 data-zoom-text="Numbers worth keeping in your ledger.">Numbers worth keeping in your ledger.</h2>
+    </div>
+    <div class="wisdom-grid reveal-stagger reveal">
+      <div class="wisdom-card reveal-child lift"><div class="big mono counter" data-count-to="12" data-count-suffix="k+">0</div><p>Publicly traded companies tracked across our market data feed.</p></div>
+      <div class="wisdom-card reveal-child lift"><div class="big mono counter" data-count-to="80" data-count-suffix="%">0</div><p>Of financial advisors recommend a diversified, long-term portfolio.</p></div>
+      <div class="wisdom-card reveal-child lift"><div class="big mono counter" data-count-to="31" data-count-suffix="k+">0</div><p>Credit and debit cards currently in circulation with DigiBank.</p></div>
+      <div class="wisdom-card reveal-child lift"><div class="big mono counter" data-count-to="90" data-count-suffix="%">0</div><p>Of customers say financial literacy changed how they save.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="plans">
+  <div class="wrap">
+    <div class="section-head center reveal" style="margin-left:auto;margin-right:auto;">
+      <span class="eyebrow" style="justify-content:center;">Investment Plans</span>
+      <h2 data-zoom-text="Daily Profit & Fixed Deposit Schemes">Daily Profit &amp; Fixed Deposit Schemes</h2>
+      <p>Secure your future with flexible daily profit schemes or guaranteed fixed-deposit returns — pick the rhythm that matches how you save.</p>
+    </div>
+    <div class="plans-toggle">
+      <button class="active" data-plan="dps">Daily Profit Schemes</button>
+      <button data-plan="fdr">Fixed Deposit Returns</button>
+    </div>
+
+    <div class="plans-set active reveal-stagger reveal" data-set="dps">
+      <div class="plan-card reveal-child lift">
+        <h3>Basic DPS</h3>
+        <div class="sub">Daily deposit of $1,000 for 6 months</div>
+        <div class="rate mono counter" data-count-to="9" data-count-decimals="2" data-count-suffix="%">0.00%</div>
+        <div class="rate-lbl">Daily Interest Rate</div>
+        <ul class="specs">
+          <li><span>Tenure</span><span>6 Months</span></li>
+          <li><span>Daily Amount</span><span>$1,000.00</span></li>
+          <li><span>Min Tenure</span><span>3 Months</span></li>
+          <li><span>Max Tenure</span><span>12 Months</span></li>
+        </ul>
+        <a class="btn btn-primary" style="justify-content:center;" href="#">Start DPS Plan</a>
+      </div>
+      <div class="plan-card featured reveal-child lift">
+        <div class="plan-badge">Most Popular</div>
+        <h3>Standard DPS</h3>
+        <div class="sub">Daily deposit of $2,000 for 12 months</div>
+        <div class="rate mono counter" data-count-to="9.5" data-count-decimals="2" data-count-suffix="%">0.00%</div>
+        <div class="rate-lbl">Daily Interest Rate</div>
+        <ul class="specs">
+          <li><span>Tenure</span><span>12 Months</span></li>
+          <li><span>Daily Amount</span><span>$2,000.00</span></li>
+          <li><span>Min Tenure</span><span>6 Months</span></li>
+          <li><span>Max Tenure</span><span>24 Months</span></li>
+        </ul>
+        <a class="btn btn-lime" style="justify-content:center;" href="#">Start DPS Plan</a>
+      </div>
+      <div class="plan-card reveal-child lift">
+        <h3>Premium DPS</h3>
+        <div class="sub">Daily deposit of $5,000 for 24 months</div>
+        <div class="rate mono counter" data-count-to="10" data-count-decimals="2" data-count-suffix="%">0.00%</div>
+        <div class="rate-lbl">Daily Interest Rate</div>
+        <ul class="specs">
+          <li><span>Tenure</span><span>24 Months</span></li>
+          <li><span>Daily Amount</span><span>$5,000.00</span></li>
+          <li><span>Min Tenure</span><span>12 Months</span></li>
+          <li><span>Max Tenure</span><span>36 Months</span></li>
+        </ul>
+        <a class="btn btn-primary" style="justify-content:center;" href="#">Start DPS Plan</a>
+      </div>
+    </div>
+
+    <div class="plans-set reveal-stagger" data-set="fdr">
+      <div class="plan-card reveal-child lift">
+        <h3>Short Term FDR</h3>
+        <div class="sub">1-month fixed deposit, competitive rate</div>
+        <div class="rate mono counter" data-count-to="8.5" data-count-decimals="2" data-count-suffix="%">0.00%</div>
+        <div class="rate-lbl">Annual Interest Rate</div>
+        <ul class="specs">
+          <li><span>Tenure</span><span>1 Month</span></li>
+          <li><span>Minimum</span><span>$1,000.00</span></li>
+          <li><span>Maximum</span><span>$100,000.00</span></li>
+          <li><span>Returns</span><span>Guaranteed</span></li>
+        </ul>
+        <a class="btn btn-primary" style="justify-content:center;" href="#">Start FDR Plan</a>
+      </div>
+      <div class="plan-card featured reveal-child lift">
+        <div class="plan-badge">Most Popular</div>
+        <h3>Medium Term FDR</h3>
+        <div class="sub">3-month fixed deposit, higher returns</div>
+        <div class="rate mono counter" data-count-to="9.25" data-count-decimals="2" data-count-suffix="%">0.00%</div>
+        <div class="rate-lbl">Annual Interest Rate</div>
+        <ul class="specs">
+          <li><span>Tenure</span><span>3 Months</span></li>
+          <li><span>Minimum</span><span>$1,000.00</span></li>
+          <li><span>Maximum</span><span>$500,000.00</span></li>
+          <li><span>Returns</span><span>Guaranteed</span></li>
+        </ul>
+        <a class="btn btn-lime" style="justify-content:center;" href="#">Start FDR Plan</a>
+      </div>
+      <div class="plan-card reveal-child lift">
+        <h3>Long Term FDR</h3>
+        <div class="sub">6-month fixed deposit, premium rate</div>
+        <div class="rate mono counter" data-count-to="10" data-count-decimals="2" data-count-suffix="%">0.00%</div>
+        <div class="rate-lbl">Annual Interest Rate</div>
+        <ul class="specs">
+          <li><span>Tenure</span><span>6 Months</span></li>
+          <li><span>Minimum</span><span>$1,000.00</span></li>
+          <li><span>Maximum</span><span>$1,000,000.00</span></li>
+          <li><span>Returns</span><span>Guaranteed</span></li>
+        </ul>
+        <a class="btn btn-primary" style="justify-content:center;" href="#">Start FDR Plan</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="testimonials">
+  <div class="wrap">
+    <div class="section-head center reveal" style="margin-left:auto;margin-right:auto;">
+      <span class="eyebrow" style="justify-content:center;">Client Testimonials</span>
+      <h2 data-zoom-text="Real stories from real customers.">Real stories from real customers.</h2>
+    </div>
+    <div class="test-strip reveal-stagger reveal">
+      <div class="test-card reveal-child lift">
+        <span class="quote-mark">"</span>
+        <div class="stars">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+        </div>
+        <div class="quote">"Great company with a great vision. Customer service is impressive, and transaction fees stay refreshingly low."</div>
+        <div class="person"><div class="avatar">KT</div><div><div class="name">Kim Thompson</div><div class="role">Entrepreneur</div></div></div>
+      </div>
+      <div class="test-card reveal-child lift">
+        <span class="quote-mark">"</span>
+        <div class="stars">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+        </div>
+        <div class="quote">"One of the best banking experiences I've had. Deposits feel safe, and the loan process was genuinely convenient."</div>
+        <div class="person"><div class="avatar">KW</div><div><div class="name">Kyle Waters</div><div class="role">Investor</div></div></div>
+      </div>
+      <div class="test-card reveal-child lift">
+        <span class="quote-mark">"</span>
+        <div class="stars">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6L22 9.3l-5 4.9 1.2 7-6.2-3.6L5.8 21l1.2-7-5-4.9 7.1-.7L12 2z"/></svg>
+        </div>
+        <div class="quote">"The digital experience is outstanding — I manage everything from anywhere, and the app just makes sense."</div>
+        <div class="person"><div class="avatar">SJ</div><div><div class="name">Sarah Johnson</div><div class="role">Small Business Owner</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="cta-band reveal" id="contact">
+    <div>
+      <h2>Open your account in minutes.</h2>
+      <p>No hidden ledger entries, no surprise fees — just a clear line from deposit to balance.</p>
+    </div>
+    <a class="btn btn-lime" th:href="@{/open-account}">Open An Account</a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-logo">
+          <span class="mark" style="width:30px;height:30px;background:rgba(255,255,255,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+            <img th:src="@{/images/logo/logo.png}" alt="DigiBank logo" style="width:24px;height:24px;object-fit:contain;">
+          </span>
+          DigiBank
+        </div>
+        <p style="max-width:280px;font-size:14px;line-height:1.6;">Experience secure, fast, and reliable online banking get instant access to your accounts from anywhere.</p>
+      </div>
+      <div>
+        <h4>Solutions</h4>
+        <ul>
+          <li><a href="#">Quick Account Opening</a></li>
+          <li><a href="#contact">Contact Us</a></li>
+          <li><a href="#">Frequently Asked Questions</a></li>
+          <li><a href="#">Terms of Service</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#services">Credit Cards</a></li>
+          <li><a href="#services">Personal Loans</a></li>
+          <li><a href="#plans">Investment Services</a></li>
+          <li><a href="#about">About Us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li>DigiBank Building, 1234 Lane, Metro City</li>
+          <li><a href="mailto:support@digibank.com">support@digibank.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>Copyright © 2026 DigiBank. All Rights Reserved.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Page loader
+  const finishPageLoading = ()=>{
+    document.body.classList.add('page-loaded');
+  };
+  if(document.readyState === 'complete'){
+    finishPageLoading();
+  } else {
+    window.addEventListener('load', finishPageLoading, {once:true});
+    setTimeout(finishPageLoading, 1800);
+  }
+
+  // Letter zoom cursor
+  const letterZoomCursor = document.getElementById('letterZoomCursor');
+  const letterZoomText = letterZoomCursor ? letterZoomCursor.querySelector('span') : null;
+  const zoomTargets = document.querySelectorAll('[data-zoom-text]');
+  const canUseLetterZoom = letterZoomCursor && letterZoomText && !window.matchMedia('(prefers-reduced-motion: reduce)').matches && window.matchMedia('(pointer: fine)').matches;
+
+  if(canUseLetterZoom){
+    let cursorX = window.innerWidth / 2;
+    let cursorY = window.innerHeight / 2;
+    let currentX = cursorX;
+    let currentY = cursorY;
+    let activeZoomTarget = null;
+    const cursorRadius = 43;
+    const zoomScale = 1.18;
+
+    const renderCursor = ()=>{
+      currentX += (cursorX - currentX) * 0.18;
+      currentY += (cursorY - currentY) * 0.18;
+      letterZoomCursor.style.left = currentX + 'px';
+      letterZoomCursor.style.top = currentY + 'px';
+
+      if(activeZoomTarget){
+        const rect = activeZoomTarget.getBoundingClientRect();
+        letterZoomText.style.left = (cursorRadius - ((currentX - rect.left) * zoomScale)) + 'px';
+        letterZoomText.style.top = (cursorRadius - ((currentY - rect.top) * zoomScale)) + 'px';
+      }
+
+      requestAnimationFrame(renderCursor);
+    };
+
+    window.addEventListener('mousemove', (event)=>{
+      cursorX = event.clientX;
+      cursorY = event.clientY;
+    });
+
+    zoomTargets.forEach(target=>{
+      target.addEventListener('mouseenter', ()=>{
+        const styles = window.getComputedStyle(target);
+        activeZoomTarget = target;
+        letterZoomText.textContent = target.dataset.zoomText || target.textContent.trim();
+        letterZoomText.style.fontFamily = styles.fontFamily;
+        letterZoomText.style.fontSize = styles.fontSize;
+        letterZoomText.style.fontWeight = styles.fontWeight;
+        letterZoomText.style.lineHeight = styles.lineHeight;
+        letterZoomText.style.letterSpacing = styles.letterSpacing;
+        letterZoomText.style.textAlign = styles.textAlign;
+        letterZoomText.style.width = target.getBoundingClientRect().width + 'px';
+        letterZoomCursor.classList.add('is-visible');
+      });
+      target.addEventListener('mouseleave', ()=>{
+        activeZoomTarget = null;
+        letterZoomCursor.classList.remove('is-visible');
+      });
+    });
+
+    renderCursor();
+  }
+
+  // About video
+  const aboutVideoWrap = document.getElementById('aboutVideo');
+  const aboutVideoFrame = document.getElementById('aboutVideoFrame');
+  const playBtn = document.getElementById('playBtn');
+  const playAboutVideo = ()=>{
+    if(!aboutVideoFrame) return;
+    aboutVideoFrame.muted = true;
+    aboutVideoFrame.play().then(()=>{
+      aboutVideoWrap.classList.add('is-playing');
+    }).catch(()=>{
+      aboutVideoWrap.classList.remove('is-playing');
+    });
+  };
+  const pauseAboutVideo = ()=>{
+    if(aboutVideoFrame && !aboutVideoFrame.paused){
+      aboutVideoFrame.pause();
+    }
+  };
+
+  if(aboutVideoWrap && aboutVideoFrame && playBtn){
+    playBtn.addEventListener('click', playAboutVideo);
+
+    const videoObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          playAboutVideo();
+        } else {
+          pauseAboutVideo();
+          aboutVideoWrap.classList.remove('is-playing');
+        }
+      });
+    }, {threshold:0.35});
+
+    videoObserver.observe(aboutVideoWrap);
+  }
+
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelector('.tabpanel[data-panel="'+tab.dataset.tab+'"]').classList.add('active');
+    });
+  });
+  // Plans toggle
+  document.querySelectorAll('.plans-toggle button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.plans-toggle button').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.plans-set').forEach(s=>s.classList.remove('active'));
+      btn.classList.add('active');
+      const targetSet = document.querySelector('.plans-set[data-set="'+btn.dataset.plan+'"]');
+      targetSet.classList.add('active');
+      // reveal immediately since it was display:none and won't retrigger the observer
+      targetSet.classList.add('in-view');
+      targetSet.querySelectorAll('.counter').forEach(counter=>{
+        counter.dataset.countAnimated = 'false';
+        animateCounter(counter);
+      });
+    });
+  });
+
+  // ---- Typewriter effect (About heading) ----
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const twEl = document.getElementById('aboutTypewriter');
+  const twCursor = document.getElementById('aboutCursor');
+  if(twEl){
+    const fullText = twEl.dataset.fullText;
+    if(prefersReduced){
+      twEl.textContent = fullText;
+      if(twCursor) twCursor.style.display = 'none';
+    } else {
+      twEl.textContent = '';
+      let typed = false;
+      const runAboutTypewriter = ()=>{
+        if(typed) return;
+        typed = true;
+        let i = 0;
+        const speed = 45;
+        (function typeChar(){
+          if(i <= fullText.length){
+            twEl.textContent = fullText.slice(0, i);
+            i++;
+            setTimeout(typeChar, speed);
+          } else if(twCursor) {
+            twCursor.classList.add('done');
+          }
+        })();
+      };
+      const twObserveTarget = twEl.closest('.about-head') || twEl.closest('.section-head') || twEl;
+      const twObserver = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){
+            runAboutTypewriter();
+            twObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.25 });
+      if(twObserveTarget){
+        twObserver.observe(twObserveTarget);
+      } else {
+        twEl.textContent = fullText;
+        if(twCursor) twCursor.classList.add('done');
+      }
+    }
+  }
+
+  // ---- Scroll reveal ----
+  const revealTargets = document.querySelectorAll('.reveal');
+  if(prefersReduced){
+    revealTargets.forEach(el=>el.classList.add('in-view'));
+  } else {
+    const revealObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+    revealTargets.forEach(el=>revealObserver.observe(el));
+  }
+
+  // ---- Counter count-up ----
+  function animateCounter(el){
+    if(el.dataset.countAnimated === 'true') return;
+    el.dataset.countAnimated = 'true';
+    const to = parseFloat(el.dataset.countTo);
+    const decimals = parseInt(el.dataset.countDecimals || '0', 10);
+    const prefix = el.dataset.countPrefix || '';
+    const suffix = el.dataset.countSuffix || '';
+    const duration = 1400;
+    const start = performance.now();
+    function tick(now){
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = (to * eased).toFixed(decimals);
+      el.textContent = prefix + value + suffix;
+      if(progress < 1){
+        requestAnimationFrame(tick);
+      } else {
+        el.textContent = prefix + to.toFixed(decimals) + suffix;
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+  const counters = document.querySelectorAll('.counter');
+  if(prefersReduced){
+    counters.forEach(el=>{
+      const to = parseFloat(el.dataset.countTo);
+      const decimals = parseInt(el.dataset.countDecimals || '0', 10);
+      el.textContent = (el.dataset.countPrefix||'') + to.toFixed(decimals) + (el.dataset.countSuffix||'');
+    });
+  } else {
+    const counterObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          animateCounter(entry.target);
+          counterObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    counters.forEach(el=>counterObserver.observe(el));
+  }
+
+  // ---- Hero parallax (subtle tilt + drift on mouse move) ----
+  const heroEl = document.getElementById('hero') || document.querySelector('.hero');
+  const passbookCard = document.getElementById('passbookCard');
+  if(heroEl && passbookCard && !prefersReduced && window.matchMedia('(min-width: 981px)').matches){
+    heroEl.addEventListener('mousemove', (e)=>{
+      const rect = heroEl.getBoundingClientRect();
+      const relX = (e.clientX - rect.left) / rect.width - 0.5;
+      const relY = (e.clientY - rect.top) / rect.height - 0.5;
+      passbookCard.style.transform = `translate3d(${relX * 12}px, ${relY * 12}px, 0) rotate(${relX * 1.5}deg)`;
+    });
+    heroEl.addEventListener('mouseleave', ()=>{
+      passbookCard.style.transform = '';
+    });
+  }
+
+  // ---- Why card pointer tilt ----
+  const canUseWhyTilt = !prefersReduced && window.matchMedia('(pointer: fine)').matches && window.matchMedia('(min-width: 981px)').matches;
+  if(canUseWhyTilt){
+    document.querySelectorAll('.why-card').forEach(card=>{
+      card.addEventListener('mousemove', (event)=>{
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+        const rotateX = (0.5 - y) * 6;
+        const rotateY = (x - 0.5) * 8;
+        card.style.setProperty('--pointer-x', `${x * 100}%`);
+        card.style.setProperty('--pointer-y', `${y * 100}%`);
+        card.style.setProperty('--tilt-x', `${rotateY}deg`);
+        card.style.setProperty('--tilt-y', `${rotateX}deg`);
+        card.style.setProperty('--image-x', `${(0.5 - x) * 10}px`);
+        card.style.setProperty('--image-y', `${(0.5 - y) * 8}px`);
+      });
+      card.addEventListener('mouseleave', ()=>{
+        card.style.removeProperty('--pointer-x');
+        card.style.removeProperty('--pointer-y');
+        card.style.removeProperty('--tilt-x');
+        card.style.removeProperty('--tilt-y');
+        card.style.removeProperty('--image-x');
+        card.style.removeProperty('--image-y');
+      });
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav class="customer-topbar" th:fragment="topbar">
+  <a class="customer-brand" th:href="@{/customer/dashboard}">
+    <img th:src="@{/images/logo/logo.png}" alt="DigiBank logo">
+    <span>DigiBank</span>
+  </a>
+  <div class="customer-toplinks">
+    <a th:href="@{/customer/dashboard}">Dashboard</a>
+    <a th:href="@{/customer/profile}">Profile</a>
+    <form th:action="@{/logout}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <button type="submit">Logout</button>
+    </form>
+  </div>
+</nav>
+
+<aside class="customer-sidebar" th:fragment="sidebar">
+  <a th:href="@{/customer/dashboard}">Overview</a>
+  <a th:href="@{/customer/profile}">My Profile</a>
+  <a th:href="@{/customer/beneficiaries}">Beneficiaries</a>
+  <a th:href="@{/notifications}">Notifications</a>
+  <span>Transfers available after activation</span>
+</aside>
+
+<div th:fragment="alerts">
+  <div class="auth-alert ok" th:if="${successMessage}" th:text="${successMessage}"></div>
+  <div class="auth-alert error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+</div>
+
+<footer class="customer-footer" th:fragment="footer">
+  <span>DigiBank Online Banking</span>
+  <span>Customer Portal</span>
+  <span>Secure profile and beneficiary access</span>
+</footer>
+</body>
+</html>
