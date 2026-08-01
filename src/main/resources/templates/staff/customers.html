@@ -1,35 +1,60 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Customer Records - DigiBank</title>
-<link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
-<link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
-<link rel="stylesheet" th:href="@{/css/auth.css}">
-<link rel="stylesheet" th:href="@{/css/customer.css}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customer Management - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <link rel="stylesheet" th:href="@{/css/staff.css}">
 </head>
-<body class="customer-shell">
-<div th:replace="~{fragments/customer-layout :: topbar}"></div>
-<main class="customer-content narrow staff-wide">
-  <div th:replace="~{fragments/customer-layout :: alerts}"></div>
-  <div class="welcome-band">
-    <div>
-      <p class="eyebrow">Staff Console</p>
-      <h1>Customer Records</h1>
-      <span class="mono">Read-only list with controlled actions inside each record.</span>
-    </div>
-  </div>
-  <section class="info-card">
-    <div class="staff-table">
-      <a th:each="customer : ${customers}" th:href="@{/staff/customers/{customerNumber}(customerNumber=${customer.customerNumber})}">
-        <span th:text="${customer.customerNumber}">CUS2026000123</span>
-        <strong th:text="${customer.fullName}">Customer Name</strong>
-        <em th:text="${customer.customerStatus}">ACTIVE</em>
-      </a>
-    </div>
-  </section>
-</main>
-<div th:replace="~{fragments/customer-layout :: footer}"></div>
+<body class="staff-shell">
+<div th:replace="~{fragments/staff-layout :: topbar}"></div>
+<div class="staff-layout">
+  <div th:replace="~{fragments/staff-layout :: sidebar('customers')}"></div>
+  <main class="staff-main">
+    <div th:replace="~{fragments/staff-layout :: alerts}"></div>
+    <section class="staff-page-head">
+      <div>
+        <p class="staff-eyebrow">Customer operations</p>
+        <h1>Customer management</h1>
+        <p>Search customer records, review account status and open a record to perform authorised actions.</p>
+      </div>
+      <a class="staff-btn secondary" th:href="@{/staff/dashboard}">Back to dashboard</a>
+    </section>
+
+    <form class="staff-filter" method="get" th:action="@{/staff/customers}">
+      <label>Search customers
+        <input type="search" name="q" th:value="${query}" placeholder="Name, customer number or email">
+      </label>
+      <label>Customer status
+        <select name="status">
+          <option value="">All statuses</option>
+          <option th:each="status : ${customerStatuses}" th:value="${status}" th:text="${status}"
+                  th:selected="${status == selectedStatus}">ACTIVE</option>
+        </select>
+      </label>
+      <button class="staff-btn primary" type="submit">Apply filters</button>
+    </form>
+
+    <div class="staff-empty" th:if="${#lists.isEmpty(customers)}">No customer records match the selected filters.</div>
+    <section class="staff-table-card" th:unless="${#lists.isEmpty(customers)}">
+      <table class="staff-record-table">
+        <thead><tr><th>Customer</th><th>Customer number</th><th>Contact</th><th>Accounts</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr th:each="customer : ${customers}">
+            <td><strong th:text="${customer.fullName}">Customer</strong><small th:text="${customer.email}">email</small></td>
+            <td><span class="mono-value" th:text="${customer.customerNumber}">CUS001</span></td>
+            <td th:text="${customer.mobileNumber}">+94700000000</td>
+            <td th:text="${#lists.size(customer.accounts)}">1</td>
+            <td><span class="status-chip" th:classappend="${customer.customerStatus.name().toLowerCase()}" th:text="${customer.customerStatus}">ACTIVE</span></td>
+            <td><a class="staff-btn secondary" th:href="@{/staff/customers/{id}(id=${customer.customerNumber})}">Open record</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</div>
+<div th:replace="~{fragments/staff-layout :: footer}"></div>
 </body>
 </html>

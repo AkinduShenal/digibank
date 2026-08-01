@@ -44,9 +44,9 @@
       <div class="auth-alert error" th:if="${param.error}">
         Invalid username/email or password.
       </div>
-      <div class="auth-alert error" th:if="${param.disabled}">
-        This profile is deactivated. Please contact DigiBank support.
-      </div>
+	  <div class="auth-alert error" th:if="${param.disabled}">
+		This profile is awaiting verification or has been deactivated. Please contact DigiBank support.
+	  </div>
       <div class="auth-alert error" th:if="${param.locked}">
         This account is locked or suspended. Please contact DigiBank support.
       </div>

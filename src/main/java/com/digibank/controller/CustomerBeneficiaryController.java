@@ -212,7 +212,8 @@ public class CustomerBeneficiaryController {
 	private BeneficiaryUpdateRequest updateRequest(BeneficiaryDetailsView beneficiary) {
 		return new BeneficiaryUpdateRequest(beneficiary.getBeneficiaryName(), beneficiary.getNickname(),
 				beneficiary.getBankName(), beneficiary.getBankCode(), beneficiary.getBranchName(),
-				beneficiary.getBranchCode(), beneficiary.getAccountType(), beneficiary.getVersion());
+				beneficiary.getBranchCode(), beneficiary.getAccountType(), beneficiary.getVersion(),
+				beneficiary.getTransferLimit());
 	}
 
 	private String action(BeneficiaryAction action, String successMessage, String redirect,

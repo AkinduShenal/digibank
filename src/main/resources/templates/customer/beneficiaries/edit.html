@@ -88,9 +88,16 @@
           </select>
           <em th:errors="*{accountType}"></em>
         </label>
-      </div>
+	  </div>
 
-      <div class="form-actions">
+	  <label>
+		<span>Transfer Limit (LKR)</span>
+		<input type="number" th:field="*{transferLimit}" th:errorclass="invalid" min="0.01" max="1000000.00" step="0.01">
+		<em th:errors="*{transferLimit}"></em>
+	  </label>
+	  <div class="beneficiary-help" th:if="${beneficiary.beneficiaryType.name() == 'EXTERNAL'}">Changing verified bank details sends this beneficiary back for staff verification.</div>
+
+	  <div class="form-actions">
         <button class="btn btn-gotologin" type="submit">Save Changes</button>
         <a class="btn btn-prev" th:href="@{/customer/beneficiaries/{id}(id=${beneficiary.id})}">Cancel</a>
       </div>

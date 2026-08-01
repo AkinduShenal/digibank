@@ -2,12 +2,14 @@ package com.digibank.repository;
 
 import com.digibank.entity.Beneficiary;
 import com.digibank.enums.BeneficiaryStatus;
+import com.digibank.enums.BeneficiaryVerificationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface BeneficiaryRepository extends JpaRepository<Beneficiary, Long>, JpaSpecificationExecutor<Beneficiary> {
 
@@ -24,4 +26,7 @@ public interface BeneficiaryRepository extends JpaRepository<Beneficiary, Long>,
 
 	Page<Beneficiary> findByCustomerIdAndStatusNot(Long customerId, BeneficiaryStatus status,
 			Pageable pageable);
+
+	List<Beneficiary> findAllByVerificationStatusAndStatusNotOrderByCreatedAtAsc(
+			BeneficiaryVerificationStatus verificationStatus, BeneficiaryStatus status);
 }

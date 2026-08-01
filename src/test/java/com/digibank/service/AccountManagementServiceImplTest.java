@@ -84,6 +84,20 @@ class AccountManagementServiceImplTest {
 	}
 
 	@Test
+	void initialActivationVerifiesCustomerAndEnablesLogin() {
+		account.setAccountStatus(AccountStatus.PENDING_ACTIVATION);
+		customer.setStatus(CustomerStatus.PENDING_VERIFICATION);
+		customer.getUser().setEnabled(false);
+
+		accountManagementService.activateAccount("staff", account.getAccountNumber());
+
+		assertEquals(CustomerStatus.ACTIVE, customer.getStatus());
+		assertTrue(customer.getUser().isEnabled());
+		assertAuditCreated("CUSTOMER_VERIFIED");
+		assertAuditCreated("ACCOUNT_ACTIVATED");
+	}
+
+	@Test
 	void staffCanFreezeActiveAccount() {
 		account.setAccountStatus(AccountStatus.ACTIVE);
 

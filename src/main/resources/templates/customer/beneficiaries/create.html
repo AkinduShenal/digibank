@@ -83,14 +83,20 @@
         <input th:field="*{accountNumber}" th:errorclass="invalid" autocomplete="off" inputmode="numeric" maxlength="40">
         <em th:errors="*{accountNumber}"></em>
       </label>
-      <label>
-        <span>Account Type</span>
+	  <label>
+		<span>Account Type</span>
         <select th:field="*{accountType}" th:errorclass="invalid">
           <option value="">Select account type</option>
           <option th:each="type : ${accountTypes}" th:value="${type}" th:text="${type}">SAVINGS</option>
         </select>
-        <em th:errors="*{accountType}"></em>
-      </label>
+		<em th:errors="*{accountType}"></em>
+	  </label>
+	  <label>
+		<span>Transfer Limit (LKR)</span>
+		<input type="number" th:field="*{transferLimit}" th:errorclass="invalid" min="0.01" max="1000000.00" step="0.01">
+		<em th:errors="*{transferLimit}"></em>
+	  </label>
+	  <div class="beneficiary-help">External beneficiaries remain pending until bank staff verifies their details.</div>
 
       <div class="form-actions">
         <button class="btn btn-gotologin" type="submit">Save Beneficiary</button>

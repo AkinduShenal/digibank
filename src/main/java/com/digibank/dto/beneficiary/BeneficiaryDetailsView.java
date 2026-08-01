@@ -3,7 +3,9 @@ package com.digibank.dto.beneficiary;
 import com.digibank.enums.BeneficiaryAccountType;
 import com.digibank.enums.BeneficiaryStatus;
 import com.digibank.enums.BeneficiaryType;
+import com.digibank.enums.BeneficiaryVerificationStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class BeneficiaryDetailsView {
@@ -20,6 +22,11 @@ public class BeneficiaryDetailsView {
 	private final BeneficiaryType beneficiaryType;
 	private final BeneficiaryStatus status;
 	private final boolean favourite;
+	private final BigDecimal transferLimit;
+	private final BeneficiaryVerificationStatus verificationStatus;
+	private final String reviewedBy;
+	private final LocalDateTime reviewedAt;
+	private final String verificationNote;
 	private final Long version;
 	private final LocalDateTime createdAt;
 	private final LocalDateTime updatedAt;
@@ -28,6 +35,17 @@ public class BeneficiaryDetailsView {
 			String bankCode, String branchName, String branchCode, String maskedAccountNumber,
 			BeneficiaryAccountType accountType, BeneficiaryType beneficiaryType, BeneficiaryStatus status,
 			boolean favourite, Long version, LocalDateTime createdAt, LocalDateTime updatedAt) {
+		this(id, beneficiaryName, nickname, bankName, bankCode, branchName, branchCode, maskedAccountNumber,
+				accountType, beneficiaryType, status, favourite, null, null, null, null, null, version, createdAt,
+				updatedAt);
+	}
+
+	public BeneficiaryDetailsView(Long id, String beneficiaryName, String nickname, String bankName,
+			String bankCode, String branchName, String branchCode, String maskedAccountNumber,
+			BeneficiaryAccountType accountType, BeneficiaryType beneficiaryType, BeneficiaryStatus status,
+			boolean favourite, BigDecimal transferLimit, BeneficiaryVerificationStatus verificationStatus,
+			String reviewedBy, LocalDateTime reviewedAt, String verificationNote, Long version,
+			LocalDateTime createdAt, LocalDateTime updatedAt) {
 		this.id = id;
 		this.beneficiaryName = beneficiaryName;
 		this.nickname = nickname;
@@ -40,6 +58,11 @@ public class BeneficiaryDetailsView {
 		this.beneficiaryType = beneficiaryType;
 		this.status = status;
 		this.favourite = favourite;
+		this.transferLimit = transferLimit;
+		this.verificationStatus = verificationStatus;
+		this.reviewedBy = reviewedBy;
+		this.reviewedAt = reviewedAt;
+		this.verificationNote = verificationNote;
 		this.version = version;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
@@ -91,6 +114,26 @@ public class BeneficiaryDetailsView {
 
 	public boolean isFavourite() {
 		return favourite;
+	}
+
+	public BigDecimal getTransferLimit() {
+		return transferLimit;
+	}
+
+	public BeneficiaryVerificationStatus getVerificationStatus() {
+		return verificationStatus;
+	}
+
+	public String getReviewedBy() {
+		return reviewedBy;
+	}
+
+	public LocalDateTime getReviewedAt() {
+		return reviewedAt;
+	}
+
+	public String getVerificationNote() {
+		return verificationNote;
 	}
 
 	public Long getVersion() {

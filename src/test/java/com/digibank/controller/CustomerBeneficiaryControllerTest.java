@@ -3,12 +3,14 @@ package com.digibank.controller;
 import com.digibank.dto.beneficiary.BeneficiaryCreateRequest;
 import com.digibank.dto.beneficiary.BeneficiaryDetailsView;
 import com.digibank.dto.beneficiary.BeneficiaryListView;
+import com.digibank.dto.beneficiary.BeneficiaryReviewView;
 import com.digibank.dto.beneficiary.BeneficiarySearchCriteria;
 import com.digibank.dto.beneficiary.BeneficiaryUpdateRequest;
 import com.digibank.entity.User;
 import com.digibank.enums.BeneficiaryAccountType;
 import com.digibank.enums.BeneficiaryStatus;
 import com.digibank.enums.BeneficiaryType;
+import com.digibank.enums.BeneficiaryVerificationStatus;
 import com.digibank.enums.CustomerStatus;
 import com.digibank.enums.Role;
 import com.digibank.exception.BeneficiaryNotFoundException;
@@ -663,6 +665,26 @@ class CustomerBeneficiaryControllerTest {
 		@Override
 		public BeneficiaryDetailsView removeFavourite(Long authenticatedUserId, Long beneficiaryId) {
 			return action(authenticatedUserId, beneficiaryId, "unfavourite");
+		}
+
+		@Override
+		public List<BeneficiaryReviewView> getBeneficiariesForReview(
+				BeneficiaryVerificationStatus verificationStatus) {
+			return List.of();
+		}
+
+		@Override
+		public BeneficiaryDetailsView verifyBeneficiary(String actorUsername, Long beneficiaryId, String note) {
+			lastBeneficiaryId = beneficiaryId;
+			lastAction = "verify";
+			return detailsView;
+		}
+
+		@Override
+		public BeneficiaryDetailsView rejectBeneficiary(String actorUsername, Long beneficiaryId, String reason) {
+			lastBeneficiaryId = beneficiaryId;
+			lastAction = "reject";
+			return detailsView;
 		}
 
 		void reset() {

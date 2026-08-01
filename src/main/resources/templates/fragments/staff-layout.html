@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<header class="staff-topbar" th:fragment="topbar">
+  <a class="staff-brand" th:href="@{/staff/dashboard}">
+    <img th:src="@{/images/logo/logo.png}" alt="DigiBank logo">
+    <span><strong>DigiBank</strong><small>Operations Console</small></span>
+  </a>
+  <div class="staff-session">
+    <div class="staff-identity">
+      <span class="staff-role" sec:authorize="hasRole('ADMIN')">Administrator</span>
+      <span class="staff-role" sec:authorize="hasRole('BANK_STAFF')">Bank Staff</span>
+      <strong sec:authentication="name">staff</strong>
+    </div>
+    <form th:action="@{/logout}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <button class="staff-logout" type="submit">Sign out</button>
+    </form>
+  </div>
+</header>
+
+<aside class="staff-sidebar" th:fragment="sidebar(activePage)">
+  <div class="staff-menu-label">Workspace</div>
+  <a th:href="@{/staff/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' active'">
+    <span class="nav-icon">⌂</span><span>Dashboard</span>
+  </a>
+  <a th:href="@{/staff/customers}" th:classappend="${activePage == 'customers'} ? ' active'">
+    <span class="nav-icon">◎</span><span>Customers</span>
+  </a>
+  <a th:href="@{/staff/beneficiaries}" th:classappend="${activePage == 'beneficiaries'} ? ' active'">
+    <span class="nav-icon">✓</span><span>Beneficiary reviews</span>
+  </a>
+  <div class="staff-help">
+    <strong>Secure operations</strong>
+    <span>All account and verification actions are recorded in the audit log.</span>
+  </div>
+</aside>
+
+<div th:fragment="alerts">
+  <div class="staff-alert success" th:if="${successMessage}" th:text="${successMessage}"></div>
+  <div class="staff-alert error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+</div>
+
+<footer class="staff-footer" th:fragment="footer">
+  <span>DigiBank Operations Console</span>
+  <span>Authorised staff access only</span>
+</footer>
+</body>
+</html>

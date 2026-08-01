@@ -135,6 +135,19 @@ class SecurityIntegrationTest {
 	}
 
 	@Test
+	void pendingCustomerCannotLoginBeforeStaffVerification() throws Exception {
+		addUser("pending", "pending@example.com", Role.CUSTOMER, true, true,
+				CustomerStatus.PENDING_VERIFICATION);
+
+		mockMvc.perform(post("/login")
+						.param("username", "pending")
+						.param("password", "Password@123")
+						.with(csrf()))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login?disabled"));
+	}
+
+	@Test
 	void lockedUserCannotLogin() throws Exception {
 		addUser("customer", "customer@example.com", Role.CUSTOMER, true, false, CustomerStatus.ACTIVE);
 
@@ -201,7 +214,30 @@ class SecurityIntegrationTest {
 						.param("customerNumber", "CUScustomer")
 						.with(user(new CustomUserDetails(customer, CustomerStatus.ACTIVE)))
 						.with(csrf()))
-				.andExpect(status().isForbidden());
+				.andExpect(status().isForbidden())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl("/access-denied"));
+	}
+
+	@Test
+	void customerReceivesFriendlyAccessDeniedPageForStaffArea() throws Exception {
+		User customer = addUser("customer", "customer@example.com", Role.CUSTOMER, true, true,
+				CustomerStatus.ACTIVE);
+
+		mockMvc.perform(get("/access-denied")
+					.with(user(new CustomUserDetails(customer, CustomerStatus.ACTIVE))))
+				.andExpect(status().isOk());
+	}
+
+	@Test
+	void staffAccessDeniedPageExplainsCustomerSessionSeparation() throws Exception {
+		User staff = addUser("staff", "staff@example.com", Role.BANK_STAFF, true, true,
+				CustomerStatus.ACTIVE);
+
+		mockMvc.perform(get("/access-denied")
+					.with(user(new CustomUserDetails(staff, CustomerStatus.ACTIVE))))
+				.andExpect(status().isOk())
+				.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+						.string(org.hamcrest.Matchers.containsString("Customer self-service pages")));
 	}
 
 	private User addUser(String username, String email, Role role, boolean enabled, boolean accountNonLocked,

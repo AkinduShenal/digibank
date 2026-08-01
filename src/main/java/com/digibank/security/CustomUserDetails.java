@@ -69,6 +69,7 @@ public class CustomUserDetails implements UserDetails {
 
 	@Override
 	public boolean isEnabled() {
-		return enabled && customerStatus != CustomerStatus.DEACTIVATED;
+		return enabled && customerStatus != CustomerStatus.DEACTIVATED
+				&& customerStatus != CustomerStatus.PENDING_VERIFICATION;
 	}
 }

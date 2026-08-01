@@ -3,9 +3,13 @@ package com.digibank.service;
 import com.digibank.dto.beneficiary.BeneficiaryCreateRequest;
 import com.digibank.dto.beneficiary.BeneficiaryDetailsView;
 import com.digibank.dto.beneficiary.BeneficiaryListView;
+import com.digibank.dto.beneficiary.BeneficiaryReviewView;
 import com.digibank.dto.beneficiary.BeneficiarySearchCriteria;
 import com.digibank.dto.beneficiary.BeneficiaryUpdateRequest;
+import com.digibank.enums.BeneficiaryVerificationStatus;
 import org.springframework.data.domain.Page;
+
+import java.util.List;
 
 public interface BeneficiaryService {
 
@@ -27,4 +31,10 @@ public interface BeneficiaryService {
 	BeneficiaryDetailsView markFavourite(Long authenticatedUserId, Long beneficiaryId);
 
 	BeneficiaryDetailsView removeFavourite(Long authenticatedUserId, Long beneficiaryId);
+
+	List<BeneficiaryReviewView> getBeneficiariesForReview(BeneficiaryVerificationStatus verificationStatus);
+
+	BeneficiaryDetailsView verifyBeneficiary(String actorUsername, Long beneficiaryId, String note);
+
+	BeneficiaryDetailsView rejectBeneficiary(String actorUsername, Long beneficiaryId, String reason);
 }

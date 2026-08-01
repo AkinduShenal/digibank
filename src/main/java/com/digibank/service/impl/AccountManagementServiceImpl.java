@@ -7,6 +7,7 @@ import com.digibank.entity.BankAccount;
 import com.digibank.entity.Customer;
 import com.digibank.enums.AccountStatus;
 import com.digibank.enums.AccountType;
+import com.digibank.enums.CustomerStatus;
 import com.digibank.exception.AccountAccessDeniedException;
 import com.digibank.exception.CustomerProfileNotFoundException;
 import com.digibank.exception.InvalidAccountClosureException;
@@ -46,6 +47,17 @@ public class AccountManagementServiceImpl implements AccountManagementService {
 	public AccountSummaryView activateAccount(String actorUsername, String accountNumber) {
 		BankAccount account = account(accountNumber);
 		requireStatus(account, AccountStatus.PENDING_ACTIVATION, "Only pending accounts can be activated.");
+		Customer customer = account.getCustomer();
+		if (customer == null) {
+			throw new InvalidAccountStateTransitionException("The account is not linked to a customer profile.");
+		}
+		if (customer.getStatus() == CustomerStatus.PENDING_VERIFICATION) {
+			CustomerStatus previousCustomerStatus = customer.getStatus();
+			customer.setStatus(CustomerStatus.ACTIVE);
+			customer.getUser().setEnabled(true);
+			auditCustomer(actorUsername, customer, "CUSTOMER_VERIFIED", previousCustomerStatus.name(),
+					CustomerStatus.ACTIVE.name(), "Verified during initial account activation.");
+		}
 		return transitionAccount(actorUsername, account, AccountStatus.ACTIVE, "ACCOUNT_ACTIVATED", null);
 	}
 

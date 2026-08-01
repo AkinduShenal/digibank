@@ -90,6 +90,11 @@ public class AuthController {
 		return "auth/registration-success";
 	}
 
+	@GetMapping("/access-denied")
+	public String accessDenied() {
+		return "auth/access-denied";
+	}
+
 	private void addRegistrationOptions(Model model) {
 		model.addAttribute("genderOptions", Gender.values());
 		model.addAttribute("identityTypeOptions", IdentityType.values());

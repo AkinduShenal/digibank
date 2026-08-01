@@ -99,7 +99,9 @@
         <div class="kv"><span>Bank</span><strong th:text="${beneficiary.bankName}">Example Bank</strong></div>
         <div class="kv"><span>Account</span><strong th:text="${beneficiary.maskedAccountNumber}">********9012</strong></div>
         <div class="kv"><span>Account Type</span><strong th:text="${beneficiary.accountType}">SAVINGS</strong></div>
-        <div class="kv"><span>Favourite</span><strong th:text="${beneficiary.favourite ? 'Yes' : 'No'}">No</strong></div>
+		<div class="kv"><span>Favourite</span><strong th:text="${beneficiary.favourite ? 'Yes' : 'No'}">No</strong></div>
+		<div class="kv"><span>Verification</span><strong class="status-pill" th:text="${beneficiary.verificationStatus}">PENDING</strong></div>
+		<div class="kv"><span>Transfer Limit</span><strong th:text="${beneficiary.transferLimit != null ? 'LKR ' + #numbers.formatDecimal(beneficiary.transferLimit, 1, 2) : '-'}">LKR 100000.00</strong></div>
         <div class="kv"><span>Created</span><strong th:text="${beneficiary.createdAt != null ? #temporals.format(beneficiary.createdAt, 'dd MMM yyyy') : '-'}">-</strong></div>
         <div class="action-row">
           <a class="btn btn-gotologin" th:href="@{/customer/beneficiaries/{id}(id=${beneficiary.id})}">View</a>

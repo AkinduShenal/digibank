@@ -2,6 +2,7 @@ package com.digibank.mapper;
 
 import com.digibank.dto.beneficiary.BeneficiaryDetailsView;
 import com.digibank.dto.beneficiary.BeneficiaryListView;
+import com.digibank.dto.beneficiary.BeneficiaryReviewView;
 import com.digibank.dto.beneficiary.BeneficiaryUpdateRequest;
 import com.digibank.entity.Beneficiary;
 import com.digibank.enums.BeneficiaryAccountType;
@@ -32,6 +33,13 @@ class BeneficiaryMapperTest {
 	@Test
 	void detailsViewMasksAccountNumber() {
 		BeneficiaryDetailsView view = mapper.toDetailsView(beneficiary());
+
+		assertEquals("********9012", view.getMaskedAccountNumber());
+	}
+
+	@Test
+	void staffReviewViewMasksAccountNumber() {
+		BeneficiaryReviewView view = mapper.toReviewView(beneficiary());
 
 		assertEquals("********9012", view.getMaskedAccountNumber());
 	}

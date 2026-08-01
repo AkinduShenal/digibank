@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staff Dashboard - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <link rel="stylesheet" th:href="@{/css/staff.css}">
+</head>
+<body class="staff-shell">
+<div th:replace="~{fragments/staff-layout :: topbar}"></div>
+<div class="staff-layout">
+  <div th:replace="~{fragments/staff-layout :: sidebar('dashboard')}"></div>
+  <main class="staff-main" th:object="${dashboard}">
+    <div th:replace="~{fragments/staff-layout :: alerts}"></div>
+    <section class="staff-page-head">
+      <div>
+        <p class="staff-eyebrow">Daily operations</p>
+        <h1>Staff dashboard</h1>
+        <p>Review new customers, manage bank accounts and approve beneficiary requests.</p>
+      </div>
+      <a class="staff-btn primary" th:href="@{/staff/customers(status='PENDING_VERIFICATION')}">Review new customers</a>
+    </section>
+
+    <section class="staff-metrics">
+      <a class="metric-card" th:href="@{/staff/customers}">
+        <span>Total customers</span><strong th:text="*{totalCustomers}">0</strong><small th:text="*{activeCustomers + ' active'}">0 active</small>
+      </a>
+      <a class="metric-card attention" th:href="@{/staff/customers(status='PENDING_VERIFICATION')}">
+        <span>Customer approvals</span><strong th:text="*{pendingCustomers}">0</strong><small>Awaiting activation</small>
+      </a>
+      <a class="metric-card" th:href="@{/staff/customers}">
+        <span>Managed accounts</span><strong th:text="*{totalAccounts}">0</strong><small th:text="*{pendingAccounts + ' pending activation'}">0 pending</small>
+      </a>
+      <a class="metric-card attention" th:href="@{/staff/beneficiaries}">
+        <span>Beneficiary reviews</span><strong th:text="*{pendingBeneficiaries}">0</strong><small>External requests waiting</small>
+      </a>
+    </section>
+
+    <section class="staff-dashboard-grid">
+      <article class="staff-panel">
+        <div class="panel-heading">
+          <div><p class="staff-eyebrow">Recently joined</p><h2>Customer records</h2></div>
+          <a th:href="@{/staff/customers}">View all</a>
+        </div>
+        <div class="staff-empty" th:if="${#lists.isEmpty(recentCustomers)}">No customer records are available.</div>
+        <div class="recent-list" th:unless="${#lists.isEmpty(recentCustomers)}">
+          <a th:each="customer : ${recentCustomers}" th:href="@{/staff/customers/{id}(id=${customer.customerNumber})}">
+            <span class="customer-initial" th:text="${#strings.substring(customer.fullName, 0, 1)}">C</span>
+            <span><strong th:text="${customer.fullName}">Customer</strong><small th:text="${customer.customerNumber}">CUS0001</small></span>
+            <em class="status-chip" th:classappend="${customer.customerStatus.name().toLowerCase()}" th:text="${customer.customerStatus}">ACTIVE</em>
+          </a>
+        </div>
+      </article>
+      <article class="staff-panel quick-panel">
+        <div class="panel-heading"><div><p class="staff-eyebrow">Quick access</p><h2>Operations</h2></div></div>
+        <a th:href="@{/staff/customers(status='PENDING_VERIFICATION')}"><strong>Activate customers</strong><span>Review identity and activate pending accounts</span></a>
+        <a th:href="@{/staff/beneficiaries}"><strong>Verify beneficiaries</strong><span>Approve or reject external beneficiary details</span></a>
+        <div class="risk-note"><strong th:text="*{frozenAccounts}">0</strong><span>frozen accounts currently require monitoring</span></div>
+      </article>
+    </section>
+  </main>
+</div>
+<div th:replace="~{fragments/staff-layout :: footer}"></div>
+</body>
+</html>

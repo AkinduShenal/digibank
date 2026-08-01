@@ -3,6 +3,7 @@ package com.digibank.service.impl;
 import com.digibank.dto.beneficiary.BeneficiaryCreateRequest;
 import com.digibank.dto.beneficiary.BeneficiaryDetailsView;
 import com.digibank.dto.beneficiary.BeneficiaryListView;
+import com.digibank.dto.beneficiary.BeneficiaryReviewView;
 import com.digibank.dto.beneficiary.BeneficiarySearchCriteria;
 import com.digibank.dto.beneficiary.BeneficiaryUpdateRequest;
 import com.digibank.entity.AuditLog;
@@ -14,6 +15,7 @@ import com.digibank.enums.AccountType;
 import com.digibank.enums.BeneficiaryAccountType;
 import com.digibank.enums.BeneficiaryStatus;
 import com.digibank.enums.BeneficiaryType;
+import com.digibank.enums.BeneficiaryVerificationStatus;
 import com.digibank.exception.BeneficiaryNotFoundException;
 import com.digibank.exception.BeneficiaryVersionConflictException;
 import com.digibank.exception.CustomerProfileNotFoundException;
@@ -41,6 +43,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -87,6 +90,7 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
 		Beneficiary beneficiary = beneficiaryType == BeneficiaryType.INTERNAL
 				? internalBeneficiary(customer, normalizedAccountNumber)
 				: externalBeneficiary(customer, request, normalizedAccountNumber);
+		beneficiary.setTransferLimit(requireTransferLimit(request.getTransferLimit()));
 		ensureNoDuplicate(customer.getId(), beneficiary.getBankCode(), beneficiary.getNormalizedAccountNumber());
 		return saveWithDuplicateTranslation(() -> {
 			Beneficiary saved = beneficiaryRepository.save(beneficiary);
@@ -131,6 +135,7 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
 		else {
 			updateExternalBeneficiary(customer, beneficiary, request);
 		}
+		beneficiary.setTransferLimit(requireTransferLimit(request.getTransferLimit()));
 		Beneficiary saved = beneficiaryRepository.save(beneficiary);
 		audit(authenticatedUserId, "BENEFICIARY_UPDATED", saved, saved.getStatus(), saved.getStatus(),
 				"Updated " + sensitiveDataMasker.maskAccountNumber(saved.getAccountNumber()));
@@ -228,6 +233,54 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
 		return beneficiaryMapper.toDetailsView(saved);
 	}
 
+	@Override
+	@Transactional(readOnly = true)
+	public List<BeneficiaryReviewView> getBeneficiariesForReview(
+			BeneficiaryVerificationStatus verificationStatus) {
+		BeneficiaryVerificationStatus safeStatus = verificationStatus == null
+				? BeneficiaryVerificationStatus.PENDING
+				: verificationStatus;
+		return beneficiaryRepository.findAllByVerificationStatusAndStatusNotOrderByCreatedAtAsc(safeStatus,
+				BeneficiaryStatus.DELETED).stream().map(beneficiaryMapper::toReviewView).toList();
+	}
+
+	@Override
+	@Transactional
+	public BeneficiaryDetailsView verifyBeneficiary(String actorUsername, Long beneficiaryId, String note) {
+		Beneficiary beneficiary = beneficiaryForReview(beneficiaryId);
+		requirePendingVerification(beneficiary);
+		String actor = requireActor(actorUsername);
+		String safeNote = optionalReviewNote(note);
+		BeneficiaryVerificationStatus previousStatus = beneficiary.getVerificationStatus();
+		beneficiary.setVerificationStatus(BeneficiaryVerificationStatus.VERIFIED);
+		beneficiary.setReviewedBy(actor);
+		beneficiary.setReviewedAt(LocalDateTime.now());
+		beneficiary.setVerificationNote(safeNote);
+		Beneficiary saved = beneficiaryRepository.save(beneficiary);
+		auditReview(actor, "BENEFICIARY_VERIFIED", saved, previousStatus, saved.getVerificationStatus(),
+				"Beneficiary verification approved.");
+		return beneficiaryMapper.toDetailsView(saved);
+	}
+
+	@Override
+	@Transactional
+	public BeneficiaryDetailsView rejectBeneficiary(String actorUsername, Long beneficiaryId, String reason) {
+		Beneficiary beneficiary = beneficiaryForReview(beneficiaryId);
+		requirePendingVerification(beneficiary);
+		String actor = requireActor(actorUsername);
+		String safeReason = requiredReviewNote(reason);
+		BeneficiaryVerificationStatus previousStatus = beneficiary.getVerificationStatus();
+		beneficiary.setVerificationStatus(BeneficiaryVerificationStatus.REJECTED);
+		beneficiary.setReviewedBy(actor);
+		beneficiary.setReviewedAt(LocalDateTime.now());
+		beneficiary.setVerificationNote(safeReason);
+		beneficiary.setFavourite(false);
+		Beneficiary saved = beneficiaryRepository.save(beneficiary);
+		auditReview(actor, "BENEFICIARY_REJECTED", saved, previousStatus, saved.getVerificationStatus(),
+				"Beneficiary verification rejected.");
+		return beneficiaryMapper.toDetailsView(saved);
+	}
+
 	private Customer resolveCustomer(Long authenticatedUserId) {
 		if (authenticatedUserId == null) {
 			throw new CustomerProfileNotFoundException();
@@ -244,6 +297,9 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
 				account.getAccountNumber(), normalizedAccountNumber, beneficiaryAccountType(account.getAccountType()),
 				BeneficiaryType.INTERNAL);
 		beneficiary.setBranchCode(trim(account.getBranchCode()));
+		beneficiary.setReviewedBy("SYSTEM");
+		beneficiary.setReviewedAt(LocalDateTime.now());
+		beneficiary.setVerificationNote("Verified from an existing DigiBank account.");
 		return beneficiary;
 	}
 
@@ -287,6 +343,7 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
 	}
 
 	private void updateExternalBeneficiary(Customer customer, Beneficiary beneficiary, BeneficiaryUpdateRequest request) {
+		boolean verificationDataChanged = externalVerificationDataChanged(beneficiary, request);
 		String bankCode = bankCodeNormalizer.normalize(request.getBankCode());
 		if (!bankCode.equals(beneficiary.getBankCode())) {
 			ensureNoDuplicateExcludingCurrent(customer.getId(), bankCode, beneficiary.getNormalizedAccountNumber(),
@@ -299,6 +356,21 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
 		beneficiary.setBranchName(trim(request.getBranchName()));
 		beneficiary.setBranchCode(normalizeOptionalBankCode(request.getBranchCode()));
 		beneficiary.setAccountType(requireAccountType(request.getAccountType()));
+		if (verificationDataChanged) {
+			beneficiary.setVerificationStatus(BeneficiaryVerificationStatus.PENDING);
+			beneficiary.setReviewedBy(null);
+			beneficiary.setReviewedAt(null);
+			beneficiary.setVerificationNote(null);
+		}
+	}
+
+	private boolean externalVerificationDataChanged(Beneficiary beneficiary, BeneficiaryUpdateRequest request) {
+		return !Objects.equals(trim(request.getBeneficiaryName()), trim(beneficiary.getBeneficiaryName()))
+				|| !Objects.equals(trim(request.getBankName()), trim(beneficiary.getBankName()))
+				|| !Objects.equals(bankCodeOrNull(request.getBankCode()), beneficiary.getBankCode())
+				|| !Objects.equals(trim(request.getBranchName()), trim(beneficiary.getBranchName()))
+				|| !Objects.equals(bankCodeOrNull(request.getBranchCode()), beneficiary.getBranchCode())
+				|| request.getAccountType() != beneficiary.getAccountType();
 	}
 
 	private void ensureNoDuplicate(Long customerId, String bankCode, String normalizedAccountNumber) {
@@ -322,6 +394,22 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
 		}
 		return beneficiaryRepository.findByIdAndCustomerIdAndStatusNot(beneficiaryId, customerId,
 				BeneficiaryStatus.DELETED).orElseThrow(BeneficiaryNotFoundException::new);
+	}
+
+	private Beneficiary beneficiaryForReview(Long beneficiaryId) {
+		if (beneficiaryId == null) {
+			throw new BeneficiaryNotFoundException();
+		}
+		Beneficiary beneficiary = beneficiaryRepository.findById(beneficiaryId)
+				.orElseThrow(BeneficiaryNotFoundException::new);
+		requireNotDeleted(beneficiary);
+		return beneficiary;
+	}
+
+	private void requirePendingVerification(Beneficiary beneficiary) {
+		if (beneficiary.getVerificationStatus() != BeneficiaryVerificationStatus.PENDING) {
+			throw new InvalidBeneficiaryStateException("Only pending beneficiaries can be reviewed.");
+		}
 	}
 
 	private void requireVersion(Beneficiary beneficiary, Long version) {
@@ -396,6 +484,39 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
 		return accountType;
 	}
 
+	private BigDecimal requireTransferLimit(BigDecimal transferLimit) {
+		if (transferLimit == null || transferLimit.compareTo(BeneficiaryConstants.MIN_TRANSFER_LIMIT) < 0
+				|| transferLimit.compareTo(BeneficiaryConstants.MAX_TRANSFER_LIMIT) > 0
+				|| transferLimit.scale() > 2) {
+			throw new InvalidBeneficiaryException("Transfer limit must be between LKR 0.01 and LKR 1,000,000.00 with at most two decimal places.");
+		}
+		return transferLimit;
+	}
+
+	private String requireActor(String actorUsername) {
+		String actor = trim(actorUsername);
+		if (actor == null) {
+			throw new InvalidBeneficiaryException("Authenticated staff member is required.");
+		}
+		return actor;
+	}
+
+	private String optionalReviewNote(String note) {
+		String value = trim(note);
+		if (value != null && value.length() > 255) {
+			throw new InvalidBeneficiaryException("Verification note must not exceed 255 characters.");
+		}
+		return value;
+	}
+
+	private String requiredReviewNote(String note) {
+		String value = optionalReviewNote(note);
+		if (value == null) {
+			throw new InvalidBeneficiaryException("A rejection reason is required.");
+		}
+		return value;
+	}
+
 	private BeneficiaryAccountType beneficiaryAccountType(AccountType accountType) {
 		if (accountType == AccountType.CURRENT) {
 			return BeneficiaryAccountType.CURRENT;
@@ -434,6 +555,14 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
 		AuditLog auditLog = new AuditLog("USER:" + authenticatedUserId, action, TARGET_BENEFICIARY,
 				"BENEFICIARY:" + beneficiary.getId(), statusName(previousStatus), statusName(newStatus),
 				reason, LocalDateTime.now());
+		auditLogRepository.save(auditLog);
+	}
+
+	private void auditReview(String actorUsername, String action, Beneficiary beneficiary,
+			BeneficiaryVerificationStatus previousStatus, BeneficiaryVerificationStatus newStatus, String reason) {
+		AuditLog auditLog = new AuditLog(requireActor(actorUsername), action, TARGET_BENEFICIARY,
+				"BENEFICIARY:" + beneficiary.getId(), previousStatus.name(), newStatus.name(), reason,
+				LocalDateTime.now());
 		auditLogRepository.save(auditLog);
 	}
 

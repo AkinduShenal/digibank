@@ -30,8 +30,32 @@ Do not commit real database usernames, passwords, or secret override files.
 ## Run
 
 ```bash
-./mvnw spring-boot:run
+sh mvnw spring-boot:run
 ```
+
+On macOS, `sh mvnw` also works when Gatekeeper blocks direct execution of the downloaded Maven wrapper.
+
+## Optional Development Staff And Admin Accounts
+
+No passwords are stored in source control. To create development-only staff and admin users, set the following
+environment variables before starting the application:
+
+```bash
+export DIGIBANK_DEV_SEED_ENABLED=true
+export DIGIBANK_DEV_STAFF_PASSWORD='choose-a-strong-local-password'
+export DIGIBANK_DEV_ADMIN_PASSWORD='choose-another-strong-local-password'
+sh mvnw spring-boot:run
+```
+
+The default development usernames are `staff` and `admin`. Existing users are never overwritten. The seeder is
+disabled outside the `dev` profile and remains disabled unless `DIGIBANK_DEV_SEED_ENABLED=true` is supplied.
+
+New customer logins remain disabled while the customer is `PENDING_VERIFICATION`. Activating the initial account
+from the staff console verifies the customer, changes both records to `ACTIVE`, and enables login.
+
+External beneficiaries start as `PENDING` and are reviewed from `/staff/beneficiaries`. Internal DigiBank
+beneficiaries are verified automatically from the bank's account records. Transfer limits must be between LKR 0.01
+and LKR 1,000,000.00.
 
 The system is being developed module by module by six members.
 

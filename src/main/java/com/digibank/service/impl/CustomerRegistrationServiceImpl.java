@@ -87,7 +87,8 @@ public class CustomerRegistrationServiceImpl implements CustomerRegistrationServ
 			User user = new User(data.username(), data.email(), passwordEncoder.encode(data.password()));
 			user.setTransactionPinHash(transactionPinEncoder.encode(data.transactionPin()));
 			user.setRole(Role.CUSTOMER);
-			user.setEnabled(true);
+			// Login remains disabled until bank staff verifies the customer and activates the account.
+			user.setEnabled(false);
 			user.setAccountNonLocked(true);
 
 			Customer customer = new Customer(user, customerNumber, data.firstName(), data.lastName(),

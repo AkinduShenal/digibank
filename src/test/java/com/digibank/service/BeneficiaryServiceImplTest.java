@@ -15,6 +15,7 @@ import com.digibank.enums.AccountType;
 import com.digibank.enums.BeneficiaryAccountType;
 import com.digibank.enums.BeneficiaryStatus;
 import com.digibank.enums.BeneficiaryType;
+import com.digibank.enums.BeneficiaryVerificationStatus;
 import com.digibank.enums.Gender;
 import com.digibank.enums.IdentityType;
 import com.digibank.enums.Role;
@@ -48,6 +49,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -114,6 +116,8 @@ class BeneficiaryServiceImplTest {
 		assertEquals("EXB01", saved.getBankCode());
 		assertEquals("123456789012", saved.getNormalizedAccountNumber());
 		assertEquals(BeneficiaryStatus.ACTIVE, saved.getStatus());
+		assertEquals(BeneficiaryVerificationStatus.PENDING, saved.getVerificationStatus());
+		assertEquals(new BigDecimal("100000.00"), saved.getTransferLimit());
 		assertFalse(saved.isFavourite());
 	}
 
@@ -186,6 +190,59 @@ class BeneficiaryServiceImplTest {
 		assertEquals("DIGIBANK", saved.getBankCode());
 		assertEquals(BeneficiaryAccountType.CURRENT, saved.getAccountType());
 		assertEquals("COL001", saved.getBranchCode());
+		assertEquals(BeneficiaryVerificationStatus.VERIFIED, saved.getVerificationStatus());
+		assertEquals("SYSTEM", saved.getReviewedBy());
+	}
+
+	@Test
+	void transferLimitAboveMaximumIsRejected() {
+		BeneficiaryCreateRequest request = externalCreateRequest();
+		request.setTransferLimit(new BigDecimal("1000000.01"));
+
+		assertThrows(InvalidBeneficiaryException.class, () -> service.createBeneficiary(USER_ID, request));
+		verify(beneficiaryRepository, never()).save(any(Beneficiary.class));
+	}
+
+	@Test
+	void staffCanVerifyPendingExternalBeneficiary() {
+		Beneficiary beneficiary = externalBeneficiary(BeneficiaryStatus.ACTIVE);
+		when(beneficiaryRepository.findById(BENEFICIARY_ID)).thenReturn(Optional.of(beneficiary));
+		when(beneficiaryRepository.save(any(Beneficiary.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		service.verifyBeneficiary("staff", BENEFICIARY_ID, "Account details checked");
+
+		assertEquals(BeneficiaryVerificationStatus.VERIFIED, beneficiary.getVerificationStatus());
+		assertEquals("staff", beneficiary.getReviewedBy());
+		assertNotNull(beneficiary.getReviewedAt());
+		assertEquals("Account details checked", beneficiary.getVerificationNote());
+		assertEquals("BENEFICIARY_VERIFIED", capturedAuditLog().getAction());
+	}
+
+	@Test
+	void rejectionRequiresReason() {
+		Beneficiary beneficiary = externalBeneficiary(BeneficiaryStatus.ACTIVE);
+		when(beneficiaryRepository.findById(BENEFICIARY_ID)).thenReturn(Optional.of(beneficiary));
+
+		assertThrows(InvalidBeneficiaryException.class,
+				() -> service.rejectBeneficiary("staff", BENEFICIARY_ID, " "));
+
+		assertEquals(BeneficiaryVerificationStatus.PENDING, beneficiary.getVerificationStatus());
+		verify(beneficiaryRepository, never()).save(any(Beneficiary.class));
+	}
+
+	@Test
+	void changingVerifiedExternalBankDetailsRequiresReverification() {
+		Beneficiary beneficiary = externalBeneficiary(BeneficiaryStatus.ACTIVE);
+		beneficiary.setVerificationStatus(BeneficiaryVerificationStatus.VERIFIED);
+		beneficiary.setReviewedBy("staff");
+		whenActiveBeneficiary(beneficiary);
+		whenNoDuplicateExcluding();
+		when(beneficiaryRepository.save(any(Beneficiary.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		service.updateBeneficiary(USER_ID, BENEFICIARY_ID, externalUpdateRequest("New Bank", "NEW01", 1L));
+
+		assertEquals(BeneficiaryVerificationStatus.PENDING, beneficiary.getVerificationStatus());
+		assertNull(beneficiary.getReviewedBy());
 	}
 
 	@Test

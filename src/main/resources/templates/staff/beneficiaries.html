@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beneficiary Reviews - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <link rel="stylesheet" th:href="@{/css/staff.css}">
+</head>
+<body class="staff-shell">
+<div th:replace="~{fragments/staff-layout :: topbar}"></div>
+<div class="staff-layout">
+  <div th:replace="~{fragments/staff-layout :: sidebar('beneficiaries')}"></div>
+  <main class="staff-main">
+    <div th:replace="~{fragments/staff-layout :: alerts}"></div>
+    <section class="staff-page-head">
+      <div>
+        <p class="staff-eyebrow">Verification queue</p>
+        <h1>Beneficiary reviews</h1>
+        <p>Confirm external bank details before customers are allowed to use the beneficiary for transfers.</p>
+      </div>
+      <a class="staff-btn secondary" th:href="@{/staff/customers}">Customer records</a>
+    </section>
+
+    <form class="staff-filter" method="get" th:action="@{/staff/beneficiaries}">
+      <label>Verification status
+        <select name="status">
+          <option th:each="status : ${verificationStatuses}" th:value="${status}" th:text="${status}"
+                  th:selected="${status == selectedStatus}">PENDING</option>
+        </select>
+      </label>
+      <span></span>
+      <button class="staff-btn primary" type="submit">Show requests</button>
+    </form>
+
+    <div class="staff-empty" th:if="${#lists.isEmpty(beneficiaries)}">No beneficiary requests were found for this status.</div>
+    <section class="review-grid" th:unless="${#lists.isEmpty(beneficiaries)}">
+      <article class="review-card" th:each="beneficiary : ${beneficiaries}">
+        <div class="review-card-head">
+          <div>
+            <p class="staff-eyebrow" th:text="${beneficiary.beneficiaryType}">EXTERNAL</p>
+            <h2 th:text="${beneficiary.beneficiaryName}">Beneficiary</h2>
+            <small th:text="${beneficiary.customerFullName + ' · ' + beneficiary.customerNumber}">Customer</small>
+          </div>
+          <span class="status-chip" th:classappend="${beneficiary.verificationStatus.name().toLowerCase()}" th:text="${beneficiary.verificationStatus}">PENDING</span>
+        </div>
+        <div class="review-details">
+          <div><span>Bank</span><strong th:text="${beneficiary.bankName}">Bank</strong></div>
+          <div><span>Bank code</span><strong th:text="${beneficiary.bankCode}">CODE</strong></div>
+          <div><span>Branch</span><strong th:text="${beneficiary.branchName + ' · ' + beneficiary.branchCode}">Branch</strong></div>
+          <div><span>Account</span><strong class="mono-value" th:text="${beneficiary.maskedAccountNumber}">********9012</strong></div>
+          <div><span>Account type</span><strong th:text="${beneficiary.accountType}">SAVINGS</strong></div>
+          <div><span>Transfer limit</span><strong th:text="${beneficiary.transferLimit != null ? 'LKR ' + #numbers.formatDecimal(beneficiary.transferLimit, 1, 2) : '-'}">LKR 100000.00</strong></div>
+          <div th:if="${beneficiary.verificationNote != null}"><span>Review note</span><strong th:text="${beneficiary.verificationNote}">Note</strong></div>
+        </div>
+        <div class="review-actions" th:if="${beneficiary.verificationStatus.name() == 'PENDING'}">
+          <form th:action="@{/staff/beneficiaries/{id}/verify(id=${beneficiary.id})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="text" name="note" maxlength="255" placeholder="Optional verification note">
+            <button class="staff-btn primary" type="submit">Verify beneficiary</button>
+          </form>
+          <form th:action="@{/staff/beneficiaries/{id}/reject(id=${beneficiary.id})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="text" name="reason" maxlength="255" required placeholder="Required rejection reason">
+            <button class="staff-btn danger" type="submit">Reject request</button>
+          </form>
+        </div>
+      </article>
+    </section>
+  </main>
+</div>
+<div th:replace="~{fragments/staff-layout :: footer}"></div>
+</body>
+</html>

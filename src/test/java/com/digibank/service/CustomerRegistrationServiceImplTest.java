@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -93,8 +94,9 @@ class CustomerRegistrationServiceImplTest {
 		assertEquals("student@example.com", savedUser.getEmail());
 		assertEquals("encoded-password:Password@123", savedUser.getPasswordHash());
 		assertEquals("encoded-pin:2468", savedUser.getTransactionPinHash());
-		assertTrue(savedUser.isEnabled());
+		assertFalse(savedUser.isEnabled());
 		assertTrue(savedUser.isAccountNonLocked());
+		assertEquals(com.digibank.enums.CustomerStatus.PENDING_VERIFICATION, savedCustomer.getStatus());
 		assertEquals("+94712345678", savedCustomer.getMobileNumber());
 		assertEquals("123456789V", savedCustomer.getIdentityNumber());
 		assertEquals("Sri Lanka", savedCustomer.getCountry());

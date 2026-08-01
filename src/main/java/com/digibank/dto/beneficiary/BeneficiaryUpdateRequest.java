@@ -3,9 +3,16 @@ package com.digibank.dto.beneficiary;
 import com.digibank.enums.BeneficiaryAccountType;
 import com.digibank.validation.beneficiary.ValidBeneficiaryRequest;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+
+import java.math.BigDecimal;
+
+import static com.digibank.util.BeneficiaryConstants.DEFAULT_TRANSFER_LIMIT;
 
 @ValidBeneficiaryRequest
 public class BeneficiaryUpdateRequest {
@@ -36,6 +43,12 @@ public class BeneficiaryUpdateRequest {
 	@NotNull(message = "Version is required.")
 	private Long version;
 
+	@NotNull(message = "Transfer limit is required.")
+	@DecimalMin(value = "0.01", message = "Transfer limit must be at least LKR 0.01.")
+	@DecimalMax(value = "1000000.00", message = "Transfer limit cannot exceed LKR 1,000,000.00.")
+	@Digits(integer = 17, fraction = 2, message = "Transfer limit can have at most two decimal places.")
+	private BigDecimal transferLimit = DEFAULT_TRANSFER_LIMIT;
+
 	public BeneficiaryUpdateRequest() {
 	}
 
@@ -49,6 +62,13 @@ public class BeneficiaryUpdateRequest {
 		this.branchCode = branchCode;
 		this.accountType = accountType;
 		this.version = version;
+	}
+
+	public BeneficiaryUpdateRequest(String beneficiaryName, String nickname, String bankName, String bankCode,
+			String branchName, String branchCode, BeneficiaryAccountType accountType, Long version,
+			BigDecimal transferLimit) {
+		this(beneficiaryName, nickname, bankName, bankCode, branchName, branchCode, accountType, version);
+		this.transferLimit = transferLimit;
 	}
 
 	public String getBeneficiaryName() {
@@ -113,5 +133,13 @@ public class BeneficiaryUpdateRequest {
 
 	public void setVersion(Long version) {
 		this.version = version;
+	}
+
+	public BigDecimal getTransferLimit() {
+		return transferLimit;
+	}
+
+	public void setTransferLimit(BigDecimal transferLimit) {
+		this.transferLimit = transferLimit;
 	}
 }

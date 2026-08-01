@@ -4,9 +4,16 @@ import com.digibank.enums.BeneficiaryAccountType;
 import com.digibank.enums.BeneficiaryType;
 import com.digibank.validation.beneficiary.ValidBeneficiaryRequest;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+
+import java.math.BigDecimal;
+
+import static com.digibank.util.BeneficiaryConstants.DEFAULT_TRANSFER_LIMIT;
 
 @ValidBeneficiaryRequest
 public class BeneficiaryCreateRequest {
@@ -40,6 +47,12 @@ public class BeneficiaryCreateRequest {
 	@NotNull(message = "Beneficiary type is required.")
 	private BeneficiaryType beneficiaryType;
 
+	@NotNull(message = "Transfer limit is required.")
+	@DecimalMin(value = "0.01", message = "Transfer limit must be at least LKR 0.01.")
+	@DecimalMax(value = "1000000.00", message = "Transfer limit cannot exceed LKR 1,000,000.00.")
+	@Digits(integer = 17, fraction = 2, message = "Transfer limit can have at most two decimal places.")
+	private BigDecimal transferLimit = DEFAULT_TRANSFER_LIMIT;
+
 	public BeneficiaryCreateRequest() {
 	}
 
@@ -55,6 +68,14 @@ public class BeneficiaryCreateRequest {
 		this.accountNumber = accountNumber;
 		this.accountType = accountType;
 		this.beneficiaryType = beneficiaryType;
+	}
+
+	public BeneficiaryCreateRequest(String beneficiaryName, String nickname, String bankName, String bankCode,
+			String branchName, String branchCode, String accountNumber, BeneficiaryAccountType accountType,
+			BeneficiaryType beneficiaryType, BigDecimal transferLimit) {
+		this(beneficiaryName, nickname, bankName, bankCode, branchName, branchCode, accountNumber, accountType,
+				beneficiaryType);
+		this.transferLimit = transferLimit;
 	}
 
 	public String getBeneficiaryName() {
@@ -127,5 +148,13 @@ public class BeneficiaryCreateRequest {
 
 	public void setBeneficiaryType(BeneficiaryType beneficiaryType) {
 		this.beneficiaryType = beneficiaryType;
+	}
+
+	public BigDecimal getTransferLimit() {
+		return transferLimit;
+	}
+
+	public void setTransferLimit(BigDecimal transferLimit) {
+		this.transferLimit = transferLimit;
 	}
 }

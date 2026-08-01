@@ -3,6 +3,7 @@ package com.digibank.entity;
 import com.digibank.enums.BeneficiaryAccountType;
 import com.digibank.enums.BeneficiaryStatus;
 import com.digibank.enums.BeneficiaryType;
+import com.digibank.enums.BeneficiaryVerificationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,6 +13,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "beneficiaries")
@@ -60,6 +64,22 @@ public class Beneficiary extends BaseEntity {
 	@Column(name = "is_favourite", nullable = false)
 	private boolean favourite;
 
+	@Column(name = "transfer_limit", nullable = false, precision = 19, scale = 2)
+	private BigDecimal transferLimit;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "verification_status", nullable = false, length = 20)
+	private BeneficiaryVerificationStatus verificationStatus;
+
+	@Column(name = "reviewed_by", length = 30)
+	private String reviewedBy;
+
+	@Column(name = "reviewed_at")
+	private LocalDateTime reviewedAt;
+
+	@Column(name = "verification_note", length = 255)
+	private String verificationNote;
+
 	@Version
 	@Column(name = "version", nullable = false)
 	private Long version;
@@ -80,6 +100,10 @@ public class Beneficiary extends BaseEntity {
 		this.beneficiaryType = beneficiaryType;
 		this.status = BeneficiaryStatus.ACTIVE;
 		this.favourite = false;
+		this.transferLimit = new BigDecimal("100000.00");
+		this.verificationStatus = beneficiaryType == BeneficiaryType.INTERNAL
+				? BeneficiaryVerificationStatus.VERIFIED
+				: BeneficiaryVerificationStatus.PENDING;
 	}
 
 	public Customer getCustomer() {
@@ -184,6 +208,46 @@ public class Beneficiary extends BaseEntity {
 
 	public void setFavourite(boolean favourite) {
 		this.favourite = favourite;
+	}
+
+	public BigDecimal getTransferLimit() {
+		return transferLimit;
+	}
+
+	public void setTransferLimit(BigDecimal transferLimit) {
+		this.transferLimit = transferLimit;
+	}
+
+	public BeneficiaryVerificationStatus getVerificationStatus() {
+		return verificationStatus;
+	}
+
+	public void setVerificationStatus(BeneficiaryVerificationStatus verificationStatus) {
+		this.verificationStatus = verificationStatus;
+	}
+
+	public String getReviewedBy() {
+		return reviewedBy;
+	}
+
+	public void setReviewedBy(String reviewedBy) {
+		this.reviewedBy = reviewedBy;
+	}
+
+	public LocalDateTime getReviewedAt() {
+		return reviewedAt;
+	}
+
+	public void setReviewedAt(LocalDateTime reviewedAt) {
+		this.reviewedAt = reviewedAt;
+	}
+
+	public String getVerificationNote() {
+		return verificationNote;
+	}
+
+	public void setVerificationNote(String verificationNote) {
+		this.verificationNote = verificationNote;
 	}
 
 	public Long getVersion() {

@@ -1,105 +1,93 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Customer Details - DigiBank</title>
-<link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
-<link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
-<link rel="stylesheet" th:href="@{/css/auth.css}">
-<link rel="stylesheet" th:href="@{/css/customer.css}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customer Record - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <link rel="stylesheet" th:href="@{/css/staff.css}">
 </head>
-<body class="customer-shell">
-<div th:replace="~{fragments/customer-layout :: topbar}"></div>
-<main class="customer-content narrow staff-wide" th:object="${customer}">
-  <div th:replace="~{fragments/customer-layout :: alerts}"></div>
-  <div class="welcome-band">
-    <div>
-      <p class="eyebrow">Customer Details</p>
-      <h1 th:text="*{fullName}">Customer Name</h1>
-      <span class="mono" th:text="*{customerNumber}">CUS2026000123</span>
-    </div>
-    <a class="btn btn-prev" th:href="@{/staff/customers}">Back</a>
-  </div>
-
-  <section class="profile-grid">
-    <article class="info-card">
-      <h2>Customer Access</h2>
-      <div class="kv"><span>Email</span><strong th:text="*{email}">customer@example.com</strong></div>
-      <div class="kv"><span>Mobile</span><strong th:text="*{mobileNumber}">+94712345678</strong></div>
-      <div class="kv"><span>Customer Status</span><strong class="status-pill" th:text="*{customerStatus}">ACTIVE</strong></div>
-      <div class="kv"><span>Login Enabled</span><strong th:text="*{userEnabled ? 'YES' : 'NO'}">YES</strong></div>
-      <div class="kv"><span>Joined</span><strong th:text="*{joinedAt != null ? #temporals.format(joinedAt, 'dd MMM yyyy') : '-'}">-</strong></div>
-    </article>
-
-    <article class="info-card">
-      <h2>Rules</h2>
-      <p class="address-copy">Use the action forms below. Status changes are validated by the service layer and logged to the audit table.</p>
-    </article>
-  </section>
-
-  <section class="info-card staff-account-card" th:each="account : *{accounts}">
-    <div class="staff-account-head">
+<body class="staff-shell">
+<div th:replace="~{fragments/staff-layout :: topbar}"></div>
+<div class="staff-layout">
+  <div th:replace="~{fragments/staff-layout :: sidebar('customers')}"></div>
+  <main class="staff-main" th:object="${customer}">
+    <div th:replace="~{fragments/staff-layout :: alerts}"></div>
+    <section class="staff-page-head">
       <div>
-        <p class="eyebrow" th:text="${account.accountType}">SAVINGS</p>
-        <h2 th:text="${account.maskedAccountNumber}">********9012</h2>
+        <p class="staff-eyebrow">Customer record</p>
+        <h1 th:text="*{fullName}">Customer name</h1>
+        <p><span class="mono-value" th:text="*{customerNumber}">CUS001</span> · Review identity status and manage linked bank accounts.</p>
       </div>
-      <span class="status-pill" th:text="${account.accountStatus}">PENDING_ACTIVATION</span>
-    </div>
-    <div class="dashboard-grid compact">
-      <div class="kv"><span>Available</span><strong th:text="'LKR ' + ${account.availableBalance}">LKR 0.00</strong></div>
-      <div class="kv"><span>Current</span><strong th:text="'LKR ' + ${account.currentBalance}">LKR 0.00</strong></div>
-      <div class="kv"><span>Branch</span><strong th:text="${account.branchCode}">COL001</strong></div>
+      <a class="staff-btn secondary" th:href="@{/staff/customers}">Back to customers</a>
+    </section>
+
+    <section class="customer-summary">
+      <div class="summary-item"><span>Email address</span><strong th:text="*{email}">email</strong></div>
+      <div class="summary-item"><span>Mobile number</span><strong th:text="*{mobileNumber}">mobile</strong></div>
+      <div class="summary-item"><span>Customer status</span><strong><em class="status-chip" th:classappend="*{customerStatus.name().toLowerCase()}" th:text="*{customerStatus}">ACTIVE</em></strong></div>
+      <div class="summary-item"><span>Login access</span><strong th:text="*{userEnabled ? 'Enabled' : 'Disabled'}">Enabled</strong></div>
+    </section>
+
+    <div class="staff-alert success" th:if="*{customerStatus.name() == 'PENDING_VERIFICATION'}">
+      This customer is awaiting verification. Activating the pending account will verify the customer and enable login access.
     </div>
 
-    <div class="staff-actions">
-      <form th:if="${account.accountStatus.name() == 'PENDING_ACTIVATION'}" th:action="@{/staff/accounts/{accountNumber}/activate(accountNumber=${account.accountNumber})}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <input type="hidden" name="customerNumber" th:value="*{customerNumber}">
-        <button class="btn btn-gotologin" type="submit">Activate</button>
-      </form>
-      <form th:if="${account.accountStatus.name() == 'ACTIVE'}" th:action="@{/staff/accounts/{accountNumber}/freeze(accountNumber=${account.accountNumber})}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <input type="hidden" name="customerNumber" th:value="*{customerNumber}">
-        <input type="text" name="reason" required placeholder="Freeze reason">
-        <button class="btn btn-prev" type="submit">Freeze</button>
-      </form>
-      <form th:if="${account.accountStatus.name() == 'FROZEN'}" th:action="@{/staff/accounts/{accountNumber}/unfreeze(accountNumber=${account.accountNumber})}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <input type="hidden" name="customerNumber" th:value="*{customerNumber}">
-        <input type="text" name="reason" required placeholder="Unfreeze reason">
-        <button class="btn btn-gotologin" type="submit">Unfreeze</button>
-      </form>
-      <form th:if="${account.accountStatus.name() == 'ACTIVE' || account.accountStatus.name() == 'FROZEN'}" th:action="@{/staff/accounts/{accountNumber}/deactivate(accountNumber=${account.accountNumber})}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <input type="hidden" name="customerNumber" th:value="*{customerNumber}">
-        <input type="text" name="reason" required placeholder="Deactivate reason">
-        <button class="btn btn-prev" type="submit">Deactivate</button>
-      </form>
-      <form th:if="${account.accountStatus.name() == 'DEACTIVATED'}" th:action="@{/staff/accounts/{accountNumber}/reactivate(accountNumber=${account.accountNumber})}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <input type="hidden" name="customerNumber" th:value="*{customerNumber}">
-        <input type="text" name="reason" required placeholder="Reactivation reason">
-        <button class="btn btn-gotologin" type="submit">Reactivate</button>
-      </form>
-      <form th:if="${account.accountStatus.name() == 'ACTIVE' || account.accountStatus.name() == 'FROZEN'}" th:action="@{/staff/accounts/{accountNumber}/close(accountNumber=${account.accountNumber})}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <input type="hidden" name="customerNumber" th:value="*{customerNumber}">
-        <input type="text" name="reason" required placeholder="Closure reason">
-        <button class="btn btn-prev" type="submit">Close</button>
-      </form>
-      <form th:if="${account.accountStatus.name() == 'PENDING_ACTIVATION'}" th:action="@{/staff/accounts/{accountNumber}/type(accountNumber=${account.accountNumber})}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <input type="hidden" name="customerNumber" th:value="*{customerNumber}">
-        <select name="accountType" required>
-          <option th:each="accountType : ${accountTypes}" th:value="${accountType}" th:text="${accountType}"></option>
-        </select>
-        <input type="text" name="reason" required placeholder="Type change reason">
-        <button class="btn btn-prev" type="submit">Change Type</button>
-      </form>
-    </div>
-  </section>
-</main>
-<div th:replace="~{fragments/customer-layout :: footer}"></div>
+    <section class="account-ops">
+      <div class="staff-empty" th:if="*{#lists.isEmpty(accounts)}">No linked bank accounts were found.</div>
+      <article class="account-card" th:each="account : *{accounts}">
+        <div class="account-card-head">
+          <div><p class="staff-eyebrow" th:text="${account.accountType}">SAVINGS</p><h2 class="mono-value" th:text="${account.maskedAccountNumber}">********9012</h2></div>
+          <span class="status-chip" th:classappend="${account.accountStatus.name().toLowerCase()}" th:text="${account.accountStatus}">ACTIVE</span>
+        </div>
+        <div class="account-facts">
+          <div><span>Available balance</span><strong th:text="'LKR ' + ${#numbers.formatDecimal(account.availableBalance, 1, 2)}">LKR 0.00</strong></div>
+          <div><span>Current balance</span><strong th:text="'LKR ' + ${#numbers.formatDecimal(account.currentBalance, 1, 2)}">LKR 0.00</strong></div>
+          <div><span>Branch code</span><strong th:text="${account.branchCode}">COL001</strong></div>
+        </div>
+
+        <div class="account-actions">
+          <form class="operation-form single" th:if="${account.accountStatus.name() == 'PENDING_ACTIVATION'}" th:action="@{/staff/accounts/{number}/activate(number=${account.accountNumber})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="customerNumber" th:value="*{customerNumber}">
+            <button class="staff-btn primary" type="submit">Verify customer & activate account</button>
+          </form>
+          <form class="operation-form" th:if="${account.accountStatus.name() == 'PENDING_ACTIVATION'}" th:action="@{/staff/accounts/{number}/type(number=${account.accountNumber})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="customerNumber" th:value="*{customerNumber}">
+            <label>Account type<select name="accountType" required><option th:each="type : ${accountTypes}" th:value="${type}" th:text="${type}"></option></select></label>
+            <label>Reason<input type="text" name="reason" required maxlength="255" placeholder="Reason for change"></label>
+            <button class="staff-btn secondary" type="submit">Change type</button>
+          </form>
+          <form class="operation-form" th:if="${account.accountStatus.name() == 'ACTIVE'}" th:action="@{/staff/accounts/{number}/freeze(number=${account.accountNumber})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="customerNumber" th:value="*{customerNumber}">
+            <label>Freeze reason<input type="text" name="reason" required maxlength="255" placeholder="Required reason"></label>
+            <button class="staff-btn secondary" type="submit">Freeze account</button>
+          </form>
+          <form class="operation-form" th:if="${account.accountStatus.name() == 'FROZEN'}" th:action="@{/staff/accounts/{number}/unfreeze(number=${account.accountNumber})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="customerNumber" th:value="*{customerNumber}">
+            <label>Unfreeze reason<input type="text" name="reason" required maxlength="255" placeholder="Required reason"></label>
+            <button class="staff-btn primary" type="submit">Unfreeze account</button>
+          </form>
+          <form class="operation-form" th:if="${account.accountStatus.name() == 'ACTIVE' || account.accountStatus.name() == 'FROZEN'}" th:action="@{/staff/accounts/{number}/deactivate(number=${account.accountNumber})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="customerNumber" th:value="*{customerNumber}">
+            <label>Deactivate reason<input type="text" name="reason" required maxlength="255" placeholder="Required reason"></label>
+            <button class="staff-btn danger" type="submit">Deactivate access</button>
+          </form>
+          <form class="operation-form" th:if="${account.accountStatus.name() == 'DEACTIVATED'}" th:action="@{/staff/accounts/{number}/reactivate(number=${account.accountNumber})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="customerNumber" th:value="*{customerNumber}">
+            <label>Reactivation reason<input type="text" name="reason" required maxlength="255" placeholder="Required reason"></label>
+            <button class="staff-btn primary" type="submit">Reactivate account</button>
+          </form>
+          <form class="operation-form" th:if="${account.accountStatus.name() == 'ACTIVE' || account.accountStatus.name() == 'FROZEN'}" th:action="@{/staff/accounts/{number}/close(number=${account.accountNumber})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><input type="hidden" name="customerNumber" th:value="*{customerNumber}">
+            <label>Closure reason<input type="text" name="reason" required maxlength="255" placeholder="Zero balance required"></label>
+            <button class="staff-btn danger" type="submit">Close account</button>
+          </form>
+        </div>
+      </article>
+    </section>
+  </main>
+</div>
+<div th:replace="~{fragments/staff-layout :: footer}"></div>
 </body>
 </html>
