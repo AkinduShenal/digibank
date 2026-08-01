@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Make a Transfer - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout">
+  <div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+  <section class="customer-content">
+    <div th:replace="~{fragments/customer-layout :: alerts}"></div>
+    <div class="welcome-band">
+      <div><p class="eyebrow">Secure transfer</p><h1>Send money</h1><span class="mono">Use a saved beneficiary or enter another customer's DigiBank account number.</span></div>
+      <a class="btn btn-prev" th:href="@{/customer/transfers}">Transfer history</a>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(transferForm.accounts)}">
+      <h2>No active source account</h2><p>Your account must be activated before making a transfer.</p>
+    </div>
+    <div class="beneficiary-help transfer-page-note" th:if="${#lists.isEmpty(transferForm.beneficiaries) && !#lists.isEmpty(transferForm.accounts)}">
+      You do not have a verified saved beneficiary yet. You can still transfer directly to another active DigiBank account.
+    </div>
+
+    <form id="transferForm" class="edit-card transfer-form" th:unless="${#lists.isEmpty(transferForm.accounts)}"
+          th:action="@{/customer/transfers}" th:object="${transferRequest}" method="post">
+      <div class="form-error" th:if="${#fields.hasGlobalErrors()}" th:each="error : ${#fields.globalErrors()}" th:text="${error}">Transfer failed.</div>
+      <label>From account
+        <select th:field="*{sourceAccountNumber}" required>
+          <option value="">Select an account</option>
+          <option th:each="account : ${transferForm.accounts}" th:value="${account.accountNumber}"
+                  th:text="${account.maskedAccountNumber + ' · ' + account.accountType + ' · LKR ' + #numbers.formatDecimal(account.availableBalance, 1, 2)}">Account</option>
+        </select>
+        <em th:errors="*{sourceAccountNumber}"></em>
+      </label>
+
+      <fieldset class="recipient-selector transfer-wide">
+        <legend>Send to</legend>
+        <label class="recipient-choice">
+          <input type="radio" th:field="*{recipientType}" value="SAVED_BENEFICIARY">
+          <span><strong>Saved beneficiary</strong><small>Choose from your verified beneficiary list</small></span>
+        </label>
+        <label class="recipient-choice">
+          <input type="radio" th:field="*{recipientType}" value="DIGIBANK_ACCOUNT">
+          <span><strong>DigiBank account number</strong><small>One-time transfer without saving a beneficiary</small></span>
+        </label>
+        <em th:errors="*{recipientType}"></em>
+      </fieldset>
+
+      <label id="savedBeneficiaryPanel">Verified beneficiary
+        <select id="beneficiaryId" th:field="*{beneficiaryId}">
+          <option value="">Select a beneficiary</option>
+          <option th:each="beneficiary : ${transferForm.beneficiaries}" th:value="${beneficiary.id}"
+                  th:text="${beneficiary.name + ' · ' + beneficiary.bankName + ' · ' + beneficiary.maskedAccountNumber}">Beneficiary</option>
+        </select>
+        <em th:errors="*{beneficiaryId}"></em>
+      </label>
+
+      <label id="directAccountPanel">Recipient DigiBank account number
+        <input id="destinationAccountNumber" type="text" inputmode="numeric" maxlength="12" autocomplete="off"
+               th:field="*{destinationAccountNumber}" placeholder="Enter the 12-digit account number">
+        <span id="accountLookupStatus" class="account-lookup-status" role="status" aria-live="polite">
+          Enter the full account number to confirm the account holder.
+        </span>
+        <em th:errors="*{destinationAccountNumber}"></em>
+      </label>
+      <label>Amount (LKR)
+        <input type="number" min="0.01" step="0.01" th:field="*{amount}" placeholder="0.00" required>
+        <em th:errors="*{amount}"></em>
+      </label>
+      <label>Transaction PIN
+        <input type="password" inputmode="numeric" maxlength="4" autocomplete="off" th:field="*{transactionPin}" placeholder="4-digit PIN" required>
+        <em th:errors="*{transactionPin}"></em>
+      </label>
+      <label class="transfer-description">Description (optional)
+        <input type="text" maxlength="140" th:field="*{description}" placeholder="Rent, invoice or personal note">
+        <em th:errors="*{description}"></em>
+      </label>
+      <div class="beneficiary-help">The receiver is verified again when you confirm. Direct account transfers do not save the receiver as a beneficiary.</div>
+      <div class="form-actions">
+        <button class="btn btn-gotologin" type="submit">Confirm transfer</button>
+        <a class="btn btn-prev" th:href="@{/customer/dashboard}">Cancel</a>
+      </div>
+    </form>
+  </section>
+</main>
+<div th:replace="~{fragments/customer-layout :: footer}"></div>
+<script>
+  (() => {
+    const form = document.getElementById('transferForm');
+    if (!form) return;
+
+    const modeInputs = form.querySelectorAll('input[name="recipientType"]');
+    const savedPanel = document.getElementById('savedBeneficiaryPanel');
+    const directPanel = document.getElementById('directAccountPanel');
+    const beneficiarySelect = document.getElementById('beneficiaryId');
+    const accountInput = document.getElementById('destinationAccountNumber');
+    const lookupStatus = document.getElementById('accountLookupStatus');
+    const submitButton = form.querySelector('button[type="submit"]');
+    const csrf = form.querySelector('input[name="_csrf"]');
+    let lookupTimer;
+    let verifiedAccountNumber = null;
+
+    const selectedMode = () => form.querySelector('input[name="recipientType"]:checked')?.value;
+    const normalizedAccount = () => accountInput.value.replace(/\D/g, '').slice(0, 12);
+
+    function setLookupMessage(message, state = '') {
+      lookupStatus.textContent = message;
+      lookupStatus.className = `account-lookup-status ${state}`.trim();
+    }
+
+    function updateMode() {
+      const direct = selectedMode() === 'DIGIBANK_ACCOUNT';
+      savedPanel.hidden = direct;
+      directPanel.hidden = !direct;
+      beneficiarySelect.required = !direct;
+      accountInput.required = direct;
+      submitButton.disabled = direct && verifiedAccountNumber !== normalizedAccount();
+    }
+
+    async function lookupAccount(accountNumber) {
+      setLookupMessage('Checking DigiBank account…', 'is-checking');
+      const body = new URLSearchParams({accountNumber});
+      if (csrf) body.append(csrf.name, csrf.value);
+      try {
+        const response = await fetch('/customer/transfers/internal-account-lookup', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+          body
+        });
+        if (accountNumber !== normalizedAccount()) return;
+        if (!response.ok) throw new Error('Lookup failed');
+        const result = await response.json();
+        if (result.available) {
+          verifiedAccountNumber = accountNumber;
+          setLookupMessage(`Account holder: ${result.accountHolderName} · ${result.maskedAccountNumber}`, 'is-valid');
+        } else {
+          verifiedAccountNumber = null;
+          setLookupMessage('No eligible active DigiBank account was found.', 'is-invalid');
+        }
+      } catch (error) {
+        verifiedAccountNumber = null;
+        setLookupMessage('Account verification is temporarily unavailable. Please try again.', 'is-invalid');
+      }
+      updateMode();
+    }
+
+    accountInput.addEventListener('input', () => {
+      accountInput.value = normalizedAccount();
+      verifiedAccountNumber = null;
+      clearTimeout(lookupTimer);
+      const accountNumber = normalizedAccount();
+      if (accountNumber.length === 12) {
+        lookupTimer = setTimeout(() => lookupAccount(accountNumber), 250);
+      } else {
+        setLookupMessage('Enter the full 12-digit account number to confirm the account holder.');
+      }
+      updateMode();
+    });
+
+    modeInputs.forEach(input => input.addEventListener('change', updateMode));
+    updateMode();
+    if (selectedMode() === 'DIGIBANK_ACCOUNT' && normalizedAccount().length === 12) {
+      lookupAccount(normalizedAccount());
+    }
+  })();
+</script>
+</body>
+</html>

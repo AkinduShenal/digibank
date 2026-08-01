@@ -51,8 +51,9 @@
       <article class="info-card">
         <h2>Access Details</h2>
         <div class="kv"><span>Last Login</span><strong th:text="${dashboard.lastLoginAt != null ? #temporals.format(dashboard.lastLoginAt, 'dd MMM yyyy HH:mm') : 'First login'}">First login</strong></div>
-        <div class="kv"><span>Banking Transactions</span><strong>After activation</strong></div>
-        <a class="btn btn-gotologin full-btn" th:href="@{/customer/accounts/{accountNumber}(accountNumber=*{accountNumber})}">View Account</a>
+        <div class="kv"><span>Banking Transactions</span><strong th:text="*{accountStatus.name() == 'ACTIVE' ? 'Available' : 'After activation'}">After activation</strong></div>
+        <a class="btn btn-gotologin full-btn" th:if="*{accountStatus.name() == 'ACTIVE'}" th:href="@{/customer/transfers/new}">Send Money</a>
+        <a class="btn btn-prev full-btn" th:href="@{/customer/accounts/{accountNumber}(accountNumber=*{accountNumber})}">View Account</a>
       </article>
     </div>
 

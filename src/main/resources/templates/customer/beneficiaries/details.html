@@ -55,6 +55,8 @@
 		<div class="kv"><span>Reviewed At</span><strong th:text="*{reviewedAt != null ? #temporals.format(reviewedAt, 'dd MMM yyyy HH:mm') : '-'}">-</strong></div>
 		<div class="kv"><span>Review Note</span><strong th:text="*{verificationNote ?: '-'}">-</strong></div>
         <div class="action-row">
+		  <a class="btn btn-gotologin" th:if="*{status != null && status.name() == 'ACTIVE' && verificationStatus != null && verificationStatus.name() == 'VERIFIED'}"
+             th:href="@{/customer/transfers/new(beneficiaryId=*{id})}">Send Money</a>
           <a class="btn btn-gotologin" th:href="@{/customer/beneficiaries/{id}/edit(id=*{id})}">Edit</a>
           <form th:if="*{status.name() == 'ACTIVE' && !favourite}" th:action="@{/customer/beneficiaries/{id}/favourite(id=*{id})}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

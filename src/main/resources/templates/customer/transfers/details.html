@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transfer Receipt - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout">
+  <div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+  <section class="customer-content narrow-receipt" th:object="${transfer}">
+    <div th:replace="~{fragments/customer-layout :: alerts}"></div>
+    <article class="transfer-receipt">
+      <div class="receipt-success">✓</div>
+      <p class="eyebrow">Transfer receipt</p>
+      <h1 th:text="*{status.name() == 'COMPLETED' ? 'Transfer complete' : 'Transfer status'}">Transfer complete</h1>
+      <strong class="receipt-amount" th:text="*{currencyCode + ' ' + #numbers.formatDecimal(amount, 1, 2)}">LKR 0.00</strong>
+      <div class="receipt-grid">
+        <div><span>Reference</span><strong class="mono" th:text="*{referenceNumber}">TRF...</strong></div>
+        <div><span>Date</span><strong th:text="*{completedAt != null ? #temporals.format(completedAt, 'dd MMM yyyy HH:mm') : '-'}">-</strong></div>
+        <div><span>From</span><strong th:text="*{sourceAccountMasked}">********9012</strong></div>
+        <div><span>To</span><strong th:text="*{beneficiaryName}">Beneficiary</strong></div>
+        <div><span>Destination</span><strong th:text="*{destinationBank + ' · ' + destinationAccountMasked}">Bank</strong></div>
+        <div><span>Transfer type</span><strong th:text="*{transferType}">INTERNAL</strong></div>
+        <div><span>Description</span><strong th:text="*{description != null ? description : '-'}">-</strong></div>
+        <div><span>Balance after</span><strong th:text="*{'LKR ' + #numbers.formatDecimal(sourceBalanceAfter, 1, 2)}">LKR 0.00</strong></div>
+      </div>
+      <div class="form-actions receipt-actions"><a class="btn btn-gotologin" th:href="@{/customer/transfers/new}">Make another transfer</a><a class="btn btn-prev" th:href="@{/customer/transfers}">View history</a></div>
+    </article>
+  </section>
+</main>
+<div th:replace="~{fragments/customer-layout :: footer}"></div>
+</body>
+</html>

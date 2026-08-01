@@ -57,6 +57,29 @@ External beneficiaries start as `PENDING` and are reviewed from `/staff/benefici
 beneficiaries are verified automatically from the bank's account records. Transfer limits must be between LKR 0.01
 and LKR 1,000,000.00.
 
+## Customer Fund Transfers
+
+Customers can send money from `/customer/transfers/new`, view their own transfer history at
+`/customer/transfers`, and open a receipt using its transfer reference. Every transfer requires an active LKR source
+account, sufficient available funds, and the customer's four-digit transaction PIN. The saved-beneficiary route
+also requires an active verified beneficiary and an amount within that beneficiary's limit.
+
+Customers may also make a one-time internal transfer without saving a beneficiary. After the complete 12-digit
+DigiBank account number is entered, the protected lookup confirms the eligible account holder's name. Partial,
+invalid, inactive and own-account lookups do not expose customer details. The backend repeats every account check
+when the transfer is submitted, and the direct recipient is not added to the beneficiary list.
+
+Internal transfers atomically debit the source account and credit the destination DigiBank account. External
+transfers currently use a simulated successful settlement because the project has no external banking network;
+they debit the source account and retain a complete local transfer record. Account rows are locked in a consistent
+order while transferring to protect balances from concurrent updates. Customers can access only their own transfer
+records, and PINs and full account numbers are never written to audit logs.
+
+Flyway migration `V6__create_fund_transfers.sql` creates the transfer table and
+`V7__allow_direct_internal_transfers.sql` enables one-time DigiBank recipients automatically when the application
+is restarted against MySQL/MariaDB. Team members only need to create an empty `digibank_db`, configure their own
+local database credentials, and start the application; tables should not be created manually in phpMyAdmin.
+
 The system is being developed module by module by six members.
 
 ## Member 1 Customer And Account CRUD Mapping

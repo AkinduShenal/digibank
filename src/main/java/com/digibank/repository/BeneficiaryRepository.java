@@ -29,4 +29,7 @@ public interface BeneficiaryRepository extends JpaRepository<Beneficiary, Long>,
 
 	List<Beneficiary> findAllByVerificationStatusAndStatusNotOrderByCreatedAtAsc(
 			BeneficiaryVerificationStatus verificationStatus, BeneficiaryStatus status);
+
+	List<Beneficiary> findAllByCustomerIdAndStatusAndVerificationStatusOrderByBeneficiaryNameAsc(Long customerId,
+			BeneficiaryStatus status, BeneficiaryVerificationStatus verificationStatus);
 }
