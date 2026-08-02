@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Cards - DigiBank</title><link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/customer.css}"><script defer th:src="@{/js/cards.js}"></script></head>
+<body class="customer-shell"><div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout"><div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+<section class="customer-content"><div th:replace="~{fragments/customer-layout :: alerts}"></div>
+  <div class="welcome-band"><div><p class="eyebrow">Card services</p><h1>My cards</h1><span>Request, activate and securely manage your DigiBank cards</span></div>
+    <a class="btn btn-save" th:href="@{/customer/cards/new}">Request a card</a></div>
+  <div class="empty-state" th:if="${#lists.isEmpty(cards)}"><h2>No card requests</h2><p>Your cards and submitted requests will appear here.</p></div>
+  <div class="payment-card-grid" th:unless="${#lists.isEmpty(cards)}">
+    <article class="payment-card-tile" th:each="card : ${cards}">
+      <a class="card-tile-link" th:href="@{/customer/cards/{number}(number=${card.requestNumber})}" th:aria-label="${'Open ' + card.cardType.displayName + ' details'}"></a>
+      <div class="payment-card-top"><span>DigiBank</span><em class="card-status" th:classappend="${card.status.name().toLowerCase()}" th:text="${card.status}">ACTIVE</em></div>
+      <div class="card-chip">▤</div><div class="card-number-line"><strong class="card-pan" data-card-number-text th:text="${card.maskedCardNumber}" th:attr="data-masked-number=${card.maskedCardNumber}">•••• •••• •••• 1234</strong>
+        <button class="card-reveal-button" type="button" th:if="${card.maskedCardNumber != 'Not issued'}" data-card-reveal
+                th:attr="data-reveal-url=@{/customer/cards/{number}/number(number=${card.requestNumber})},data-csrf-name=${_csrf.parameterName},data-csrf-token=${_csrf.token}" aria-label="Show full card number" title="Show card number">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10-6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.8"></circle></svg></button></div>
+      <div class="payment-card-bottom"><span><small>Cardholder</small><strong th:text="${card.cardholderName}">NAME</strong></span>
+        <span><small>Expires</small><strong th:text="${card.expiryDate == null ? '--/--' : #temporals.format(card.expiryDate, 'MM/yy')}">12/30</strong></span>
+        <span><small>Type</small><strong th:text="${card.cardType.displayName}">Debit</strong></span></div>
+      <small class="card-request-number" th:text="${card.requestNumber}">CRD</small>
+    </article>
+  </div>
+</section></main><div th:replace="~{fragments/customer-layout :: footer}"></div></body></html>

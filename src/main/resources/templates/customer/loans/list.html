@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Loans - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout"><div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+  <section class="customer-content">
+    <div th:replace="~{fragments/customer-layout :: alerts}"></div>
+    <div class="welcome-band"><div><p class="eyebrow">Borrowing</p><h1>My loans</h1><span>Track applications and repayment plans</span></div>
+      <a class="btn btn-save" th:href="@{/customer/loans/new}">Apply for a loan</a></div>
+    <div class="empty-state" th:if="${#lists.isEmpty(loans)}"><h2>No loan applications</h2><p>Your submitted applications will appear here.</p></div>
+    <div class="loan-grid" th:unless="${#lists.isEmpty(loans)}">
+      <a class="loan-card" th:each="loan : ${loans}" th:href="@{/customer/loans/{number}(number=${loan.applicationNumber})}">
+        <div><span class="mono" th:text="${loan.applicationNumber}">LON123</span>
+          <em class="loan-status" th:classappend="${loan.status.name().toLowerCase()}" th:text="${loan.status}">PENDING</em></div>
+        <h2 th:text="${loan.loanType.displayName}">Personal loan</h2>
+        <strong th:text="${'LKR ' + #numbers.formatDecimal(loan.requestedAmount, 1, 2)}">LKR 0.00</strong>
+        <small th:text="${loan.termMonths + ' months · ' + loan.annualInterestRate + '% p.a.'}">12 months</small>
+      </a>
+    </div>
+  </section>
+</main><div th:replace="~{fragments/customer-layout :: footer}"></div>
+</body></html>

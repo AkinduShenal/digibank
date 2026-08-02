@@ -97,6 +97,41 @@ after pulling this migration; they should not create these tables manually in ph
 
 The system is being developed module by module by six members.
 
+## Loan Management
+
+Active customers can submit a loan application from `/customer/loans/new` for an eligible LKR account. The module
+supports personal, education, home and business loans, validates amounts from LKR 50,000 to LKR 5,000,000, allows
+terms from 6 to 60 months, calculates a reducing-balance monthly installment, and limits that installment to 40% of
+the customer's declared monthly income. Customers can track the review status and view the repayment schedule.
+
+Bank staff and administrators review applications at `/staff/loans`. Approval and disbursement happen atomically:
+the account is locked, the approved amount is credited, a loan-disbursement ledger entry is written, the repayment
+schedule is generated, and the customer receives a notification. Rejections require a reason and also notify the
+customer. Both decisions are recorded in the audit log, and applications can only be decided once. Flyway migration
+`V9__create_loan_management.sql` creates the loan tables and extends account-ledger transaction types automatically.
+
+Customers with a disbursed loan can pay the next unpaid installment from the loan detail page. Repayments require a
+four-digit transaction PIN, an active customer-owned LKR account and sufficient available/current balances. The
+payment locks both the loan installment and debit account, creates a unique `LRP` reference, writes a
+`LOAN_REPAYMENT` debit to the account statement, updates the schedule, sends a notification and writes an audit log
+in one transaction. Missed due dates are marked overdue when loan records are viewed, installments must be paid in
+order, and the loan closes automatically after the final installment. Flyway migration
+`V10__add_loan_repayment_payments.sql` adds the payment reference, debit account and balance snapshot fields.
+
+## Card Management
+
+Active customers can request debit or credit cards for their own active LKR accounts from `/customer/cards`.
+Duplicate open requests for the same account and card type are prevented. Bank staff and administrators review
+requests at `/staff/cards`; approval creates a unique Luhn-valid card number and five-year expiry date, while
+rejection requires a reason. Full card numbers are never exposed in either portal—the UI uses masked card details.
+
+Approved cards begin as inactive. Customers activate them using their four-digit transaction PIN, can immediately
+block an active card, and can reactivate cards they blocked themselves. Cards blocked by bank staff require a staff
+review before reactivation. Staff can also block active or inactive issued cards with a documented reason. Every
+request and status change creates an audit record, and approval, rejection, activation, blocking and reactivation
+send customer notifications. Flyway migration `V11__create_card_management.sql` creates the card table when the
+application restarts; team members should not create the table manually in phpMyAdmin.
+
 ## Member 1 Customer And Account CRUD Mapping
 
 Member 1 owns the customer registration, login, profile, customer dashboard and account lifecycle foundation.

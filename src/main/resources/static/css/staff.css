@@ -14,6 +14,10 @@
   --staff-shadow: 0 14px 38px rgba(13, 48, 42, .08);
 }
 
+.loan-review-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.8fr);gap:20px}.loan-review-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:0}.loan-review-facts div{padding:14px 0;border-top:1px solid #e5ece9}.loan-review-facts div:nth-child(odd){padding-right:18px}.loan-review-facts .wide{grid-column:1/-1}.loan-review-facts dt{font-size:12px;color:#718078;margin-bottom:6px}.loan-review-facts dd{font-weight:700;color:#143c33;margin:0}.decision-panel form{display:flex;flex-direction:column;gap:9px}.decision-panel input,.decision-panel textarea,.staff-filter select{border:1px solid #ccd9d4;border-radius:10px;padding:11px 12px;font:inherit}.decision-panel label{font-size:12px;font-weight:800;color:#405d54}.decision-panel .reject-form{border-top:1px solid #e5ece9;margin-top:20px;padding-top:20px}.staff-btn.danger{background:#a52828;color:#fff;border-color:#a52828}.staff-filter{display:flex;align-items:end;gap:10px;margin:0 0 18px}.staff-filter label{font-size:12px;font-weight:800}.staff-table-card td small{display:block;color:#74837d;margin-top:3px}.status-chip.pending_review{background:#fff2c9;color:#8b6200}.status-chip.disbursed{background:#daf7e7;color:#087443}.status-chip.rejected{background:#fee5e5;color:#aa2525}
+.status-chip.paid{background:#daf7e7;color:#087443}.status-chip.overdue{background:#fee5e5;color:#aa2525}.repayment-progress{margin-top:20px}
+@media(max-width:900px){.loan-review-grid{grid-template-columns:1fr}.loan-review-facts{grid-template-columns:1fr}.loan-review-facts .wide{grid-column:auto}.loan-review-facts div:nth-child(odd){padding-right:0}}
+
 * { box-sizing: border-box; }
 
 .staff-shell,
@@ -184,4 +188,18 @@
   .staff-metrics, .customer-summary, .account-facts, .account-actions, .review-details, .review-actions, .staff-filter { grid-template-columns: 1fr; }
   .metric-card { min-height: 130px; }
   .staff-footer { flex-direction: column; }
+}
+
+/* Card management */
+.card-review-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .8fr); gap: 20px; align-items: start; }
+.status-chip.inactive { color: #3458a5; background: #edf2ff; }
+.status-chip.active { color: #087443; background: #daf7e7; }
+.status-chip.blocked, .status-chip.expired { color: var(--staff-danger); background: #fff0f0; }
+.staff-table-card table { width: 100%; border-collapse: collapse; }
+.staff-table-card th { padding: 13px 18px; color: var(--staff-muted); background: #f7faf8; text-align: left; font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.staff-table-card td { padding: 16px 18px; border-top: 1px solid var(--staff-line); font-size: 13px; }
+.staff-table-card a { color: var(--staff-primary); font-weight: 900; text-decoration: none; }
+
+@media (max-width: 1000px) {
+	.card-review-layout { grid-template-columns: 1fr; }
 }

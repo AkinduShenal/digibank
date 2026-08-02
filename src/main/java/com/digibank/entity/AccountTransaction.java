@@ -65,11 +65,26 @@ public class AccountTransaction extends BaseEntity {
 	public AccountTransaction(BankAccount account, FundTransfer fundTransfer, String referenceNumber,
 			TransactionDirection direction, BigDecimal amount, BigDecimal balanceAfter, String counterpartyName,
 			String counterpartyAccountMasked, String description, LocalDateTime occurredAt) {
+		this(account, fundTransfer, referenceNumber, direction, AccountTransactionType.FUND_TRANSFER, amount,
+				balanceAfter, counterpartyName, counterpartyAccountMasked, description, occurredAt);
+	}
+
+	public AccountTransaction(BankAccount account, String referenceNumber, TransactionDirection direction,
+			AccountTransactionType transactionType, BigDecimal amount, BigDecimal balanceAfter, String counterpartyName,
+			String counterpartyAccountMasked, String description, LocalDateTime occurredAt) {
+		this(account, null, referenceNumber, direction, transactionType, amount, balanceAfter, counterpartyName,
+				counterpartyAccountMasked, description, occurredAt);
+	}
+
+	private AccountTransaction(BankAccount account, FundTransfer fundTransfer, String referenceNumber,
+			TransactionDirection direction, AccountTransactionType transactionType, BigDecimal amount,
+			BigDecimal balanceAfter, String counterpartyName, String counterpartyAccountMasked, String description,
+			LocalDateTime occurredAt) {
 		this.account = account;
 		this.fundTransfer = fundTransfer;
 		this.referenceNumber = referenceNumber;
 		this.direction = direction;
-		this.transactionType = AccountTransactionType.FUND_TRANSFER;
+		this.transactionType = transactionType;
 		this.amount = amount;
 		this.balanceAfter = balanceAfter;
 		this.counterpartyName = counterpartyName;

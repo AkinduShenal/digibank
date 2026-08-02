@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Loan Review - DigiBank</title><link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/staff.css}"></head>
+<body class="staff-shell"><div th:replace="~{fragments/staff-layout :: topbar}"></div>
+<div class="staff-layout"><div th:replace="~{fragments/staff-layout :: sidebar('loans')}"></div>
+<main class="staff-main" th:object="${loan}"><div th:replace="~{fragments/staff-layout :: alerts}"></div>
+  <section class="staff-page-head"><div><p class="staff-eyebrow">Loan review</p><h1 th:text="*{customerName}">Customer</h1><p class="mono" th:text="*{applicationNumber}">LON</p></div>
+    <a class="staff-btn" th:href="@{/staff/loans}">Back to applications</a></section>
+  <section class="loan-review-grid"><article class="staff-panel"><div class="panel-heading"><div><p class="staff-eyebrow">Application</p><h2 th:text="*{loanType.displayName}">Loan</h2></div><em class="status-chip" th:classappend="*{status.name().toLowerCase()}" th:text="*{status}">STATUS</em></div>
+    <dl class="loan-review-facts"><div><dt>Requested amount</dt><dd th:text="*{'LKR ' + #numbers.formatDecimal(requestedAmount, 1, 2)}">0</dd></div>
+      <div><dt>Monthly income</dt><dd th:text="*{'LKR ' + #numbers.formatDecimal(monthlyIncome, 1, 2)}">0</dd></div><div><dt>Estimated installment</dt><dd th:text="*{'LKR ' + #numbers.formatDecimal(monthlyInstallment, 1, 2)}">0</dd></div>
+      <div><dt>Term / rate</dt><dd th:text="*{termMonths + ' months · ' + annualInterestRate + '%'}">0</dd></div><div><dt>Employment</dt><dd th:text="*{employmentStatus}">Employment</dd></div>
+      <div><dt>Account</dt><dd class="mono" th:text="*{accountNumber}">****</dd></div><div class="wide"><dt>Purpose</dt><dd th:text="*{purpose}">Purpose</dd></div>
+      <div class="wide" th:if="*{reviewNote != null}"><dt>Review note</dt><dd th:text="*{reviewNote}">Note</dd></div></dl></article>
+    <article class="staff-panel decision-panel" th:if="*{status.name() == 'PENDING_REVIEW'}"><div class="panel-heading"><div><p class="staff-eyebrow">Decision</p><h2>Complete review</h2></div></div>
+      <form th:action="@{/staff/loans/{number}/approve(number=*{applicationNumber})}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <label>Approved amount</label><input name="approvedAmount" type="number" min="50000" step="0.01" th:value="*{requestedAmount}" required>
+        <label>Approval note</label><textarea name="note" rows="3" maxlength="500" placeholder="Optional internal review note"></textarea>
+        <button class="staff-btn primary" type="submit">Approve and disburse</button></form>
+      <form class="reject-form" th:action="@{/staff/loans/{number}/reject(number=*{applicationNumber})}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <label>Rejection reason</label><textarea name="reason" rows="3" minlength="5" maxlength="500" required></textarea><button class="staff-btn danger" type="submit">Reject application</button></form>
+    </article>
+  </section>
+  <section class="staff-panel repayment-progress" th:if="*{!#lists.isEmpty(schedule)}"><div class="panel-heading"><div><p class="staff-eyebrow">Repayments</p><h2>Payment progress</h2></div></div>
+    <div class="staff-table-card"><table><thead><tr><th>No.</th><th>Due date</th><th>Principal</th><th>Interest</th><th>Total</th><th>Status / reference</th></tr></thead><tbody>
+      <tr th:each="row : *{schedule}"><td th:text="${row.installmentNumber}">1</td><td th:text="${#temporals.format(row.dueDate, 'dd MMM yyyy')}">date</td>
+        <td th:text="${#numbers.formatDecimal(row.principalAmount, 1, 2)}">0</td><td th:text="${#numbers.formatDecimal(row.interestAmount, 1, 2)}">0</td><td th:text="${#numbers.formatDecimal(row.totalAmount, 1, 2)}">0</td>
+        <td><em class="status-chip" th:classappend="${row.status.name().toLowerCase()}" th:text="${row.status}">STATUS</em><small class="mono" th:if="${row.paymentReference != null}" th:text="${row.paymentReference}">LRP</small></td></tr>
+    </tbody></table></div>
+  </section>
+</main></div><div th:replace="~{fragments/staff-layout :: footer}"></div></body></html>

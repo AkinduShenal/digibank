@@ -31,6 +31,12 @@
   <a th:href="@{/staff/beneficiaries}" th:classappend="${activePage == 'beneficiaries'} ? ' active'">
     <span class="nav-icon">✓</span><span>Beneficiary reviews</span>
   </a>
+  <a th:href="@{/staff/loans}" th:classappend="${activePage == 'loans'} ? ' active'">
+    <span class="nav-icon">¤</span><span>Loan applications</span>
+  </a>
+  <a th:href="@{/staff/cards}" th:classappend="${activePage == 'cards'} ? ' active'">
+    <span class="nav-icon">▣</span><span>Card requests</span>
+  </a>
   <div class="staff-help">
     <strong>Secure operations</strong>
     <span>All account and verification actions are recorded in the audit log.</span>

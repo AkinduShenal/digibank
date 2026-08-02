@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Card Details - DigiBank</title><link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/customer.css}"><script defer th:src="@{/js/cards.js}"></script></head>
+<body class="customer-shell"><div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout"><div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+<section class="customer-content" th:object="${card}"><div th:replace="~{fragments/customer-layout :: alerts}"></div>
+  <div class="welcome-band"><div><p class="eyebrow">Card details</p><h1 th:text="*{cardType.displayName}">Card</h1><span class="mono" th:text="*{requestNumber}">CRD</span></div>
+    <em class="card-status large" th:classappend="*{status.name().toLowerCase()}" th:text="*{status}">STATUS</em></div>
+  <div class="card-details-layout">
+    <article class="payment-card-tile large-card"><div class="payment-card-top"><span>DigiBank</span><span th:text="*{cardType.name()}">DEBIT</span></div>
+      <div class="card-chip">▤</div><div class="card-number-line"><strong class="card-pan" data-card-number-text th:text="*{maskedCardNumber}" th:attr="data-masked-number=*{maskedCardNumber}">•••• •••• •••• 1234</strong>
+        <button class="card-reveal-button" type="button" th:if="*{maskedCardNumber != 'Not issued'}" data-card-reveal
+                th:attr="data-reveal-url=@{/customer/cards/{number}/number(number=*{requestNumber})},data-csrf-name=${_csrf.parameterName},data-csrf-token=${_csrf.token}" aria-label="Show full card number" title="Show card number">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.8"></circle></svg></button></div>
+      <div class="payment-card-bottom"><span><small>Cardholder</small><strong th:text="*{cardholderName}">NAME</strong></span>
+        <span><small>Expires</small><strong th:text="*{expiryDate == null ? '--/--' : #temporals.format(expiryDate, 'MM/yy')}">12/30</strong></span></div></article>
+    <article class="transaction-detail-card card-facts"><div><span>Linked account</span><strong class="mono" th:text="*{accountNumber}">****</strong></div>
+      <div><span>Requested</span><strong th:text="*{#temporals.format(requestedAt, 'dd MMM yyyy HH:mm')}">date</strong></div>
+      <div><span>Reviewed by</span><strong th:text="*{reviewedBy == null ? 'Awaiting review' : reviewedBy}">staff</strong></div>
+      <div><span>Activation</span><strong th:text="*{activatedAt == null ? 'Not activated' : #temporals.format(activatedAt, 'dd MMM yyyy HH:mm')}">active</strong></div>
+      <div class="wide" th:if="*{reviewNote != null}"><span>Review note</span><strong th:text="*{reviewNote}">note</strong></div>
+      <div class="wide" th:if="*{blockReason != null}"><span>Block reason</span><strong th:text="*{blockReason}">reason</strong></div></article>
+  </div>
+  <section class="card-action-panel" th:if="*{status.name() == 'INACTIVE' or status.name() == 'ACTIVE' or status.name() == 'BLOCKED'}">
+    <div><p class="eyebrow">Secure card control</p><h2 th:text="*{status.name() == 'INACTIVE' ? 'Activate your card' : status.name() == 'ACTIVE' ? 'Block this card' : 'Reactivate this card'}">Card action</h2>
+      <p th:if="*{status.name() == 'BLOCKED' and blockReason != 'Blocked by customer'}">This card was blocked by bank staff. Contact the bank for reactivation.</p></div>
+    <form th:if="*{status.name() == 'INACTIVE' or status.name() == 'ACTIVE' or (status.name() == 'BLOCKED' and blockReason == 'Blocked by customer')}"
+          th:action="*{status.name() == 'INACTIVE' ? '/customer/cards/' + requestNumber + '/activate' : status.name() == 'ACTIVE' ? '/customer/cards/' + requestNumber + '/block' : '/customer/cards/' + requestNumber + '/reactivate'}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><label>Transaction PIN</label>
+      <input name="transactionPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="4 digits" required>
+      <button class="btn" th:classappend="*{status.name() == 'ACTIVE'} ? ' btn-danger' : ' btn-save'" type="submit"
+              th:text="*{status.name() == 'INACTIVE' ? 'Activate card' : status.name() == 'ACTIVE' ? 'Block card' : 'Reactivate card'}">Update</button></form>
+  </section>
+  <a class="btn btn-prev" th:href="@{/customer/cards}">Back to cards</a>
+</section></main><div th:replace="~{fragments/customer-layout :: footer}"></div></body></html>
