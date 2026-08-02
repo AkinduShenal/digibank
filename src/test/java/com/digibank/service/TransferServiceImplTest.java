@@ -5,6 +5,7 @@ import com.digibank.dto.transfer.TransferDetailsView;
 import com.digibank.dto.transfer.TransferFormView;
 import com.digibank.dto.transfer.TransferRequest;
 import com.digibank.entity.AuditLog;
+import com.digibank.entity.AccountTransaction;
 import com.digibank.entity.BankAccount;
 import com.digibank.entity.Beneficiary;
 import com.digibank.entity.Customer;
@@ -26,9 +27,11 @@ import com.digibank.enums.TransferType;
 import com.digibank.exception.TransferException;
 import com.digibank.exception.TransferNotFoundException;
 import com.digibank.repository.AuditLogRepository;
+import com.digibank.repository.AccountTransactionRepository;
 import com.digibank.repository.BankAccountRepository;
 import com.digibank.repository.BeneficiaryRepository;
 import com.digibank.repository.CustomerRepository;
+import com.digibank.repository.CustomerNotificationRepository;
 import com.digibank.repository.FundTransferRepository;
 import com.digibank.service.impl.TransferServiceImpl;
 import com.digibank.util.SensitiveDataMasker;
@@ -57,6 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -75,6 +79,8 @@ class TransferServiceImplTest {
 	@Mock private BeneficiaryRepository beneficiaryRepository;
 	@Mock private FundTransferRepository fundTransferRepository;
 	@Mock private AuditLogRepository auditLogRepository;
+	@Mock private AccountTransactionRepository accountTransactionRepository;
+	@Mock private CustomerNotificationRepository notificationRepository;
 	@Mock private PasswordEncoder passwordEncoder;
 
 	private TransferServiceImpl service;
@@ -84,13 +90,16 @@ class TransferServiceImplTest {
 	@BeforeEach
 	void setUp() {
 		service = new TransferServiceImpl(customerRepository, bankAccountRepository, beneficiaryRepository,
-				fundTransferRepository, auditLogRepository, passwordEncoder, new SensitiveDataMasker());
+				fundTransferRepository, auditLogRepository, accountTransactionRepository, notificationRepository,
+				passwordEncoder, new SensitiveDataMasker());
 		customer = customer(USER_ID, CUSTOMER_ID, "Sender", "Customer");
 		source = account(customer, 30L, SOURCE_NUMBER, new BigDecimal("1000.00"));
 		when(customerRepository.findByUserId(USER_ID)).thenReturn(Optional.of(customer));
 		when(passwordEncoder.matches("1234", "encoded-pin")).thenReturn(true);
 		when(fundTransferRepository.save(any(FundTransfer.class))).thenAnswer(invocation -> invocation.getArgument(0));
 		when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(accountTransactionRepository.save(any(AccountTransaction.class)))
+				.thenAnswer(invocation -> invocation.getArgument(0));
 	}
 
 	@Test
@@ -111,6 +120,8 @@ class TransferServiceImplTest {
 		assertEquals(TransferStatus.COMPLETED, result.status());
 		assertEquals(new BigDecimal("750.00"), result.sourceBalanceAfter());
 		verify(bankAccountRepository).saveAll(any());
+		verify(accountTransactionRepository, times(2)).save(any(AccountTransaction.class));
+		verify(notificationRepository, times(2)).save(any());
 		assertEquals("FUND_TRANSFER_COMPLETED", capturedAudit().getAction());
 	}
 
@@ -127,6 +138,8 @@ class TransferServiceImplTest {
 		assertEquals(TransferType.EXTERNAL, result.transferType());
 		assertEquals(TransferStatus.COMPLETED, result.status());
 		assertNotNull(result.referenceNumber());
+		verify(accountTransactionRepository).save(any(AccountTransaction.class));
+		verify(notificationRepository).save(any());
 	}
 
 	@Test

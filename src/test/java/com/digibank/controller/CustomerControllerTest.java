@@ -4,6 +4,10 @@ import com.digibank.dto.customer.AccountSummaryView;
 import com.digibank.dto.customer.CustomerDashboardView;
 import com.digibank.dto.customer.CustomerProfileUpdateRequest;
 import com.digibank.dto.customer.CustomerProfileView;
+import com.digibank.dto.transaction.StatementExport;
+import com.digibank.dto.transaction.TransactionSearchCriteria;
+import com.digibank.dto.transaction.TransactionStatementView;
+import com.digibank.dto.transaction.TransactionView;
 import com.digibank.entity.User;
 import com.digibank.enums.AccountStatus;
 import com.digibank.enums.AccountType;
@@ -19,6 +23,7 @@ import com.digibank.security.CustomUserDetails;
 import com.digibank.security.SecurityConfig;
 import com.digibank.service.CustomerProfileService;
 import com.digibank.service.AccountManagementService;
+import com.digibank.service.AccountTransactionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +78,7 @@ class CustomerControllerTest {
 		mockMvc.perform(get("/customer/dashboard").with(user(customerUser)))
 				.andExpect(status().isOk())
 				.andExpect(view().name("customer/dashboard"))
-				.andExpect(model().attributeExists("dashboard"));
+				.andExpect(model().attributeExists("dashboard", "recentTransactions"));
 	}
 
 	@Test
@@ -155,6 +160,11 @@ class CustomerControllerTest {
 		@Bean
 		FakeAccountManagementService accountManagementService() {
 			return new FakeAccountManagementService();
+		}
+
+		@Bean
+		FakeAccountTransactionService accountTransactionService() {
+			return new FakeAccountTransactionService();
 		}
 
 		@Bean
@@ -271,6 +281,20 @@ class CustomerControllerTest {
 		public com.digibank.dto.staff.StaffCustomerView getCustomerDetails(String customerNumber) {
 			return null;
 		}
+	}
+
+	static class FakeAccountTransactionService implements AccountTransactionService {
+
+		@Override
+		public TransactionStatementView getStatement(Long userId, TransactionSearchCriteria criteria) { return null; }
+		@Override
+		public TransactionView getTransaction(Long userId, Long transactionId) { return null; }
+		@Override
+		public List<TransactionView> getRecentTransactions(Long userId, int limit) { return List.of(); }
+		@Override
+		public StatementExport exportCsv(Long userId, TransactionSearchCriteria criteria) { return null; }
+		@Override
+		public StatementExport exportPdf(Long userId, TransactionSearchCriteria criteria) { return null; }
 	}
 
 	private static void setId(User user, Long id) {

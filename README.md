@@ -80,6 +80,21 @@ Flyway migration `V6__create_fund_transfers.sql` creates the transfer table and
 is restarted against MySQL/MariaDB. Team members only need to create an empty `digibank_db`, configure their own
 local database credentials, and start the application; tables should not be created manually in phpMyAdmin.
 
+## Customer Account Statements And Notifications
+
+Every completed transfer now creates an immutable account-ledger entry. Internal transfers create a debit entry
+for the sender and a credit entry for the recipient in the same database transaction; external transfers create the
+sender's debit entry. Customers can view their account statement at `/customer/transactions`, filter it by account,
+direction, date range or keyword, open a transaction detail page, and download the filtered statement as CSV or PDF.
+All statement and detail queries are restricted to accounts owned by the signed-in customer.
+
+Senders receive a debit notification for every completed transfer, and recipients of internal transfers receive an
+incoming-transfer notification. Notifications can be viewed and marked as read at `/customer/notifications`, and
+the customer dashboard shows recent ledger activity. Flyway migration
+`V8__create_account_transactions_and_notifications.sql` creates the ledger and notification tables and backfills
+ledger entries for existing completed transfers when the application restarts. Team members should restart the app
+after pulling this migration; they should not create these tables manually in phpMyAdmin.
+
 The system is being developed module by module by six members.
 
 ## Member 1 Customer And Account CRUD Mapping

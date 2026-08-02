@@ -57,6 +57,22 @@
       </article>
     </div>
 
+    <section class="dashboard-transactions" th:if="${dashboard.primaryAccount != null}">
+      <div class="section-heading"><div><p class="eyebrow">Latest activity</p><h2>Recent transactions</h2></div>
+        <a th:href="@{/customer/transactions}">View full statement</a></div>
+      <div class="empty-state compact" th:if="${#lists.isEmpty(recentTransactions)}"><p>No account transactions yet.</p></div>
+      <div class="transaction-ledger compact" th:unless="${#lists.isEmpty(recentTransactions)}">
+        <a th:each="transaction : ${recentTransactions}" th:href="@{/customer/transactions/{id}(id=${transaction.id})}">
+          <span class="transaction-direction" th:classappend="${transaction.direction.name() == 'CREDIT' ? ' credit' : ' debit'}"
+                th:text="${transaction.direction.name() == 'CREDIT' ? '↓' : '↑'}">↓</span>
+          <span class="transaction-party"><strong th:text="${transaction.counterpartyName}">Name</strong>
+            <small th:text="${#temporals.format(transaction.occurredAt, 'dd MMM yyyy HH:mm')}">Date</small></span>
+          <strong class="transaction-amount" th:classappend="${transaction.direction.name() == 'CREDIT' ? ' credit' : ' debit'}"
+                  th:text="${(transaction.direction.name() == 'CREDIT' ? '+ LKR ' : '- LKR ') + #numbers.formatDecimal(transaction.amount, 1, 2)}">Amount</strong>
+        </a>
+      </div>
+    </section>
+
     <div class="notice" th:unless="*{primaryAccount != null}">
       <div class="ic">i</div>
       <div>

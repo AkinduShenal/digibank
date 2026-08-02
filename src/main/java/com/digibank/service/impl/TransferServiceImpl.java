@@ -8,9 +8,11 @@ import com.digibank.dto.transfer.TransferFormView;
 import com.digibank.dto.transfer.TransferListView;
 import com.digibank.dto.transfer.TransferRequest;
 import com.digibank.entity.AuditLog;
+import com.digibank.entity.AccountTransaction;
 import com.digibank.entity.BankAccount;
 import com.digibank.entity.Beneficiary;
 import com.digibank.entity.Customer;
+import com.digibank.entity.CustomerNotification;
 import com.digibank.entity.FundTransfer;
 import com.digibank.enums.AccountStatus;
 import com.digibank.enums.BeneficiaryStatus;
@@ -18,6 +20,8 @@ import com.digibank.enums.BeneficiaryType;
 import com.digibank.enums.BeneficiaryVerificationStatus;
 import com.digibank.enums.CurrencyCode;
 import com.digibank.enums.CustomerStatus;
+import com.digibank.enums.NotificationType;
+import com.digibank.enums.TransactionDirection;
 import com.digibank.enums.TransferStatus;
 import com.digibank.enums.TransferRecipientType;
 import com.digibank.enums.TransferType;
@@ -25,8 +29,10 @@ import com.digibank.exception.CustomerProfileNotFoundException;
 import com.digibank.exception.TransferException;
 import com.digibank.exception.TransferNotFoundException;
 import com.digibank.repository.AuditLogRepository;
+import com.digibank.repository.AccountTransactionRepository;
 import com.digibank.repository.BankAccountRepository;
 import com.digibank.repository.BeneficiaryRepository;
+import com.digibank.repository.CustomerNotificationRepository;
 import com.digibank.repository.CustomerRepository;
 import com.digibank.repository.FundTransferRepository;
 import com.digibank.service.TransferService;
@@ -58,17 +64,23 @@ public class TransferServiceImpl implements TransferService {
 	private final BeneficiaryRepository beneficiaryRepository;
 	private final FundTransferRepository fundTransferRepository;
 	private final AuditLogRepository auditLogRepository;
+	private final AccountTransactionRepository accountTransactionRepository;
+	private final CustomerNotificationRepository notificationRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final SensitiveDataMasker dataMasker;
 
 	public TransferServiceImpl(CustomerRepository customerRepository, BankAccountRepository bankAccountRepository,
 			BeneficiaryRepository beneficiaryRepository, FundTransferRepository fundTransferRepository,
-			AuditLogRepository auditLogRepository, PasswordEncoder passwordEncoder, SensitiveDataMasker dataMasker) {
+			AuditLogRepository auditLogRepository, AccountTransactionRepository accountTransactionRepository,
+			CustomerNotificationRepository notificationRepository, PasswordEncoder passwordEncoder,
+			SensitiveDataMasker dataMasker) {
 		this.customerRepository = customerRepository;
 		this.bankAccountRepository = bankAccountRepository;
 		this.beneficiaryRepository = beneficiaryRepository;
 		this.fundTransferRepository = fundTransferRepository;
 		this.auditLogRepository = auditLogRepository;
+		this.accountTransactionRepository = accountTransactionRepository;
+		this.notificationRepository = notificationRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.dataMasker = dataMasker;
 	}
@@ -179,9 +191,11 @@ public class TransferServiceImpl implements TransferService {
 		}
 		bankAccountRepository.saveAll(lockedAccounts.values());
 		transfer.setSourceBalanceAfter(source.getAvailableBalance());
+		LocalDateTime completedAt = LocalDateTime.now();
 		transfer.setStatus(TransferStatus.COMPLETED);
-		transfer.setCompletedAt(LocalDateTime.now());
+		transfer.setCompletedAt(completedAt);
 		FundTransfer saved = fundTransferRepository.save(transfer);
+		writeLedgerEntries(customer, source, destination, saved, recipientName, completedAt);
 		audit(actorUsername, saved);
 		return details(saved);
 	}
@@ -330,6 +344,32 @@ public class TransferServiceImpl implements TransferService {
 		auditLogRepository.save(new AuditLog(requireActor(actorUsername), "FUND_TRANSFER_COMPLETED", "FUND_TRANSFER",
 				transfer.getReferenceNumber(), TransferStatus.PENDING.name(), TransferStatus.COMPLETED.name(), reason,
 				LocalDateTime.now()));
+	}
+
+	private void writeLedgerEntries(Customer sender, BankAccount source, BankAccount destination,
+			FundTransfer transfer, String recipientName, LocalDateTime completedAt) {
+		AccountTransaction debit = new AccountTransaction(source, transfer, transfer.getReferenceNumber(),
+				TransactionDirection.DEBIT, transfer.getAmount(), source.getAvailableBalance(), recipientName,
+				transfer.getDestinationAccountMasked(), transfer.getDescription(), completedAt);
+		accountTransactionRepository.save(debit);
+		String debitMessage = String.format(Locale.ROOT, "LKR %s debited for transfer to %s (%s).",
+				transfer.getAmount().toPlainString(), recipientName, transfer.getDestinationAccountMasked());
+		notificationRepository.save(new CustomerNotification(sender.getUser(), NotificationType.ACCOUNT_NOTICE,
+				"Transfer debited", debitMessage, transfer.getReferenceNumber()));
+		if (destination == null) {
+			return;
+		}
+		String senderName = sender.getFullName();
+		String maskedSource = dataMasker.maskAccountNumber(source.getAccountNumber());
+		AccountTransaction credit = new AccountTransaction(destination, transfer, transfer.getReferenceNumber(),
+				TransactionDirection.CREDIT, transfer.getAmount(), destination.getAvailableBalance(), senderName,
+				maskedSource, transfer.getDescription(), completedAt);
+		accountTransactionRepository.save(credit);
+		String message = String.format(Locale.ROOT, "LKR %s received from %s (%s).",
+				transfer.getAmount().toPlainString(), senderName, maskedSource);
+		notificationRepository.save(new CustomerNotification(destination.getCustomer().getUser(),
+				NotificationType.INCOMING_TRANSFER, "Incoming transfer received", message,
+				transfer.getReferenceNumber()));
 	}
 
 	private TransferListView summary(FundTransfer transfer) {

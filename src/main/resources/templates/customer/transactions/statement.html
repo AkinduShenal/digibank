@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account Statement - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout">
+  <div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+  <section class="customer-content">
+    <div th:replace="~{fragments/customer-layout :: alerts}"></div>
+    <div class="welcome-band">
+      <div><p class="eyebrow">Account activity</p><h1>Transaction statement</h1><span class="mono">Incoming and outgoing account entries</span></div>
+      <a class="btn btn-gotologin" th:href="@{/customer/transfers/new}">Send money</a>
+    </div>
+
+    <form class="statement-filters" method="get" th:action="@{/customer/transactions}" th:object="${criteria}">
+      <label>Account
+        <select th:field="*{accountNumber}">
+          <option value="">All accounts</option>
+          <option th:each="account : ${statement.accounts}" th:value="${account.accountNumber}"
+                  th:text="${account.maskedAccountNumber + ' · ' + account.accountType}">Account</option>
+        </select>
+      </label>
+      <label>Entry type
+        <select th:field="*{direction}">
+          <option value="">Credits and debits</option>
+          <option value="CREDIT">Money received</option>
+          <option value="DEBIT">Money sent</option>
+        </select>
+      </label>
+      <label>From date<input type="date" th:field="*{fromDate}"></label>
+      <label>To date<input type="date" th:field="*{toDate}"></label>
+      <label class="statement-keyword">Search
+        <input type="search" maxlength="80" th:field="*{keyword}" placeholder="Reference, name or description">
+      </label>
+      <div class="statement-filter-actions">
+        <button class="btn btn-gotologin" type="submit">Apply filters</button>
+        <a class="btn btn-prev" th:href="@{/customer/transactions}">Clear</a>
+      </div>
+    </form>
+
+    <div class="statement-toolbar">
+      <p><strong th:text="${statement.transactions.totalElements}">0</strong> transaction entries</p>
+      <div>
+        <a class="btn btn-prev" th:href="@{/customer/transactions/export/csv(accountNumber=${criteria.accountNumber},direction=${criteria.direction},fromDate=${criteria.fromDate},toDate=${criteria.toDate},keyword=${criteria.keyword})}">Download CSV</a>
+        <a class="btn btn-prev" th:href="@{/customer/transactions/export/pdf(accountNumber=${criteria.accountNumber},direction=${criteria.direction},fromDate=${criteria.fromDate},toDate=${criteria.toDate},keyword=${criteria.keyword})}">Download PDF</a>
+      </div>
+    </div>
+
+    <div class="empty-state" th:if="${statement.transactions.empty}">
+      <h2>No matching transactions</h2><p>New transfers and incoming payments will appear here.</p>
+    </div>
+    <div class="transaction-ledger" th:unless="${statement.transactions.empty}">
+      <a th:each="transaction : ${statement.transactions.content}"
+         th:href="@{/customer/transactions/{id}(id=${transaction.id})}">
+        <span class="transaction-direction" th:classappend="${transaction.direction.name() == 'CREDIT' ? ' credit' : ' debit'}"
+              th:text="${transaction.direction.name() == 'CREDIT' ? '↓' : '↑'}">↓</span>
+        <span class="transaction-party">
+          <strong th:text="${transaction.counterpartyName}">Counterparty</strong>
+          <small th:text="${transaction.referenceNumber + ' · ' + transaction.counterpartyAccountMasked}">Reference</small>
+        </span>
+        <span class="transaction-date" th:text="${#temporals.format(transaction.occurredAt, 'dd MMM yyyy HH:mm')}">Date</span>
+        <strong class="transaction-amount" th:classappend="${transaction.direction.name() == 'CREDIT' ? ' credit' : ' debit'}"
+                th:text="${(transaction.direction.name() == 'CREDIT' ? '+ LKR ' : '- LKR ') + #numbers.formatDecimal(transaction.amount, 1, 2)}">LKR 0.00</strong>
+      </a>
+    </div>
+
+    <nav class="statement-pages" th:if="${statement.transactions.totalPages > 1}" aria-label="Statement pages">
+      <a th:if="${statement.transactions.hasPrevious()}"
+         th:href="@{/customer/transactions(page=${statement.transactions.number - 1},accountNumber=${criteria.accountNumber},direction=${criteria.direction},fromDate=${criteria.fromDate},toDate=${criteria.toDate},keyword=${criteria.keyword})}">Previous</a>
+      <span th:text="${'Page ' + (statement.transactions.number + 1) + ' of ' + statement.transactions.totalPages}">Page 1</span>
+      <a th:if="${statement.transactions.hasNext()}"
+         th:href="@{/customer/transactions(page=${statement.transactions.number + 1},accountNumber=${criteria.accountNumber},direction=${criteria.direction},fromDate=${criteria.fromDate},toDate=${criteria.toDate},keyword=${criteria.keyword})}">Next</a>
+    </nav>
+  </section>
+</main>
+<div th:replace="~{fragments/customer-layout :: footer}"></div>
+</body>
+</html>

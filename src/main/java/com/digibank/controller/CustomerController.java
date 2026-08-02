@@ -4,6 +4,7 @@ import com.digibank.dto.customer.CustomerProfileUpdateRequest;
 import com.digibank.exception.AccountAccessDeniedException;
 import com.digibank.security.CustomUserDetails;
 import com.digibank.service.AccountManagementService;
+import com.digibank.service.AccountTransactionService;
 import com.digibank.service.CustomerProfileService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,15 +23,19 @@ public class CustomerController {
 
 	private final CustomerProfileService customerProfileService;
 	private final AccountManagementService accountManagementService;
+	private final AccountTransactionService transactionService;
 
-	public CustomerController(CustomerProfileService customerProfileService, AccountManagementService accountManagementService) {
+	public CustomerController(CustomerProfileService customerProfileService, AccountManagementService accountManagementService,
+			AccountTransactionService transactionService) {
 		this.customerProfileService = customerProfileService;
 		this.accountManagementService = accountManagementService;
+		this.transactionService = transactionService;
 	}
 
 	@GetMapping("/customer/dashboard")
 	public String dashboard(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
 		model.addAttribute("dashboard", customerProfileService.getDashboard(userDetails));
+		model.addAttribute("recentTransactions", transactionService.getRecentTransactions(userDetails.getUserId(), 5));
 		return "customer/dashboard";
 	}
 
