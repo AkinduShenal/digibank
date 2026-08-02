@@ -12,7 +12,8 @@
   <div th:replace="~{fragments/customer-layout :: sidebar}"></div>
   <section class="customer-content">
     <div th:replace="~{fragments/customer-layout :: alerts}"></div>
-    <div class="welcome-band"><div><p class="eyebrow">Activity</p><h1>Transfer history</h1><span class="mono">Your latest 50 transfers</span></div><a class="btn btn-gotologin" th:href="@{/customer/transfers/new}">Send money</a></div>
+    <div class="welcome-band"><div><p class="eyebrow">Activity</p><h1>Transfer history</h1><span>Search and filter your transfers</span></div><a class="btn btn-gotologin" th:href="@{/customer/transfers/new}">Send money</a></div>
+    <form class="list-filter" method="get"><input name="q" th:value="${query}" placeholder="Reference, recipient or bank"><select name="status"><option value="">All statuses</option><option th:each="s:${transferStatuses}" th:value="${s}" th:text="${s}" th:selected="${s==selectedStatus}"></option></select><button class="btn btn-save">Filter</button></form>
     <div class="empty-state" th:if="${#lists.isEmpty(transfers)}"><h2>No transfers yet</h2><p>Your completed transfers will appear here.</p></div>
     <section class="transfer-history" th:unless="${#lists.isEmpty(transfers)}">
       <a th:each="transfer : ${transfers}" th:href="@{/customer/transfers/{reference}(reference=${transfer.referenceNumber})}">
@@ -22,6 +23,7 @@
         <em class="status-pill" th:text="${transfer.status}">COMPLETED</em>
       </a>
     </section>
+    <nav class="list-pagination" th:if="${transfersPage.totalPages>1}"><a th:if="${transfersPage.hasPrevious()}" th:href="@{/customer/transfers(q=${query},status=${selectedStatus},page=${transfersPage.number-1},size=${transfersPage.size})}">Previous</a><span th:text="${'Page '+(transfersPage.number+1)+' of '+transfersPage.totalPages}"></span><a th:if="${transfersPage.hasNext()}" th:href="@{/customer/transfers(q=${query},status=${selectedStatus},page=${transfersPage.number+1},size=${transfersPage.size})}">Next</a></nav>
   </section>
 </main>
 <div th:replace="~{fragments/customer-layout :: footer}"></div>

@@ -1,0 +1,21 @@
+CREATE TABLE scheduled_payments (
+	id BIGINT AUTO_INCREMENT PRIMARY KEY, customer_id BIGINT NOT NULL, source_account_id BIGINT NOT NULL,
+	beneficiary_id BIGINT NULL, saved_biller_id BIGINT NULL, schedule_reference VARCHAR(32) NOT NULL,
+	payment_type VARCHAR(30) NOT NULL, status VARCHAR(20) NOT NULL, recurrence VARCHAR(20) NOT NULL,
+	next_execution_at DATETIME(6) NOT NULL, end_date DATE NULL, amount DECIMAL(19,2) NOT NULL,
+	description VARCHAR(140) NULL, transfer_recipient_type VARCHAR(30) NULL, destination_account_number VARCHAR(34) NULL,
+	biller_selection_type VARCHAR(30) NULL, biller_provider VARCHAR(40) NULL, consumer_reference VARCHAR(50) NULL,
+	execution_count INT NOT NULL DEFAULT 0, last_execution_reference VARCHAR(32) NULL, last_executed_at DATETIME(6) NULL,
+	failure_reason VARCHAR(255) NULL, cancelled_at DATETIME(6) NULL, version BIGINT NOT NULL DEFAULT 0,
+	created_at DATETIME(6) NOT NULL, updated_at DATETIME(6) NOT NULL,
+	CONSTRAINT uk_scheduled_payments_reference UNIQUE(schedule_reference),
+	CONSTRAINT fk_scheduled_customer FOREIGN KEY(customer_id) REFERENCES customers(id),
+	CONSTRAINT fk_scheduled_source FOREIGN KEY(source_account_id) REFERENCES bank_accounts(id),
+	CONSTRAINT fk_scheduled_beneficiary FOREIGN KEY(beneficiary_id) REFERENCES beneficiaries(id),
+	CONSTRAINT fk_scheduled_biller FOREIGN KEY(saved_biller_id) REFERENCES saved_billers(id),
+	CONSTRAINT chk_scheduled_type CHECK(payment_type IN ('FUND_TRANSFER','BILL_PAYMENT')),
+	CONSTRAINT chk_scheduled_status CHECK(status IN ('SCHEDULED','PROCESSING','COMPLETED','CANCELLED','FAILED')),
+	CONSTRAINT chk_scheduled_recurrence CHECK(recurrence IN ('ONCE','MONTHLY')),
+	CONSTRAINT chk_scheduled_amount CHECK(amount > 0),
+	INDEX idx_scheduled_due(status,next_execution_at), INDEX idx_scheduled_customer(customer_id,created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

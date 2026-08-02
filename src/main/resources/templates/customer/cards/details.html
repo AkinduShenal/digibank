@@ -20,6 +20,7 @@
       <div><span>Requested</span><strong th:text="*{#temporals.format(requestedAt, 'dd MMM yyyy HH:mm')}">date</strong></div>
       <div><span>Reviewed by</span><strong th:text="*{reviewedBy == null ? 'Awaiting review' : reviewedBy}">staff</strong></div>
       <div><span>Activation</span><strong th:text="*{activatedAt == null ? 'Not activated' : #temporals.format(activatedAt, 'dd MMM yyyy HH:mm')}">active</strong></div>
+      <div><span>Spending limit</span><strong th:text="*{'LKR ' + #numbers.formatDecimal(spendingLimit, 1, 2)}">LKR</strong></div>
       <div class="wide" th:if="*{reviewNote != null}"><span>Review note</span><strong th:text="*{reviewNote}">note</strong></div>
       <div class="wide" th:if="*{blockReason != null}"><span>Block reason</span><strong th:text="*{blockReason}">reason</strong></div></article>
   </div>
@@ -32,6 +33,12 @@
       <input name="transactionPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="4 digits" required>
       <button class="btn" th:classappend="*{status.name() == 'ACTIVE'} ? ' btn-danger' : ' btn-save'" type="submit"
               th:text="*{status.name() == 'INACTIVE' ? 'Activate card' : status.name() == 'ACTIVE' ? 'Block card' : 'Reactivate card'}">Update</button></form>
+  </section>
+  <section class="card-control-grid" th:if="*{status.name() == 'ACTIVE' or status.name() == 'INACTIVE' or status.name() == 'BLOCKED'}">
+    <form class="card-action-panel compact-control" th:if="*{status.name() == 'ACTIVE' or status.name() == 'INACTIVE'}" th:action="@{/customer/cards/{number}/limit(number=*{requestNumber})}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><div><p class="eyebrow">Card controls</p><h2>Change spending limit</h2><p>Set a limit between LKR 1,000 and LKR 1,000,000.</p></div><label>New limit</label><input name="spendingLimit" type="number" min="1000" max="1000000" step="0.01" th:value="*{spendingLimit}" required><label>Transaction PIN</label><input name="transactionPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required><button class="btn btn-save" type="submit">Update limit</button></form>
+    <form class="card-action-panel compact-control danger-control" th:action="@{/customer/cards/{number}/lost-stolen(number=*{requestNumber})}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><div><p class="eyebrow">Emergency control</p><h2>Report lost or stolen</h2><p>This permanently blocks the card. Bank staff must issue a replacement.</p></div><label>What happened?</label><textarea name="reason" minlength="5" maxlength="200" required></textarea><label>Transaction PIN</label><input name="transactionPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required><button class="btn btn-danger" type="submit">Secure card now</button></form>
   </section>
   <a class="btn btn-prev" th:href="@{/customer/cards}">Back to cards</a>
 </section></main><div th:replace="~{fragments/customer-layout :: footer}"></div></body></html>

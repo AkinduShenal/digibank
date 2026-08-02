@@ -45,6 +45,11 @@ public class SavedBiller extends BaseEntity {
 	}
 
 	public void delete() { this.status = SavedBillerStatus.DELETED; }
+	public void update(BillerProvider provider, String nickname, String consumerReference) {
+		this.provider = provider;
+		this.nickname = nickname;
+		this.consumerReference = consumerReference;
+	}
 
 	public Customer getCustomer() { return customer; }
 	public BillerProvider getProvider() { return provider; }

@@ -22,6 +22,7 @@ import com.digibank.repository.CustomerNotificationRepository;
 import com.digibank.repository.CustomerRepository;
 import com.digibank.repository.PaymentCardRepository;
 import com.digibank.service.CardManagementService;
+import com.digibank.security.CardDataProtector;
 import com.digibank.util.SensitiveDataMasker;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 @Transactional(readOnly = true)
@@ -49,11 +52,13 @@ public class CardManagementServiceImpl implements CardManagementService {
 	private final AuditLogRepository auditLogRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final SensitiveDataMasker dataMasker;
+	private final CardDataProtector cardDataProtector;
 	private final SecureRandom secureRandom = new SecureRandom();
 
 	public CardManagementServiceImpl(CustomerRepository customerRepository, BankAccountRepository accountRepository,
 			PaymentCardRepository cardRepository, CustomerNotificationRepository notificationRepository,
-			AuditLogRepository auditLogRepository, PasswordEncoder passwordEncoder, SensitiveDataMasker dataMasker) {
+			AuditLogRepository auditLogRepository, PasswordEncoder passwordEncoder, SensitiveDataMasker dataMasker,
+			CardDataProtector cardDataProtector) {
 		this.customerRepository = customerRepository;
 		this.accountRepository = accountRepository;
 		this.cardRepository = cardRepository;
@@ -61,6 +66,7 @@ public class CardManagementServiceImpl implements CardManagementService {
 		this.auditLogRepository = auditLogRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.dataMasker = dataMasker;
+		this.cardDataProtector = cardDataProtector;
 	}
 
 	@Override
@@ -113,13 +119,13 @@ public class CardManagementServiceImpl implements CardManagementService {
 	@Transactional
 	public String revealCardNumber(Long userId, String actorUsername, String requestNumber) {
 		PaymentCard card = customerCard(userId, requestNumber);
-		if (card.getCardNumber() == null || card.getStatus() == CardStatus.PENDING_REVIEW
+		if (card.getEncryptedCardNumber() == null || card.getStatus() == CardStatus.PENDING_REVIEW
 				|| card.getStatus() == CardStatus.REJECTED) {
 			throw new CardException("The card number is not available until the card request is approved.");
 		}
 		audit(actorUsername, "CARD_NUMBER_VIEWED", card, card.getStatus(), card.getStatus(),
 				"Customer securely viewed the issued card number.", LocalDateTime.now());
-		return card.getCardNumber();
+		return cardDataProtector.decrypt(card.getEncryptedCardNumber());
 	}
 
 	@Override
@@ -177,6 +183,48 @@ public class CardManagementServiceImpl implements CardManagementService {
 	}
 
 	@Override
+	@Transactional
+	public void updateSpendingLimit(Long userId, String actorUsername, String requestNumber, BigDecimal limit,
+			String transactionPin) {
+		Customer customer = customer(userId);
+		requireTransactionPin(customer, transactionPin);
+		PaymentCard card = lockedCustomerCard(customer, requestNumber);
+		if (card.getStatus() != CardStatus.ACTIVE && card.getStatus() != CardStatus.INACTIVE) {
+			throw new CardException("Only an active or inactive issued card can have its limit changed.");
+		}
+		if (limit == null || limit.scale() > 2 || limit.compareTo(new BigDecimal("1000.00")) < 0
+				|| limit.compareTo(new BigDecimal("1000000.00")) > 0) {
+			throw new CardException("Card spending limit must be between LKR 1,000.00 and LKR 1,000,000.00.");
+		}
+		BigDecimal previous = card.getSpendingLimit();
+		card.changeSpendingLimit(limit.setScale(2, RoundingMode.UNNECESSARY));
+		cardRepository.save(card);
+		String reason = "Limit changed from LKR " + previous + " to LKR " + card.getSpendingLimit() + ".";
+		notify(card, "Card limit updated", "The spending limit for card " + masked(card) + " is now LKR " + card.getSpendingLimit() + ".");
+		audit(actorUsername, "CARD_LIMIT_CHANGED", card, card.getStatus(), card.getStatus(), reason, LocalDateTime.now());
+	}
+
+	@Override
+	@Transactional
+	public void reportLostOrStolen(Long userId, String actorUsername, String requestNumber, String reason,
+			String transactionPin) {
+		Customer customer = customer(userId);
+		requireTransactionPin(customer, transactionPin);
+		PaymentCard card = lockedCustomerCard(customer, requestNumber);
+		if (card.getStatus() != CardStatus.ACTIVE && card.getStatus() != CardStatus.INACTIVE
+				&& card.getStatus() != CardStatus.BLOCKED) {
+			throw new CardException("Only an issued card can be reported lost or stolen.");
+		}
+		String cleanReason = requiredReason(reason);
+		CardStatus previous = card.getStatus();
+		LocalDateTime now = LocalDateTime.now();
+		card.reportLostOrStolen("Lost/stolen: " + cleanReason, now);
+		cardRepository.save(card);
+		notify(card, "Lost or stolen card secured", "Card " + masked(card) + " has been permanently blocked. Contact DigiBank for a replacement.");
+		audit(actorUsername, "CARD_REPORTED_LOST_STOLEN", card, previous, CardStatus.LOST_STOLEN, cleanReason, now);
+	}
+
+	@Override
 	public List<CardView> getCardsForReview(CardStatus status) {
 		CardStatus selected = status == null ? CardStatus.PENDING_REVIEW : status;
 		return cardRepository.findByStatusOrderByRequestedAtAsc(selected).stream().map(this::view).toList();
@@ -197,7 +245,9 @@ public class CardManagementServiceImpl implements CardManagementService {
 			throw new CardException("The linked bank account is not active.");
 		}
 		LocalDateTime now = LocalDateTime.now();
-		card.approve(actor(actorUsername), cardNumber(card.getCardType()), expiryDate(), optional(note), now);
+		String number = cardNumber(card.getCardType());
+		card.approve(actor(actorUsername), cardDataProtector.encrypt(number), cardDataProtector.hash(number),
+				cardDataProtector.lastFour(number), expiryDate(), optional(note), now);
 		cardRepository.saveAndFlush(card);
 		notify(card, "Card request approved",
 				"Your " + card.getCardType().getDisplayName() + " " + masked(card)
@@ -251,6 +301,39 @@ public class CardManagementServiceImpl implements CardManagementService {
 		notify(card, "Card reactivated by DigiBank", "Your card " + masked(card) + " is active again.");
 		audit(actorUsername, "CARD_REACTIVATED_BY_STAFF", card, CardStatus.BLOCKED, CardStatus.ACTIVE,
 				optional(note), now);
+	}
+
+	@Override
+	@Transactional
+	public void cancelByStaff(String actorUsername, String requestNumber, String reason) {
+		PaymentCard card = lockedCard(requestNumber);
+		if (card.getStatus() == CardStatus.CANCELLED || card.getStatus() == CardStatus.EXPIRED
+				|| card.getStatus() == CardStatus.REJECTED) {
+			throw new CardException("This card can no longer be cancelled.");
+		}
+		String cleanReason = requiredReason(reason);
+		CardStatus previous = card.getStatus();
+		LocalDateTime now = LocalDateTime.now();
+		card.cancel(cleanReason, now);
+		cardRepository.save(card);
+		notify(card, "Card cancelled", "Card " + masked(card) + " was cancelled by DigiBank. Reason: " + cleanReason);
+		audit(actorUsername, "CARD_CANCELLED", card, previous, CardStatus.CANCELLED, cleanReason, now);
+	}
+
+	@Override
+	@Transactional
+	public int expireDueCards() {
+		List<PaymentCard> cards = cardRepository.findByStatusInAndExpiryDateBefore(
+				List.of(CardStatus.INACTIVE, CardStatus.ACTIVE, CardStatus.BLOCKED), LocalDate.now());
+		LocalDateTime now = LocalDateTime.now();
+		for (PaymentCard card : cards) {
+			CardStatus previous = card.getStatus();
+			card.expire(now);
+			cardRepository.save(card);
+			notify(card, "Card expired", "Card " + masked(card) + " has expired and can no longer be used.");
+			audit("system", "CARD_EXPIRED", card, previous, CardStatus.EXPIRED, "Expiry date reached.", now);
+		}
+		return cards.size();
 	}
 
 	private Customer customer(Long userId) {
@@ -318,7 +401,7 @@ public class CardManagementServiceImpl implements CardManagementService {
 				partial.append(secureRandom.nextInt(10));
 			}
 			String candidate = partial.append(luhnCheckDigit(partial.toString())).toString();
-			if (!cardRepository.existsByCardNumber(candidate)) {
+			if (!cardRepository.existsByCardNumberHash(cardDataProtector.hash(candidate))) {
 				return candidate;
 			}
 		}
@@ -355,12 +438,12 @@ public class CardManagementServiceImpl implements CardManagementService {
 				customer.getCustomerNumber(), dataMasker.maskAccountNumber(card.getBankAccount().getAccountNumber()),
 				card.getCardType(), card.getStatus(), card.getCardholderName(), masked(card), card.getExpiryDate(),
 				card.getRequestedAt(), card.getReviewedBy(), card.getReviewedAt(), card.getReviewNote(),
-				card.getActivatedAt(), card.getBlockedAt(), card.getBlockReason());
+				card.getActivatedAt(), card.getBlockedAt(), card.getBlockReason(), card.getSpendingLimit(),
+				card.getLostStolenAt(), card.getCancelledAt(), card.getCancellationReason());
 	}
 
 	private String masked(PaymentCard card) {
-		String number = card.getCardNumber();
-		return number == null ? "Not issued" : "•••• •••• •••• " + number.substring(number.length() - 4);
+		return card.getCardLastFour() == null ? "Not issued" : "•••• •••• •••• " + card.getCardLastFour();
 	}
 
 	private void notify(PaymentCard card, String title, String message) {

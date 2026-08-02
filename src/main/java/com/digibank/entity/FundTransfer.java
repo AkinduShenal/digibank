@@ -77,6 +77,18 @@ public class FundTransfer extends BaseEntity {
 	@Column(name = "failure_reason", length = 255)
 	private String failureReason;
 
+	@Column(name = "reversal_reference", length = 32, unique = true)
+	private String reversalReference;
+
+	@Column(name = "reversal_reason", length = 255)
+	private String reversalReason;
+
+	@Column(name = "reversed_by", length = 30)
+	private String reversedBy;
+
+	@Column(name = "reversed_at")
+	private LocalDateTime reversedAt;
+
 	protected FundTransfer() {
 	}
 
@@ -119,4 +131,15 @@ public class FundTransfer extends BaseEntity {
 	public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
 	public String getFailureReason() { return failureReason; }
 	public void setFailureReason(String failureReason) { this.failureReason = failureReason; }
+	public String getReversalReference() { return reversalReference; }
+	public String getReversalReason() { return reversalReason; }
+	public String getReversedBy() { return reversedBy; }
+	public LocalDateTime getReversedAt() { return reversedAt; }
+	public void reverse(String reversalReference, String reason, String actor, LocalDateTime when) {
+		this.status = TransferStatus.REVERSED;
+		this.reversalReference = reversalReference;
+		this.reversalReason = reason;
+		this.reversedBy = actor;
+		this.reversedAt = when;
+	}
 }

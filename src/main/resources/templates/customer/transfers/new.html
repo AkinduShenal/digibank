@@ -45,6 +45,10 @@
           <span><strong>Saved beneficiary</strong><small>Choose from your verified beneficiary list</small></span>
         </label>
         <label class="recipient-choice">
+          <input type="radio" th:field="*{recipientType}" value="OWN_ACCOUNT">
+          <span><strong>Between my accounts</strong><small>Move money to another active account you own</small></span>
+        </label>
+        <label class="recipient-choice">
           <input type="radio" th:field="*{recipientType}" value="DIGIBANK_ACCOUNT">
           <span><strong>DigiBank account number</strong><small>One-time transfer without saving a beneficiary</small></span>
         </label>
@@ -58,6 +62,14 @@
                   th:text="${beneficiary.name + ' · ' + beneficiary.bankName + ' · ' + beneficiary.maskedAccountNumber}">Beneficiary</option>
         </select>
         <em th:errors="*{beneficiaryId}"></em>
+      </label>
+
+      <label id="ownAccountPanel">My destination account
+        <select id="ownDestinationAccountNumber" th:field="*{ownDestinationAccountNumber}">
+          <option value="">Select destination account</option>
+          <option th:each="account : ${transferForm.accounts}" th:value="${account.accountNumber}"
+                  th:text="${account.maskedAccountNumber + ' · ' + account.accountType}">Account</option>
+        </select>
       </label>
 
       <label id="directAccountPanel">Recipient DigiBank account number
@@ -97,8 +109,10 @@
     const modeInputs = form.querySelectorAll('input[name="recipientType"]');
     const savedPanel = document.getElementById('savedBeneficiaryPanel');
     const directPanel = document.getElementById('directAccountPanel');
+    const ownPanel = document.getElementById('ownAccountPanel');
     const beneficiarySelect = document.getElementById('beneficiaryId');
     const accountInput = document.getElementById('destinationAccountNumber');
+    const ownAccountSelect = document.getElementById('ownDestinationAccountNumber');
     const lookupStatus = document.getElementById('accountLookupStatus');
     const submitButton = form.querySelector('button[type="submit"]');
     const csrf = form.querySelector('input[name="_csrf"]');
@@ -114,11 +128,15 @@
     }
 
     function updateMode() {
-      const direct = selectedMode() === 'DIGIBANK_ACCOUNT';
-      savedPanel.hidden = direct;
-      directPanel.hidden = !direct;
-      beneficiarySelect.required = !direct;
-      accountInput.required = direct;
+	  const mode = selectedMode();
+	  const direct = mode === 'DIGIBANK_ACCOUNT';
+	  const own = mode === 'OWN_ACCOUNT';
+	  savedPanel.hidden = direct || own;
+	  directPanel.hidden = !direct;
+	  ownPanel.hidden = !own;
+	  beneficiarySelect.required = !direct && !own;
+	  accountInput.required = direct;
+	  ownAccountSelect.required = own;
       submitButton.disabled = direct && verifiedAccountNumber !== normalizedAccount();
     }
 

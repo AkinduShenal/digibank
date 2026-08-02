@@ -124,6 +124,8 @@
 .staff-filter input:focus, .staff-filter select:focus, .operation-form input:focus, .operation-form select:focus { outline: 3px solid rgba(0,185,135,.13); border-color: var(--staff-accent); }
 
 .staff-table-card { overflow: hidden; border: 1px solid var(--staff-line); border-radius: 17px; background: var(--staff-surface); box-shadow: var(--staff-shadow); }
+.staff-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 18px; color: var(--staff-muted); font-size: 12px; font-weight: 800; }
+.operation-form textarea { width: 100%; min-height: 92px; resize: vertical; border: 1px solid var(--staff-line); border-radius: 10px; padding: 10px 12px; font: 700 13px Inter,sans-serif; }
 .staff-record-table { width: 100%; border-collapse: collapse; }
 .staff-record-table th { padding: 13px 18px; color: var(--staff-muted); background: #f7faf8; text-align: left; font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
 .staff-record-table td { padding: 16px 18px; border-top: 1px solid var(--staff-line); font-size: 13px; }

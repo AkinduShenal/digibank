@@ -128,6 +128,17 @@ public class TransferServiceImpl implements TransferService {
 	@Override
 	@Transactional
 	public TransferDetailsView transfer(Long authenticatedUserId, String actorUsername, TransferRequest request) {
+		return executeTransfer(authenticatedUserId, actorUsername, request, true);
+	}
+
+	@Override
+	@Transactional(noRollbackFor = TransferException.class)
+	public TransferDetailsView executeScheduledTransfer(Long authenticatedUserId, TransferRequest request) {
+		return executeTransfer(authenticatedUserId, "system-scheduler", request, false);
+	}
+
+	private TransferDetailsView executeTransfer(Long authenticatedUserId, String actorUsername, TransferRequest request,
+			boolean requirePin) {
 		Customer customer = customer(authenticatedUserId);
 		requireActiveCustomer(customer);
 		requireRequest(request);
@@ -150,12 +161,16 @@ public class TransferServiceImpl implements TransferService {
 			destinationNumber = normalizeInternalAccountNumber(request.getDestinationAccountNumber());
 			transferLimit = BeneficiaryConstants.MAX_TRANSFER_LIMIT;
 		}
+		else if (request.getRecipientType() == TransferRecipientType.OWN_ACCOUNT) {
+			destinationNumber = normalizeInternalAccountNumber(request.getOwnDestinationAccountNumber());
+			transferLimit = BeneficiaryConstants.MAX_TRANSFER_LIMIT;
+		}
 		else {
 			throw new TransferException("Select a valid transfer recipient type.");
 		}
 
 		BigDecimal amount = requireAmount(request.getAmount(), transferLimit);
-		requireTransactionPin(customer, request.getTransactionPin());
+		if (requirePin) requireTransactionPin(customer, request.getTransactionPin());
 
 		String sourceNumber = trim(request.getSourceAccountNumber());
 		List<String> accountNumbers = destinationNumber == null
@@ -169,11 +184,13 @@ public class TransferServiceImpl implements TransferService {
 		requireSufficientBalance(source, amount);
 
 		TransferType transferType = request.getRecipientType() == TransferRecipientType.DIGIBANK_ACCOUNT
-				|| beneficiary.getBeneficiaryType() == BeneficiaryType.INTERNAL
+				|| request.getRecipientType() == TransferRecipientType.OWN_ACCOUNT
+				|| (beneficiary != null && beneficiary.getBeneficiaryType() == BeneficiaryType.INTERNAL)
 						? TransferType.INTERNAL : TransferType.EXTERNAL;
 		BankAccount destination = transferType == TransferType.INTERNAL ? lockedAccounts.get(destinationNumber) : null;
 		if (destination != null || transferType == TransferType.INTERNAL) {
-			requireDestinationAccount(customer, source, destination);
+			requireDestinationAccount(customer, source, destination,
+					request.getRecipientType() == TransferRecipientType.OWN_ACCOUNT);
 		}
 		String recipientName = beneficiary == null ? accountHolderName(destination) : beneficiary.getBeneficiaryName();
 		String destinationBank = beneficiary == null ? BeneficiaryConstants.DIGIBANK_BANK_NAME : beneficiary.getBankName();
@@ -244,6 +261,10 @@ public class TransferServiceImpl implements TransferService {
 				&& trim(request.getDestinationAccountNumber()) == null) {
 			throw new TransferException("Enter the recipient's DigiBank account number.");
 		}
+		if (request.getRecipientType() == TransferRecipientType.OWN_ACCOUNT
+				&& trim(request.getOwnDestinationAccountNumber()) == null) {
+			throw new TransferException("Select one of your destination accounts.");
+		}
 	}
 
 	private void requireTransferableBeneficiary(Beneficiary beneficiary) {
@@ -294,12 +315,19 @@ public class TransferServiceImpl implements TransferService {
 		}
 	}
 
-	private void requireDestinationAccount(Customer customer, BankAccount source, BankAccount destination) {
+	private void requireDestinationAccount(Customer customer, BankAccount source, BankAccount destination, boolean ownTransfer) {
 		if (destination == null || Objects.equals(source.getId(), destination.getId())) {
 			throw new TransferException("The internal destination account is not available.");
 		}
-		if (destination.getCustomer() == null || Objects.equals(customer.getId(), destination.getCustomer().getId())) {
-			throw new TransferException("Use another customer's DigiBank account as the recipient.");
+		if (destination.getCustomer() == null) {
+			throw new TransferException("The internal destination account is not available.");
+		}
+		boolean sameCustomer = Objects.equals(customer.getId(), destination.getCustomer().getId());
+		if (ownTransfer && !sameCustomer) {
+			throw new TransferException("Select an account that belongs to you.");
+		}
+		if (!ownTransfer && sameCustomer) {
+			throw new TransferException("Use the own-account option to transfer between your accounts.");
 		}
 		if (destination.getAccountStatus() != AccountStatus.ACTIVE || destination.getCurrencyCode() != CurrencyCode.LKR) {
 			throw new TransferException("The internal destination account must be an active LKR account.");

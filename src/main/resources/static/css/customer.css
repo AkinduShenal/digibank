@@ -15,6 +15,10 @@
 }
 
 /* Bill payments */
+.card-control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+.compact-control { display: grid; gap: 10px; margin: 0; }
+.compact-control input, .compact-control textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; }
+.danger-control { border-color: #f0caca; background: #fffafa; }
 .bill-hero { background: linear-gradient(120deg, #fff 45%, #e5faf3); }
 .bill-payment-form { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(330px, .9fr); gap: 22px; align-items: start; }
 .bill-form-card, .bill-receipt { padding: 28px; border: 1px solid var(--border); border-radius: 22px; background: #fff; box-shadow: var(--shadow); }
@@ -1185,3 +1189,9 @@
 		text-align: left;
 	}
 }
+.biller-row-actions { display:flex; align-items:center; gap:10px; margin-left:auto; }
+.biller-row-actions a { color:#0a6b56; font-weight:800; text-decoration:none; }
+.list-filter { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:0 0 20px; padding:16px; border:1px solid #dbe8e3; border-radius:16px; background:#fff; }
+.list-filter input,.list-filter select { flex:1 1 180px; min-height:44px; padding:10px 12px; border:1px solid #ceded8; border-radius:10px; background:#fff; }
+.list-pagination { display:flex; justify-content:center; align-items:center; gap:14px; margin-top:20px; font-weight:800; }
+.list-pagination a { padding:10px 16px; border:1px solid #ceded8; border-radius:10px; color:#0a5a49; text-decoration:none; background:#fff; }

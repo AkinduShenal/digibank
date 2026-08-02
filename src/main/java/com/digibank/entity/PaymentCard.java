@@ -15,6 +15,7 @@ import jakarta.persistence.Version;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "payment_cards", uniqueConstraints = {
@@ -45,11 +46,20 @@ public class PaymentCard extends BaseEntity {
 	@Column(name = "cardholder_name", nullable = false, length = 100)
 	private String cardholderName;
 
-	@Column(name = "card_number", length = 19)
-	private String cardNumber;
+	@Column(name = "card_number", length = 255)
+	private String encryptedCardNumber;
+
+	@Column(name = "card_number_hash", length = 64)
+	private String cardNumberHash;
+
+	@Column(name = "card_last_four", length = 4)
+	private String cardLastFour;
 
 	@Column(name = "expiry_date")
 	private LocalDate expiryDate;
+
+	@Column(name = "spending_limit", nullable = false, precision = 19, scale = 2)
+	private BigDecimal spendingLimit;
 
 	@Column(name = "requested_at", nullable = false)
 	private LocalDateTime requestedAt;
@@ -68,6 +78,15 @@ public class PaymentCard extends BaseEntity {
 
 	@Column(name = "blocked_at")
 	private LocalDateTime blockedAt;
+
+	@Column(name = "lost_stolen_at")
+	private LocalDateTime lostStolenAt;
+
+	@Column(name = "cancelled_at")
+	private LocalDateTime cancelledAt;
+
+	@Column(name = "cancellation_reason", length = 255)
+	private String cancellationReason;
 
 	@Column(name = "block_reason", length = 255)
 	private String blockReason;
@@ -88,10 +107,14 @@ public class PaymentCard extends BaseEntity {
 		this.cardholderName = cardholderName;
 		this.requestedAt = requestedAt;
 		this.status = CardStatus.PENDING_REVIEW;
+		this.spendingLimit = cardType == CardType.CREDIT ? new BigDecimal("500000.00") : new BigDecimal("250000.00");
 	}
 
-	public void approve(String reviewer, String number, LocalDate expiry, String note, LocalDateTime when) {
-		this.cardNumber = number;
+	public void approve(String reviewer, String encryptedNumber, String numberHash, String lastFour,
+			LocalDate expiry, String note, LocalDateTime when) {
+		this.encryptedCardNumber = encryptedNumber;
+		this.cardNumberHash = numberHash;
+		this.cardLastFour = lastFour;
 		this.expiryDate = expiry;
 		this.reviewedBy = reviewer;
 		this.reviewNote = note;
@@ -119,14 +142,44 @@ public class PaymentCard extends BaseEntity {
 		this.blockReason = reason;
 	}
 
+	public void changeSpendingLimit(BigDecimal limit) { this.spendingLimit = limit; }
+
+	public void reportLostOrStolen(String reason, LocalDateTime when) {
+		this.status = CardStatus.LOST_STOLEN;
+		this.blockedAt = when;
+		this.lostStolenAt = when;
+		this.blockReason = reason;
+	}
+
+	public void cancel(String reason, LocalDateTime when) {
+		this.status = CardStatus.CANCELLED;
+		this.cancelledAt = when;
+		this.cancellationReason = reason;
+	}
+
+	public void expire(LocalDateTime when) {
+		this.status = CardStatus.EXPIRED;
+		this.blockedAt = when;
+		this.blockReason = "Card expired";
+	}
+
+	public void secureLegacyNumber(String encryptedNumber, String numberHash, String lastFour) {
+		this.encryptedCardNumber = encryptedNumber;
+		this.cardNumberHash = numberHash;
+		this.cardLastFour = lastFour;
+	}
+
 	public Customer getCustomer() { return customer; }
 	public BankAccount getBankAccount() { return bankAccount; }
 	public String getRequestNumber() { return requestNumber; }
 	public CardType getCardType() { return cardType; }
 	public CardStatus getStatus() { return status; }
 	public String getCardholderName() { return cardholderName; }
-	public String getCardNumber() { return cardNumber; }
+	public String getEncryptedCardNumber() { return encryptedCardNumber; }
+	public String getCardNumberHash() { return cardNumberHash; }
+	public String getCardLastFour() { return cardLastFour; }
 	public LocalDate getExpiryDate() { return expiryDate; }
+	public BigDecimal getSpendingLimit() { return spendingLimit; }
 	public LocalDateTime getRequestedAt() { return requestedAt; }
 	public String getReviewedBy() { return reviewedBy; }
 	public LocalDateTime getReviewedAt() { return reviewedAt; }
@@ -134,5 +187,8 @@ public class PaymentCard extends BaseEntity {
 	public LocalDateTime getActivatedAt() { return activatedAt; }
 	public LocalDateTime getBlockedAt() { return blockedAt; }
 	public String getBlockReason() { return blockReason; }
+	public LocalDateTime getLostStolenAt() { return lostStolenAt; }
+	public LocalDateTime getCancelledAt() { return cancelledAt; }
+	public String getCancellationReason() { return cancellationReason; }
 	public long getVersion() { return version; }
 }

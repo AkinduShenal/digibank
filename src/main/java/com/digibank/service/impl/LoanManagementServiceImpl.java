@@ -6,6 +6,8 @@ import com.digibank.dto.loan.LoanApplicationRequest;
 import com.digibank.dto.loan.LoanApplicationView;
 import com.digibank.dto.loan.LoanRepaymentRequest;
 import com.digibank.dto.loan.LoanScheduleView;
+import com.digibank.dto.loan.LoanDocumentDownload;
+import com.digibank.dto.loan.StoredLoanDocument;
 import com.digibank.entity.AccountTransaction;
 import com.digibank.entity.AuditLog;
 import com.digibank.entity.BankAccount;
@@ -29,6 +31,7 @@ import com.digibank.repository.CustomerRepository;
 import com.digibank.repository.LoanApplicationRepository;
 import com.digibank.repository.LoanRepaymentScheduleRepository;
 import com.digibank.service.LoanManagementService;
+import com.digibank.service.LoanDocumentStorageService;
 import com.digibank.util.SensitiveDataMasker;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,12 +63,13 @@ public class LoanManagementServiceImpl implements LoanManagementService {
 	private final AuditLogRepository auditLogRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final SensitiveDataMasker dataMasker;
+	private final LoanDocumentStorageService documentStorage;
 
 	public LoanManagementServiceImpl(CustomerRepository customerRepository, BankAccountRepository accountRepository,
 			LoanApplicationRepository loanRepository, LoanRepaymentScheduleRepository scheduleRepository,
 			AccountTransactionRepository transactionRepository,
 			CustomerNotificationRepository notificationRepository, AuditLogRepository auditLogRepository,
-			PasswordEncoder passwordEncoder, SensitiveDataMasker dataMasker) {
+			PasswordEncoder passwordEncoder, SensitiveDataMasker dataMasker, LoanDocumentStorageService documentStorage) {
 		this.customerRepository = customerRepository;
 		this.accountRepository = accountRepository;
 		this.loanRepository = loanRepository;
@@ -75,6 +79,7 @@ public class LoanManagementServiceImpl implements LoanManagementService {
 		this.auditLogRepository = auditLogRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.dataMasker = dataMasker;
+		this.documentStorage = documentStorage;
 	}
 
 	@Override
@@ -103,15 +108,55 @@ public class LoanManagementServiceImpl implements LoanManagementService {
 		BigDecimal rate = request.getLoanType().getAnnualInterestRate();
 		BigDecimal installment = monthlyPayment(request.getRequestedAmount(), rate, request.getTermMonths());
 		validateAffordability(installment, request.getMonthlyIncome());
+		StoredLoanDocument document = documentStorage.store(request.getSupportingDocument());
+		String documentName = document == null ? bounded(request.getSupportingDocumentReference(), 255, "Supporting document reference") : document.originalFilename();
 		LoanApplication loan = new LoanApplication(customer, account, applicationNumber(), request.getLoanType(),
 				money(request.getRequestedAmount()), rate, request.getTermMonths(), installment,
 				money(request.getMonthlyIncome()), bounded(request.getEmploymentStatus(), 80, "Employment status"),
-				bounded(request.getPurpose(), 500, "Loan purpose"));
+				bounded(request.getPurpose(), 500, "Loan purpose"), documentName);
+		if (document != null) loan.attachDocument(document.originalFilename(), document.storedFilename(), document.contentType(), document.size());
 		loanRepository.save(loan);
 		auditLogRepository.save(new AuditLog(actor(actorUsername), "LOAN_APPLICATION_SUBMITTED", "LOAN_APPLICATION",
 				loan.getApplicationNumber(), null, LoanStatus.PENDING_REVIEW.name(),
 				"Customer submitted a " + loan.getLoanType().name() + " loan application.", LocalDateTime.now()));
 		return view(loan, List.of());
+	}
+
+	@Override
+	public LoanApplicationRequest getPendingApplicationForEdit(Long userId, String applicationNumber) {
+		LoanApplication loan=customerPendingLoan(userId,applicationNumber);
+		LoanApplicationRequest request=new LoanApplicationRequest();
+		request.setAccountNumber(loan.getDisbursementAccount().getAccountNumber()); request.setLoanType(loan.getLoanType());
+		request.setRequestedAmount(loan.getRequestedAmount()); request.setTermMonths(loan.getTermMonths());
+		request.setMonthlyIncome(loan.getMonthlyIncome()); request.setEmploymentStatus(loan.getEmploymentStatus());
+		request.setPurpose(loan.getPurpose()); request.setSupportingDocumentReference(loan.getSupportingDocumentReference());
+		return request;
+	}
+
+	@Override @Transactional
+	public void updatePendingApplication(Long userId,String actorUsername,String applicationNumber,LoanApplicationRequest request){
+		LoanApplication loan=customerPendingLoan(userId,applicationNumber); validateRequest(request);
+		BankAccount account=eligibleAccounts(loan.getCustomer()).stream().filter(a->a.getAccountNumber().equals(request.getAccountNumber()))
+				.findFirst().orElseThrow(()->new LoanException("Select an active LKR account owned by you."));
+		BigDecimal rate=request.getLoanType().getAnnualInterestRate();
+		BigDecimal installment=monthlyPayment(request.getRequestedAmount(),rate,request.getTermMonths());
+		validateAffordability(installment,request.getMonthlyIncome());
+		StoredLoanDocument document=documentStorage.store(request.getSupportingDocument());
+		String oldStoredName=loan.getSupportingDocumentStoredName();
+		String documentName=document==null?bounded(request.getSupportingDocumentReference(),255,"Supporting document reference"):document.originalFilename();
+		loan.revise(account,request.getLoanType(),money(request.getRequestedAmount()),rate,request.getTermMonths(),installment,
+				money(request.getMonthlyIncome()),bounded(request.getEmploymentStatus(),80,"Employment status"),
+				bounded(request.getPurpose(),500,"Loan purpose"),documentName);
+		if(document!=null){loan.attachDocument(document.originalFilename(),document.storedFilename(),document.contentType(),document.size());documentStorage.deleteAfterCommit(oldStoredName);}
+		loanRepository.save(loan); auditLogRepository.save(new AuditLog(actor(actorUsername),"LOAN_APPLICATION_UPDATED","LOAN_APPLICATION",
+				applicationNumber,LoanStatus.PENDING_REVIEW.name(),LoanStatus.PENDING_REVIEW.name(),"Pending application updated by customer.",LocalDateTime.now()));
+	}
+
+	@Override @Transactional
+	public void withdrawPendingApplication(Long userId,String actorUsername,String applicationNumber){
+		LoanApplication loan=customerPendingLoan(userId,applicationNumber); loan.cancel(LocalDateTime.now()); loanRepository.save(loan);
+		auditLogRepository.save(new AuditLog(actor(actorUsername),"LOAN_APPLICATION_WITHDRAWN","LOAN_APPLICATION",applicationNumber,
+				LoanStatus.PENDING_REVIEW.name(),LoanStatus.CANCELLED.name(),"Withdrawn by customer.",LocalDateTime.now()));
 	}
 
 	@Override
@@ -148,6 +193,20 @@ public class LoanManagementServiceImpl implements LoanManagementService {
 		LoanApplication loan = loanRepository.findByApplicationNumber(applicationNumber)
 				.orElseThrow(() -> new LoanException("Loan application was not found."));
 		return view(loan, schedule(loan));
+	}
+
+	@Override
+	public LoanDocumentDownload getCustomerDocument(Long userId, String applicationNumber) {
+		LoanApplication loan = loanRepository.findByApplicationNumberAndCustomerUserId(applicationNumber, userId)
+				.orElseThrow(() -> new LoanException("Loan application was not found."));
+		return document(loan);
+	}
+
+	@Override
+	public LoanDocumentDownload getStaffDocument(String applicationNumber) {
+		LoanApplication loan = loanRepository.findByApplicationNumber(applicationNumber)
+				.orElseThrow(() -> new LoanException("Loan application was not found."));
+		return document(loan);
 	}
 
 	@Override
@@ -329,6 +388,15 @@ public class LoanManagementServiceImpl implements LoanManagementService {
 		if (clean(request.getEmploymentStatus()) == null || clean(request.getPurpose()) == null) {
 			throw new LoanException("Employment status and loan purpose are required.");
 		}
+		if (clean(request.getSupportingDocumentReference()) == null
+				&& (request.getSupportingDocument() == null || request.getSupportingDocument().isEmpty())) {
+			throw new LoanException("Upload a supporting document.");
+		}
+	}
+
+	private LoanDocumentDownload document(LoanApplication loan) {
+		return documentStorage.load(loan.getSupportingDocumentStoredName(), loan.getSupportingDocumentReference(),
+				loan.getSupportingDocumentContentType());
 	}
 
 	private void validateAffordability(BigDecimal installment, BigDecimal monthlyIncome) {
@@ -356,6 +424,13 @@ public class LoanManagementServiceImpl implements LoanManagementService {
 		}
 	}
 
+	private LoanApplication customerPendingLoan(Long userId,String applicationNumber){
+		LoanApplication loan=loanRepository.findByApplicationNumberAndCustomerUserId(applicationNumber,userId)
+				.orElseThrow(()->new LoanException("Loan application was not found."));
+		if(loan.getStatus()!=LoanStatus.PENDING_REVIEW)throw new LoanException("Only pending applications can be changed or withdrawn.");
+		return loan;
+	}
+
 	private List<LoanScheduleView> schedule(LoanApplication loan) {
 		if (loan.getId() == null) {
 			return List.of();
@@ -377,7 +452,8 @@ public class LoanManagementServiceImpl implements LoanManagementService {
 				dataMasker.maskAccountNumber(loan.getDisbursementAccount().getAccountNumber()), loan.getLoanType(),
 				loan.getStatus(), loan.getRequestedAmount(), loan.getApprovedAmount(), loan.getAnnualInterestRate(),
 				loan.getTermMonths(), loan.getMonthlyInstallment(), loan.getMonthlyIncome(), loan.getEmploymentStatus(),
-				loan.getPurpose(), loan.getReviewedBy(), loan.getReviewedAt(), loan.getReviewNote(), loan.getDisbursedAt(),
+				loan.getPurpose(), loan.getSupportingDocumentReference(), loan.getSupportingDocumentStoredName()!=null,
+				loan.getReviewedBy(), loan.getReviewedAt(), loan.getReviewNote(), loan.getDisbursedAt(),
 				loan.getCreatedAt(), schedule);
 	}
 

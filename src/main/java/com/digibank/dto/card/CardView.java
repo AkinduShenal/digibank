@@ -5,6 +5,7 @@ import com.digibank.enums.CardType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 public record CardView(
 		String requestNumber,
@@ -22,5 +23,9 @@ public record CardView(
 		String reviewNote,
 		LocalDateTime activatedAt,
 		LocalDateTime blockedAt,
-		String blockReason) {
+		String blockReason,
+		BigDecimal spendingLimit,
+		LocalDateTime lostStolenAt,
+		LocalDateTime cancelledAt,
+		String cancellationReason) {
 }

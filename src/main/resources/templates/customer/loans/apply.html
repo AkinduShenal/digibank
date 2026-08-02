@@ -13,7 +13,7 @@
     <div th:replace="~{fragments/customer-layout :: alerts}"></div>
     <div class="welcome-band"><div><p class="eyebrow">New application</p><h1>Apply for a loan</h1><span>Applications are reviewed by authorised bank staff</span></div></div>
     <div class="empty-state" th:if="${#lists.isEmpty(form.accounts)}"><h2>No eligible account</h2><p>You need an active LKR account before applying.</p></div>
-    <form class="edit-card loan-form" th:unless="${#lists.isEmpty(form.accounts)}" th:action="@{/customer/loans}" th:object="${loanApplicationRequest}" method="post">
+    <form class="edit-card loan-form" th:unless="${#lists.isEmpty(form.accounts)}" th:action="@{/customer/loans}" th:object="${loanApplicationRequest}" method="post" enctype="multipart/form-data">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
       <div class="field"><label>Disbursement account</label><select th:field="*{accountNumber}"><option value="">Select account</option>
         <option th:each="account : ${form.accounts}" th:value="${account.accountNumber}" th:text="${account.accountType + ' · ' + account.accountNumber}"></option></select>
@@ -31,6 +31,8 @@
         <small class="field-error" th:errors="*{employmentStatus}"></small></div>
       <div class="field wide"><label>Loan purpose</label><textarea rows="4" maxlength="500" th:field="*{purpose}" placeholder="Describe how the funds will be used"></textarea>
         <small class="field-error" th:errors="*{purpose}"></small></div>
+      <div class="field wide"><label>Supporting document</label><input type="file" th:field="*{supportingDocument}" accept="application/pdf,image/jpeg,image/png" required>
+		<small class="field-error" th:errors="*{supportingDocumentReference}"></small><small>PDF, JPEG or PNG only. Maximum 5 MB. Files are stored outside the public web directory.</small></div>
       <div class="loan-estimate wide"><strong>Affordability rule</strong><span>The estimated installment must not exceed 40% of your declared monthly income.</span></div>
       <div class="form-actions wide"><a class="btn btn-prev" th:href="@{/customer/loans}">Cancel</a><button class="btn btn-save" type="submit">Submit application</button></div>
     </form>

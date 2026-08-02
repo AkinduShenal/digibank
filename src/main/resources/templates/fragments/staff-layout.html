@@ -31,6 +31,9 @@
   <a th:href="@{/staff/beneficiaries}" th:classappend="${activePage == 'beneficiaries'} ? ' active'">
     <span class="nav-icon">✓</span><span>Beneficiary reviews</span>
   </a>
+  <a th:href="@{/staff/transfers}" th:classappend="${activePage == 'transfers'} ? ' active'">
+    <span class="nav-icon">⇄</span><span>Transfers</span>
+  </a>
   <a th:href="@{/staff/loans}" th:classappend="${activePage == 'loans'} ? ' active'">
     <span class="nav-icon">¤</span><span>Loan applications</span>
   </a>
@@ -40,6 +43,7 @@
   <a th:href="@{/staff/bill-payments}" th:classappend="${activePage == 'bills'} ? ' active'">
     <span class="nav-icon">⌁</span><span>Bill payments</span>
   </a>
+  <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/dashboard}" th:classappend="${activePage == 'audit'} ? ' active'"><span class="nav-icon">☷</span><span>Audit log</span></a>
   <div class="staff-help">
     <strong>Secure operations</strong>
     <span>All account and verification actions are recorded in the audit log.</span>

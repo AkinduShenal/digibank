@@ -8,6 +8,7 @@
 <section class="customer-content"><div th:replace="~{fragments/customer-layout :: alerts}"></div>
   <div class="welcome-band"><div><p class="eyebrow">Card services</p><h1>My cards</h1><span>Request, activate and securely manage your DigiBank cards</span></div>
     <a class="btn btn-save" th:href="@{/customer/cards/new}">Request a card</a></div>
+  <form class="list-filter" method="get"><input name="q" th:value="${query}" placeholder="Request number or type"><select name="status"><option value="">All statuses</option><option th:each="s:${cardStatuses}" th:value="${s}" th:text="${s}" th:selected="${s==selectedStatus}"></option></select><select name="type"><option value="">All card types</option><option th:each="t:${cardTypes}" th:value="${t}" th:text="${t.displayName}" th:selected="${t==selectedType}"></option></select><button class="btn btn-save">Filter</button></form>
   <div class="empty-state" th:if="${#lists.isEmpty(cards)}"><h2>No card requests</h2><p>Your cards and submitted requests will appear here.</p></div>
   <div class="payment-card-grid" th:unless="${#lists.isEmpty(cards)}">
     <article class="payment-card-tile" th:each="card : ${cards}">
@@ -23,4 +24,5 @@
       <small class="card-request-number" th:text="${card.requestNumber}">CRD</small>
     </article>
   </div>
+  <nav class="list-pagination" th:if="${cardsPage.totalPages>1}"><a th:if="${cardsPage.hasPrevious()}" th:href="@{/customer/cards(q=${query},status=${selectedStatus},type=${selectedType},page=${cardsPage.number-1},size=${cardsPage.size})}">Previous</a><span th:text="${'Page '+(cardsPage.number+1)+' of '+cardsPage.totalPages}"></span><a th:if="${cardsPage.hasNext()}" th:href="@{/customer/cards(q=${query},status=${selectedStatus},type=${selectedType},page=${cardsPage.number+1},size=${cardsPage.size})}">Next</a></nav>
 </section></main><div th:replace="~{fragments/customer-layout :: footer}"></div></body></html>

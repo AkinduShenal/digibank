@@ -21,6 +21,7 @@ import com.digibank.repository.CustomerRepository;
 import com.digibank.repository.PaymentCardRepository;
 import com.digibank.service.impl.CardManagementServiceImpl;
 import com.digibank.util.SensitiveDataMasker;
+import com.digibank.security.CardDataProtector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,11 +60,13 @@ class CardManagementServiceImplTest {
 	private CardManagementServiceImpl service;
 	private Customer customer;
 	private BankAccount account;
+	private CardDataProtector protector;
 
 	@BeforeEach
 	void setUp() {
+		protector = new CardDataProtector("test-card-security-key-with-32-characters");
 		service = new CardManagementServiceImpl(customerRepository, accountRepository, cardRepository,
-				notificationRepository, auditLogRepository, passwordEncoder, new SensitiveDataMasker());
+				notificationRepository, auditLogRepository, passwordEncoder, new SensitiveDataMasker(), protector);
 		User user = new User("customer", "customer@example.com", "hash");
 		user.setTransactionPinHash("pin-hash");
 		setId(user, 10L);
@@ -109,8 +112,9 @@ class CardManagementServiceImplTest {
 		service.approve("staff", "CRDTEST", "Identity checked");
 
 		assertEquals(CardStatus.INACTIVE, card.getStatus());
-		assertNotNull(card.getCardNumber());
-		assertEquals(16, card.getCardNumber().length());
+		assertNotNull(card.getEncryptedCardNumber());
+		assertTrue(card.getEncryptedCardNumber().startsWith("v1:"));
+		assertEquals(16, protector.decrypt(card.getEncryptedCardNumber()).length());
 		assertNotNull(card.getExpiryDate());
 		verify(notificationRepository).save(any());
 		verify(auditLogRepository).save(any());
@@ -199,7 +203,9 @@ class CardManagementServiceImplTest {
 
 	private PaymentCard approvedCard() {
 		PaymentCard card = pendingCard();
-		card.approve("staff", "4532123412341234", LocalDate.now().plusYears(5), "Approved", LocalDateTime.now());
+		String number = "4532123412341234";
+		card.approve("staff", protector.encrypt(number), protector.hash(number), protector.lastFour(number),
+				LocalDate.now().plusYears(5), "Approved", LocalDateTime.now());
 		return card;
 	}
 

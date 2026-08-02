@@ -62,6 +62,7 @@ class LoanManagementServiceImplTest {
 	@Mock private CustomerNotificationRepository notificationRepository;
 	@Mock private AuditLogRepository auditLogRepository;
 	@Mock private PasswordEncoder passwordEncoder;
+	@Mock private LoanDocumentStorageService documentStorage;
 
 	private LoanManagementServiceImpl service;
 	private Customer customer;
@@ -71,7 +72,7 @@ class LoanManagementServiceImplTest {
 	void setUp() {
 		service = new LoanManagementServiceImpl(customerRepository, accountRepository, loanRepository,
 				scheduleRepository, transactionRepository, notificationRepository, auditLogRepository,
-				passwordEncoder, new SensitiveDataMasker());
+				passwordEncoder, new SensitiveDataMasker(), documentStorage);
 		User user = new User("customer", "customer@example.com", "hash");
 		user.setTransactionPinHash("encoded-pin");
 		setId(user, 10L);
@@ -206,6 +207,7 @@ class LoanManagementServiceImplTest {
 		request.setMonthlyIncome(new BigDecimal(income));
 		request.setEmploymentStatus("Permanent employee");
 		request.setPurpose("Personal home improvements");
+		request.setSupportingDocumentReference("PAYSLIP-TEST-001");
 		return request;
 	}
 
@@ -219,7 +221,7 @@ class LoanManagementServiceImplTest {
 	private LoanApplication loan() {
 		LoanApplication loan = new LoanApplication(customer, account, "LONTEST", LoanType.PERSONAL,
 				new BigDecimal("100000.00"), new BigDecimal("12.00"), 12, new BigDecimal("8884.88"),
-				new BigDecimal("50000.00"), "Permanent employee", "Personal home improvements");
+				new BigDecimal("50000.00"), "Permanent employee", "Personal home improvements", "PAYSLIP-TEST-001");
 		setId(loan, 40L);
 		return loan;
 	}

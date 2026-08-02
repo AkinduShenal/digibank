@@ -7,11 +7,12 @@
 <div class="staff-layout"><div th:replace="~{fragments/staff-layout :: sidebar('cards')}"></div>
 <main class="staff-main"><div th:replace="~{fragments/staff-layout :: alerts}"></div>
   <section class="staff-page-head"><div><p class="staff-eyebrow">Card operations</p><h1>Card requests</h1><p>Review card applications and manage issued card status securely.</p></div></section>
-  <form class="staff-filter" method="get" th:action="@{/staff/cards}"><label>Status</label><select name="status">
-    <option th:each="status : ${cardStatuses}" th:value="${status}" th:text="${status}" th:selected="${status == selectedStatus}"></option></select><button class="staff-btn primary" type="submit">Filter</button></form>
+  <form class="staff-filter" method="get" th:action="@{/staff/cards}"><label>Search<input name="q" th:value="${query}" placeholder="Request or customer"></label><label>Status<select name="status">
+    <option th:each="status : ${cardStatuses}" th:value="${status}" th:text="${status}" th:selected="${status == selectedStatus}"></option></select></label><button class="staff-btn primary" type="submit">Filter</button></form>
   <div class="staff-empty" th:if="${#lists.isEmpty(cards)}">No cards match this status.</div>
   <section class="staff-table-card" th:unless="${#lists.isEmpty(cards)}"><table class="staff-record-table"><thead><tr><th>Request</th><th>Customer</th><th>Type</th><th>Linked account</th><th>Card</th><th>Status</th><th></th></tr></thead>
     <tbody><tr th:each="card : ${cards}"><td class="mono-value" th:text="${card.requestNumber}">CRD</td><td><strong th:text="${card.customerName}">Name</strong><small th:text="${card.customerNumber}">CUS</small></td>
       <td th:text="${card.cardType.displayName}">Debit</td><td class="mono-value" th:text="${card.accountNumber}">****</td><td class="mono-value" th:text="${card.maskedCardNumber}">Not issued</td>
       <td><em class="status-chip" th:classappend="${card.status.name().toLowerCase()}" th:text="${card.status}">STATUS</em></td><td><a th:href="@{/staff/cards/{number}(number=${card.requestNumber})}">Open</a></td></tr></tbody></table></section>
+  <nav class="staff-pagination" th:if="${cardsPage.totalPages>1}"><a class="staff-btn secondary" th:if="${cardsPage.hasPrevious()}" th:href="@{/staff/cards(q=${query},status=${selectedStatus},page=${cardsPage.number-1},size=${cardsPage.size})}">Previous</a><span th:text="${'Page '+(cardsPage.number+1)+' of '+cardsPage.totalPages}"></span><a class="staff-btn secondary" th:if="${cardsPage.hasNext()}" th:href="@{/staff/cards(q=${query},status=${selectedStatus},page=${cardsPage.number+1},size=${cardsPage.size})}">Next</a></nav>
 </main></div><div th:replace="~{fragments/staff-layout :: footer}"></div></body></html>
