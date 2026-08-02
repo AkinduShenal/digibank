@@ -37,6 +37,9 @@
   <a th:href="@{/staff/cards}" th:classappend="${activePage == 'cards'} ? ' active'">
     <span class="nav-icon">▣</span><span>Card requests</span>
   </a>
+  <a th:href="@{/staff/bill-payments}" th:classappend="${activePage == 'bills'} ? ' active'">
+    <span class="nav-icon">⌁</span><span>Bill payments</span>
+  </a>
   <div class="staff-help">
     <strong>Secure operations</strong>
     <span>All account and verification actions are recorded in the audit log.</span>

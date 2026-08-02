@@ -132,6 +132,20 @@ request and status change creates an audit record, and approval, rejection, acti
 send customer notifications. Flyway migration `V11__create_card_management.sql` creates the card table when the
 application restarts; team members should not create the table manually in phpMyAdmin.
 
+## Bill Payments
+
+Active customers can pay CEB, LECO, NWSDB, mobile and internet bills from `/customer/bill-payments/new`.
+Payments support saved billers or one-time service references and require an active customer-owned LKR account,
+sufficient current and available balances, an amount from LKR 10.00 to LKR 1,000,000.00, and the customer's
+four-digit transaction PIN. A completed payment atomically debits the account, writes a `BILL_PAYMENT` statement
+entry, creates a customer notification and records an audit event. Customers can view payment history and receipts,
+manage saved billers, and can never access another customer's receipt or saved biller.
+
+Bank staff and administrators can monitor the latest payments at `/staff/bill-payments`. Provider settlement is
+simulated because this academic project has no live utility-provider API; the local debit and banking records are
+fully completed. Flyway migration `V12__create_bill_payments.sql` creates the bill-payment and saved-biller tables
+and extends the account-ledger transaction types automatically when the application restarts.
+
 ## Member 1 Customer And Account CRUD Mapping
 
 Member 1 owns the customer registration, login, profile, customer dashboard and account lifecycle foundation.
