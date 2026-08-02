@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transfer History - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout">
+  <div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+  <section class="customer-content">
+    <div th:replace="~{fragments/customer-layout :: alerts}"></div>
+    <div class="welcome-band"><div><p class="eyebrow">Activity</p><h1>Transfer history</h1><span class="mono">Your latest 50 transfers</span></div><a class="btn btn-gotologin" th:href="@{/customer/transfers/new}">Send money</a></div>
+    <div class="empty-state" th:if="${#lists.isEmpty(transfers)}"><h2>No transfers yet</h2><p>Your completed transfers will appear here.</p></div>
+    <section class="transfer-history" th:unless="${#lists.isEmpty(transfers)}">
+      <a th:each="transfer : ${transfers}" th:href="@{/customer/transfers/{reference}(reference=${transfer.referenceNumber})}">
+        <span class="transfer-mark">↗</span>
+        <span class="transfer-party"><strong th:text="${transfer.beneficiaryName}">Beneficiary</strong><small th:text="${transfer.destinationBank + ' · ' + transfer.destinationAccountMasked}">Bank</small></span>
+        <span class="transfer-meta"><strong th:text="${transfer.currencyCode + ' ' + #numbers.formatDecimal(transfer.amount, 1, 2)}">LKR 0.00</strong><small th:text="${transfer.createdAt != null ? #temporals.format(transfer.createdAt, 'dd MMM yyyy HH:mm') : '-'}">Date</small></span>
+        <em class="status-pill" th:text="${transfer.status}">COMPLETED</em>
+      </a>
+    </section>
+  </section>
+</main>
+<div th:replace="~{fragments/customer-layout :: footer}"></div>
+</body>
+</html>

@@ -18,7 +18,7 @@
       <div>
         <p class="staff-eyebrow">Daily operations</p>
         <h1>Staff dashboard</h1>
-        <p>Review new customers, manage bank accounts and approve beneficiary requests.</p>
+        <p>Review customers, accounts, beneficiaries, loans and card requests.</p>
       </div>
       <a class="staff-btn primary" th:href="@{/staff/customers(status='PENDING_VERIFICATION')}">Review new customers</a>
     </section>
@@ -57,6 +57,8 @@
         <div class="panel-heading"><div><p class="staff-eyebrow">Quick access</p><h2>Operations</h2></div></div>
         <a th:href="@{/staff/customers(status='PENDING_VERIFICATION')}"><strong>Activate customers</strong><span>Review identity and activate pending accounts</span></a>
         <a th:href="@{/staff/beneficiaries}"><strong>Verify beneficiaries</strong><span>Approve or reject external beneficiary details</span></a>
+        <a th:href="@{/staff/loans}"><strong>Review loan applications</strong><span>Assess affordability and approve secure disbursements</span></a>
+        <a th:href="@{/staff/cards}"><strong>Review card requests</strong><span>Issue cards and manage blocked or inactive cards</span></a>
         <div class="risk-note"><strong th:text="*{frozenAccounts}">0</strong><span>frozen accounts currently require monitoring</span></div>
       </article>
     </section>

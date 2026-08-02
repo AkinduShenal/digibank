@@ -19,9 +19,14 @@
 <aside class="customer-sidebar" th:fragment="sidebar">
   <a th:href="@{/customer/dashboard}">Overview</a>
   <a th:href="@{/customer/profile}">My Profile</a>
+  <a th:href="@{/customer/transfers/new}">Send Money</a>
+  <a th:href="@{/customer/transfers}">Transfer History</a>
+  <a th:href="@{/customer/transactions}">Account Statement</a>
   <a th:href="@{/customer/beneficiaries}">Beneficiaries</a>
-  <a th:href="@{/notifications}">Notifications</a>
-  <span>Transfers available after activation</span>
+  <a th:href="@{/customer/loans}">Loans</a>
+  <a th:href="@{/customer/cards}">Cards</a>
+  <a th:href="@{/customer/notifications}">Notifications</a>
+  <span>Secure transfers, cards, statements and account notifications</span>
 </aside>
 
 <div th:fragment="alerts">
@@ -32,7 +37,7 @@
 <footer class="customer-footer" th:fragment="footer">
   <span>DigiBank Online Banking</span>
   <span>Customer Portal</span>
-  <span>Secure profile and beneficiary access</span>
+  <span>Secure profile, card, transfer and statement access</span>
 </footer>
 </body>
 </html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transaction Details - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}">
+  <link rel="stylesheet" th:href="@{/css/customer.css}">
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout">
+  <div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+  <section class="customer-content narrow-receipt" th:object="${transaction}">
+    <div class="transaction-detail-card">
+      <span class="transaction-direction large" th:classappend="*{direction.name() == 'CREDIT' ? ' credit' : ' debit'}"
+            th:text="*{direction.name() == 'CREDIT' ? '↓' : '↑'}">↓</span>
+      <p class="eyebrow" th:text="*{direction.name() == 'CREDIT' ? 'Money received' : 'Money sent'}">Transaction</p>
+      <h1 th:text="*{(direction.name() == 'CREDIT' ? '+ LKR ' : '- LKR ') + #numbers.formatDecimal(amount, 1, 2)}">LKR 0.00</h1>
+      <div class="receipt-grid">
+        <div><span>Reference</span><strong class="mono" th:text="*{referenceNumber}">TRF</strong></div>
+        <div><span>Date</span><strong th:text="*{#temporals.format(occurredAt, 'dd MMM yyyy HH:mm:ss')}">Date</strong></div>
+        <div><span>Account</span><strong th:text="*{accountMasked}">Account</strong></div>
+        <div><span>Entry type</span><strong th:text="*{direction}">CREDIT</strong></div>
+        <div><span>Counterparty</span><strong th:text="*{counterpartyName}">Name</strong></div>
+        <div><span>Counterparty account</span><strong th:text="*{counterpartyAccountMasked}">Account</strong></div>
+        <div><span>Balance after</span><strong th:text="*{balanceAfter != null ? 'LKR ' + #numbers.formatDecimal(balanceAfter, 1, 2) : 'Historical entry'}">-</strong></div>
+        <div><span>Description</span><strong th:text="*{description ?: '-'}">-</strong></div>
+      </div>
+      <div class="receipt-actions"><a class="btn btn-prev" th:href="@{/customer/transactions}">Back to statement</a></div>
+    </div>
+  </section>
+</main>
+<div th:replace="~{fragments/customer-layout :: footer}"></div>
+</body>
+</html>

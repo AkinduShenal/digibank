@@ -51,10 +51,28 @@
       <article class="info-card">
         <h2>Access Details</h2>
         <div class="kv"><span>Last Login</span><strong th:text="${dashboard.lastLoginAt != null ? #temporals.format(dashboard.lastLoginAt, 'dd MMM yyyy HH:mm') : 'First login'}">First login</strong></div>
-        <div class="kv"><span>Banking Transactions</span><strong>After activation</strong></div>
-        <a class="btn btn-gotologin full-btn" th:href="@{/customer/accounts/{accountNumber}(accountNumber=*{accountNumber})}">View Account</a>
+        <div class="kv"><span>Banking Transactions</span><strong th:text="*{accountStatus.name() == 'ACTIVE' ? 'Available' : 'After activation'}">After activation</strong></div>
+        <a class="btn btn-gotologin full-btn" th:if="*{accountStatus.name() == 'ACTIVE'}" th:href="@{/customer/transfers/new}">Send Money</a>
+        <a class="btn btn-save full-btn" th:if="*{accountStatus.name() == 'ACTIVE'}" th:href="@{/customer/cards}">Manage Cards</a>
+        <a class="btn btn-prev full-btn" th:href="@{/customer/accounts/{accountNumber}(accountNumber=*{accountNumber})}">View Account</a>
       </article>
     </div>
+
+    <section class="dashboard-transactions" th:if="${dashboard.primaryAccount != null}">
+      <div class="section-heading"><div><p class="eyebrow">Latest activity</p><h2>Recent transactions</h2></div>
+        <a th:href="@{/customer/transactions}">View full statement</a></div>
+      <div class="empty-state compact" th:if="${#lists.isEmpty(recentTransactions)}"><p>No account transactions yet.</p></div>
+      <div class="transaction-ledger compact" th:unless="${#lists.isEmpty(recentTransactions)}">
+        <a th:each="transaction : ${recentTransactions}" th:href="@{/customer/transactions/{id}(id=${transaction.id})}">
+          <span class="transaction-direction" th:classappend="${transaction.direction.name() == 'CREDIT' ? ' credit' : ' debit'}"
+                th:text="${transaction.direction.name() == 'CREDIT' ? '↓' : '↑'}">↓</span>
+          <span class="transaction-party"><strong th:text="${transaction.counterpartyName}">Name</strong>
+            <small th:text="${#temporals.format(transaction.occurredAt, 'dd MMM yyyy HH:mm')}">Date</small></span>
+          <strong class="transaction-amount" th:classappend="${transaction.direction.name() == 'CREDIT' ? ' credit' : ' debit'}"
+                  th:text="${(transaction.direction.name() == 'CREDIT' ? '+ LKR ' : '- LKR ') + #numbers.formatDecimal(transaction.amount, 1, 2)}">Amount</strong>
+        </a>
+      </div>
+    </section>
 
     <div class="notice" th:unless="*{primaryAccount != null}">
       <div class="ic">i</div>
