@@ -14,6 +14,9 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.digibank.enums.BillerCategory;
+import com.digibank.util.PageSupport;
+import java.util.Locale;
 
 @Controller
 @RequestMapping("/customer/bill-payments")
@@ -23,8 +26,12 @@ public class CustomerBillPaymentController {
 	public CustomerBillPaymentController(BillPaymentService service) { this.service = service; }
 
 	@GetMapping
-	public String history(@AuthenticationPrincipal CustomUserDetails user, Model model) {
-		model.addAttribute("payments", service.getCustomerHistory(user.getUserId()));
+	public String history(@AuthenticationPrincipal CustomUserDetails user,@RequestParam(required=false) String q,
+			@RequestParam(required=false) BillerCategory category,@RequestParam(defaultValue="0") int page,
+			@RequestParam(defaultValue="10") int size,Model model) {
+		String query=PageSupport.query(q);var filtered=service.getCustomerHistory(user.getUserId()).stream()
+				.filter(p->category==null||p.category()==category).filter(p->query.isEmpty()||p.referenceNumber().toLowerCase(Locale.ROOT).contains(query)||p.providerName().toLowerCase(Locale.ROOT).contains(query)).toList();var result=PageSupport.page(filtered,page,size);
+		model.addAttribute("payments",result.getContent());model.addAttribute("paymentsPage",result);model.addAttribute("query",q==null?"":q.trim());model.addAttribute("selectedCategory",category);model.addAttribute("billerCategories",BillerCategory.values());
 		return "customer/bills/history";
 	}
 
@@ -77,6 +84,41 @@ public class CustomerBillPaymentController {
 			redirect.addFlashAttribute("successMessage", "Biller saved successfully.");
 		} catch (BillPaymentException ex) { redirect.addFlashAttribute("errorMessage", ex.getMessage()); }
 		return "redirect:/customer/bill-payments/billers";
+	}
+
+	@GetMapping("/billers/{id}/edit")
+	public String editBillerForm(@AuthenticationPrincipal CustomUserDetails user, @PathVariable Long id,
+			Model model, RedirectAttributes redirect) {
+		try {
+			model.addAttribute("savedBillerRequest", service.getSavedBillerForEdit(user.getUserId(), id));
+			model.addAttribute("billerId", id);
+			model.addAttribute("providers", BillerProvider.values());
+			return "customer/bills/edit-biller";
+		} catch (BillPaymentException ex) {
+			redirect.addFlashAttribute("errorMessage", ex.getMessage());
+			return "redirect:/customer/bill-payments/billers";
+		}
+	}
+
+	@PostMapping("/billers/{id}/edit")
+	public String updateBiller(@AuthenticationPrincipal CustomUserDetails user, @PathVariable Long id,
+			@Valid @ModelAttribute SavedBillerRequest savedBillerRequest, BindingResult result,
+			Model model, RedirectAttributes redirect) {
+		if (result.hasErrors()) {
+			model.addAttribute("billerId", id);
+			model.addAttribute("providers", BillerProvider.values());
+			return "customer/bills/edit-biller";
+		}
+		try {
+			service.updateBiller(user.getUserId(), user.getUsername(), id, savedBillerRequest);
+			redirect.addFlashAttribute("successMessage", "Saved biller updated successfully.");
+			return "redirect:/customer/bill-payments/billers";
+		} catch (BillPaymentException ex) {
+			model.addAttribute("errorMessage", ex.getMessage());
+			model.addAttribute("billerId", id);
+			model.addAttribute("providers", BillerProvider.values());
+			return "customer/bills/edit-biller";
+		}
 	}
 
 	@PostMapping("/billers/{id}/delete")

@@ -69,13 +69,24 @@ public class BillPaymentServiceImpl implements BillPaymentService {
 	@Override
 	@Transactional
 	public BillPaymentDetailsView pay(Long userId, String actorUsername, BillPaymentRequest request) {
+		return executePayment(userId, actorUsername, request, true);
+	}
+
+	@Override
+	@Transactional(noRollbackFor = BillPaymentException.class)
+	public BillPaymentDetailsView executeScheduledPayment(Long userId, BillPaymentRequest request) {
+		return executePayment(userId, "system-scheduler", request, false);
+	}
+
+	private BillPaymentDetailsView executePayment(Long userId, String actorUsername, BillPaymentRequest request,
+			boolean requirePin) {
 		Customer customer = customer(userId);
 		requireActive(customer);
 		if (request == null || request.getSelectionType() == null || trim(request.getSourceAccountNumber()) == null) {
 			throw new BillPaymentException("Select a source account and biller.");
 		}
 		BigDecimal amount = amount(request.getAmount());
-		requirePin(customer, request.getTransactionPin());
+		if (requirePin) requirePin(customer, request.getTransactionPin());
 
 		SavedBiller savedBiller = null;
 		BillerProvider provider;
@@ -156,11 +167,46 @@ public class BillPaymentServiceImpl implements BillPaymentService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
+	public SavedBillerRequest getSavedBillerForEdit(Long userId, Long savedBillerId) {
+		Customer customer = customer(userId);
+		SavedBiller biller = activeBiller(customer, savedBillerId);
+		SavedBillerRequest request = new SavedBillerRequest();
+		request.setProvider(biller.getProvider());
+		request.setNickname(biller.getNickname());
+		request.setConsumerReference(biller.getConsumerReference());
+		return request;
+	}
+
+	@Override
+	@Transactional
+	public SavedBillerView updateBiller(Long userId, String actorUsername, Long savedBillerId,
+			SavedBillerRequest request) {
+		Customer customer = customer(userId);
+		requireActive(customer);
+		if (request == null || request.getProvider() == null) throw new BillPaymentException("Select a service provider.");
+		SavedBiller biller = activeBiller(customer, savedBillerId);
+		String nickname = clean(request.getNickname(), 80);
+		if (nickname == null || nickname.length() < 2) throw new BillPaymentException("Enter a nickname for the biller.");
+		String reference = normalizeReference(request.getConsumerReference());
+		if (savedBillerRepository.existsByCustomerIdAndProviderAndConsumerReferenceIgnoreCaseAndStatusAndIdNot(
+				customer.getId(), request.getProvider(), reference, SavedBillerStatus.ACTIVE, biller.getId())) {
+			throw new BillPaymentException("This biller is already saved.");
+		}
+		String before = biller.getProvider().name() + ":" + masker.maskAccountNumber(biller.getConsumerReference());
+		biller.update(request.getProvider(), nickname, reference);
+		savedBillerRepository.save(biller);
+		String after = biller.getProvider().name() + ":" + masker.maskAccountNumber(reference);
+		auditLogRepository.save(new AuditLog(actor(actorUsername), "SAVED_BILLER_UPDATED", "SAVED_BILLER",
+				String.valueOf(biller.getId()), before, after, "Saved biller details updated", LocalDateTime.now()));
+		return savedBillerView(biller);
+	}
+
+	@Override
 	@Transactional
 	public void deleteBiller(Long userId, String actorUsername, Long savedBillerId) {
 		Customer customer = customer(userId);
-		SavedBiller biller = savedBillerRepository.findByIdAndCustomerIdAndStatus(savedBillerId, customer.getId(),
-				SavedBillerStatus.ACTIVE).orElseThrow(() -> new BillPaymentException("Saved biller was not found."));
+		SavedBiller biller = activeBiller(customer, savedBillerId);
 		biller.delete();
 		savedBillerRepository.save(biller);
 		auditLogRepository.save(new AuditLog(actor(actorUsername), "SAVED_BILLER_DELETED", "SAVED_BILLER",
@@ -215,6 +261,12 @@ public class BillPaymentServiceImpl implements BillPaymentService {
 		if (savedBillerRepository.existsByCustomerIdAndProviderAndConsumerReferenceIgnoreCaseAndStatus(customer.getId(),
 				provider, reference, SavedBillerStatus.ACTIVE)) throw new BillPaymentException("This biller is already saved.");
 		return savedBillerRepository.save(new SavedBiller(customer, provider, cleanNickname, reference));
+	}
+
+	private SavedBiller activeBiller(Customer customer, Long id) {
+		if (id == null) throw new BillPaymentException("Saved biller was not found.");
+		return savedBillerRepository.findByIdAndCustomerIdAndStatus(id, customer.getId(), SavedBillerStatus.ACTIVE)
+				.orElseThrow(() -> new BillPaymentException("Saved biller was not found."));
 	}
 
 	private String normalizeReference(String value) {

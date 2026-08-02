@@ -65,6 +65,18 @@ public class LoanApplication extends BaseEntity {
 	@Column(name = "purpose", nullable = false, length = 500)
 	private String purpose;
 
+	@Column(name = "supporting_document_reference", nullable = false, length = 255)
+	private String supportingDocumentReference;
+
+	@Column(name = "supporting_document_stored_name", length = 100)
+	private String supportingDocumentStoredName;
+
+	@Column(name = "supporting_document_content_type", length = 100)
+	private String supportingDocumentContentType;
+
+	@Column(name = "supporting_document_size")
+	private Long supportingDocumentSize;
+
 	@Column(name = "reviewed_by", length = 30)
 	private String reviewedBy;
 
@@ -77,6 +89,9 @@ public class LoanApplication extends BaseEntity {
 	@Column(name = "disbursed_at")
 	private LocalDateTime disbursedAt;
 
+	@Column(name = "cancelled_at")
+	private LocalDateTime cancelledAt;
+
 	@Version
 	@Column(name = "version", nullable = false)
 	private long version;
@@ -86,7 +101,8 @@ public class LoanApplication extends BaseEntity {
 
 	public LoanApplication(Customer customer, BankAccount account, String applicationNumber, LoanType loanType,
 			BigDecimal requestedAmount, BigDecimal annualInterestRate, int termMonths,
-			BigDecimal monthlyInstallment, BigDecimal monthlyIncome, String employmentStatus, String purpose) {
+			BigDecimal monthlyInstallment, BigDecimal monthlyIncome, String employmentStatus, String purpose,
+			String supportingDocumentReference) {
 		this.customer = customer;
 		this.disbursementAccount = account;
 		this.applicationNumber = applicationNumber;
@@ -99,7 +115,23 @@ public class LoanApplication extends BaseEntity {
 		this.monthlyIncome = monthlyIncome;
 		this.employmentStatus = employmentStatus;
 		this.purpose = purpose;
+		this.supportingDocumentReference = supportingDocumentReference;
 	}
+
+	public void revise(BankAccount account, LoanType type, BigDecimal amount, BigDecimal rate, int months,
+			BigDecimal installment, BigDecimal income, String employment, String purpose, String documentReference) {
+		this.disbursementAccount=account; this.loanType=type; this.requestedAmount=amount; this.annualInterestRate=rate;
+		this.termMonths=months; this.monthlyInstallment=installment; this.monthlyIncome=income;
+		this.employmentStatus=employment; this.purpose=purpose; this.supportingDocumentReference=documentReference;
+	}
+	public void attachDocument(String originalName, String storedName, String contentType, long size) {
+		this.supportingDocumentReference = originalName;
+		this.supportingDocumentStoredName = storedName;
+		this.supportingDocumentContentType = contentType;
+		this.supportingDocumentSize = size;
+	}
+
+	public void cancel(LocalDateTime when) { this.status=LoanStatus.CANCELLED; this.cancelledAt=when; }
 
 	public void disburse(String reviewer, String note, BigDecimal amount, BigDecimal installment, LocalDateTime when) {
 		this.status = LoanStatus.DISBURSED;
@@ -135,9 +167,14 @@ public class LoanApplication extends BaseEntity {
 	public BigDecimal getMonthlyIncome() { return monthlyIncome; }
 	public String getEmploymentStatus() { return employmentStatus; }
 	public String getPurpose() { return purpose; }
+	public String getSupportingDocumentReference() { return supportingDocumentReference; }
+	public String getSupportingDocumentStoredName() { return supportingDocumentStoredName; }
+	public String getSupportingDocumentContentType() { return supportingDocumentContentType; }
+	public Long getSupportingDocumentSize() { return supportingDocumentSize; }
 	public String getReviewedBy() { return reviewedBy; }
 	public LocalDateTime getReviewedAt() { return reviewedAt; }
 	public String getReviewNote() { return reviewNote; }
 	public LocalDateTime getDisbursedAt() { return disbursedAt; }
+	public LocalDateTime getCancelledAt() { return cancelledAt; }
 	public long getVersion() { return version; }
 }

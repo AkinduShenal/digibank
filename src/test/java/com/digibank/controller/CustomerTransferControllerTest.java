@@ -241,6 +241,11 @@ class CustomerTransferControllerTest {
 		}
 
 		@Override
+		public TransferDetailsView executeScheduledTransfer(Long authenticatedUserId, TransferRequest request) {
+			return details();
+		}
+
+		@Override
 		public List<TransferListView> getTransferHistory(Long authenticatedUserId) {
 			return List.of(new TransferListView("TRFTEST123", "Verified Receiver", "DigiBank", "********7777",
 					new BigDecimal("100.00"), CurrencyCode.LKR, TransferType.INTERNAL, TransferStatus.COMPLETED,

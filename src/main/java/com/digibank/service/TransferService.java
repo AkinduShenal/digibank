@@ -15,6 +15,7 @@ public interface TransferService {
 	InternalAccountLookupView lookupInternalAccount(Long authenticatedUserId, String accountNumber);
 
 	TransferDetailsView transfer(Long authenticatedUserId, String actorUsername, TransferRequest request);
+	TransferDetailsView executeScheduledTransfer(Long authenticatedUserId, TransferRequest request);
 
 	List<TransferListView> getTransferHistory(Long authenticatedUserId);
 

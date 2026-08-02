@@ -32,6 +32,7 @@ public class SecurityConfig {
 								"/investment",
 								"/contact",
 								"/forgot-password",
+								"/reset-password",
 								"/css/**",
 								"/js/**",
 								"/images/**",

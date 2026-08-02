@@ -29,6 +29,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import com.digibank.util.PageSupport;
 
 @Controller
 public class StaffAccountManagementController {
@@ -56,14 +57,10 @@ public class StaffAccountManagementController {
 		return "staff/dashboard";
 	}
 
-	@GetMapping("/admin/dashboard")
-	public String adminDashboard() {
-		return "redirect:/staff/dashboard";
-	}
-
 	@GetMapping("/staff/customers")
 	public String customers(@RequestParam(required = false) String q,
-			@RequestParam(required = false) CustomerStatus status, Model model) {
+			@RequestParam(required = false) CustomerStatus status,@RequestParam(defaultValue="0") int page,
+			@RequestParam(defaultValue="20") int size, Model model) {
 		String query = q == null ? "" : q.trim().toLowerCase(Locale.ROOT);
 		List<StaffCustomerView> customers = accountManagementService.getCustomerRecords().stream()
 				.filter(customer -> status == null || customer.getCustomerStatus() == status)
@@ -72,7 +69,7 @@ public class StaffAccountManagementController {
 						|| customer.getFullName().toLowerCase(Locale.ROOT).contains(query)
 						|| customer.getEmail().toLowerCase(Locale.ROOT).contains(query))
 				.toList();
-		model.addAttribute("customers", customers);
+		var result=PageSupport.page(customers,page,size);model.addAttribute("customers", result.getContent());model.addAttribute("customersPage",result);
 		model.addAttribute("query", q == null ? "" : q.trim());
 		model.addAttribute("selectedStatus", status);
 		model.addAttribute("customerStatuses", CustomerStatus.values());

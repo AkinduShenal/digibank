@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import org.springframework.web.multipart.MultipartFile;
 
 public class LoanApplicationRequest {
 	@NotBlank(message = "Select a disbursement account.")
@@ -39,6 +40,10 @@ public class LoanApplicationRequest {
 	@Size(min = 10, max = 500, message = "Purpose must contain 10 to 500 characters.")
 	private String purpose;
 
+	@Size(max = 255, message = "Supporting document reference is too long.")
+	private String supportingDocumentReference;
+	private MultipartFile supportingDocument;
+
 	public String getAccountNumber() { return accountNumber; }
 	public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
 	public LoanType getLoanType() { return loanType; }
@@ -53,4 +58,8 @@ public class LoanApplicationRequest {
 	public void setEmploymentStatus(String employmentStatus) { this.employmentStatus = employmentStatus; }
 	public String getPurpose() { return purpose; }
 	public void setPurpose(String purpose) { this.purpose = purpose; }
+	public String getSupportingDocumentReference() { return supportingDocumentReference; }
+	public void setSupportingDocumentReference(String value) { supportingDocumentReference = value; }
+	public MultipartFile getSupportingDocument() { return supportingDocument; }
+	public void setSupportingDocument(MultipartFile supportingDocument) { this.supportingDocument = supportingDocument; }
 }

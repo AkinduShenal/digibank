@@ -13,4 +13,6 @@ public interface SavedBillerRepository extends JpaRepository<SavedBiller, Long> 
 	Optional<SavedBiller> findByIdAndCustomerIdAndStatus(Long id, Long customerId, SavedBillerStatus status);
 	boolean existsByCustomerIdAndProviderAndConsumerReferenceIgnoreCaseAndStatus(Long customerId,
 			BillerProvider provider, String consumerReference, SavedBillerStatus status);
+	boolean existsByCustomerIdAndProviderAndConsumerReferenceIgnoreCaseAndStatusAndIdNot(Long customerId,
+			BillerProvider provider, String consumerReference, SavedBillerStatus status, Long id);
 }

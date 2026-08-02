@@ -87,10 +87,13 @@ class BillPaymentControllerTest {
 				List.of(), List.of(new BillerProviderOption(BillerProvider.CEB, BillerCategory.ELECTRICITY,
 				"Ceylon Electricity Board", "Electricity account number")), BillerCategory.values()); }
 		@Override public BillPaymentDetailsView pay(Long id, String actor, BillPaymentRequest r) { return detail(); }
+		@Override public BillPaymentDetailsView executeScheduledPayment(Long id, BillPaymentRequest r) { return detail(); }
 		@Override public List<BillPaymentListView> getCustomerHistory(Long id) { return List.of(summary()); }
 		@Override public BillPaymentDetailsView getCustomerPayment(Long id, String ref) { return detail(); }
 		@Override public List<SavedBillerView> getSavedBillers(Long id) { return List.of(); }
 		@Override public SavedBillerView saveBiller(Long id, String actor, SavedBillerRequest r) { return null; }
+		@Override public SavedBillerRequest getSavedBillerForEdit(Long id, Long biller) { SavedBillerRequest r=new SavedBillerRequest();r.setProvider(BillerProvider.CEB);r.setNickname("Home");r.setConsumerReference("ACC-12345");return r; }
+		@Override public SavedBillerView updateBiller(Long id, String actor, Long biller, SavedBillerRequest r) { return null; }
 		@Override public void deleteBiller(Long id, String actor, Long biller) { }
 		@Override public List<BillPaymentListView> getStaffPayments() { return List.of(summary()); }
 		@Override public BillPaymentDetailsView getStaffPayment(String ref) { return detail(); }

@@ -143,19 +143,23 @@ class CardControllerTest {
 		@Override public void activate(Long userId, String actor, String number, String pin) { lastAction = "activate:" + number; }
 		@Override public void blockByCustomer(Long userId, String actor, String number, String pin) { lastAction = "block:" + number; }
 		@Override public void reactivateByCustomer(Long userId, String actor, String number, String pin) { lastAction = "reactivate:" + number; }
+		@Override public void updateSpendingLimit(Long userId, String actor, String number, java.math.BigDecimal limit, String pin) { lastAction = "limit:" + number; }
+		@Override public void reportLostOrStolen(Long userId, String actor, String number, String reason, String pin) { lastAction = "lost:" + number; }
 		@Override public List<CardView> getCardsForReview(CardStatus status) { return List.of(card(status)); }
 		@Override public CardView getCardForStaff(String number) { return card(CardStatus.PENDING_REVIEW); }
 		@Override public void approve(String actor, String number, String note) { lastAction = "approve:" + number; }
 		@Override public void reject(String actor, String number, String reason) { lastAction = "reject:" + number; }
 		@Override public void blockByStaff(String actor, String number, String reason) { lastAction = "staff-block:" + number; }
 		@Override public void reactivateByStaff(String actor, String number, String note) { lastAction = "staff-reactivate:" + number; }
+		@Override public void cancelByStaff(String actor, String number, String reason) { lastAction = "cancel:" + number; }
+		@Override public int expireDueCards() { return 0; }
 		private CardView card() { return card(CardStatus.PENDING_REVIEW); }
 		private CardView card(CardStatus status) {
 			return new CardView("CRDTEST", "Test Customer", "CUS100", "********3333", CardType.DEBIT,
 					status, "TEST CUSTOMER", status == CardStatus.PENDING_REVIEW ? "Not issued" : "•••• •••• •••• 1234",
 					status == CardStatus.PENDING_REVIEW ? null : LocalDate.of(2031, 8, 31),
 					LocalDateTime.of(2026, 8, 2, 10, 0), "staff", LocalDateTime.of(2026, 8, 2, 11, 0),
-					"Approved", null, null, null);
+					"Approved", null, null, null, new java.math.BigDecimal("250000.00"), null, null, null);
 		}
 	}
 }

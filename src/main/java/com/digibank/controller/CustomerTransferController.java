@@ -5,6 +5,9 @@ import com.digibank.dto.transfer.TransferDetailsView;
 import com.digibank.dto.transfer.TransferFormView;
 import com.digibank.dto.transfer.TransferRequest;
 import com.digibank.enums.TransferRecipientType;
+import com.digibank.enums.TransferStatus;
+import com.digibank.util.PageSupport;
+import java.util.Locale;
 import com.digibank.exception.TransferException;
 import com.digibank.exception.TransferNotFoundException;
 import com.digibank.security.CustomUserDetails;
@@ -35,8 +38,16 @@ public class CustomerTransferController {
 	}
 
 	@GetMapping
-	public String history(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-		model.addAttribute("transfers", transferService.getTransferHistory(userDetails.getUserId()));
+	public String history(@AuthenticationPrincipal CustomUserDetails userDetails,
+			@RequestParam(required=false) String q, @RequestParam(required=false) TransferStatus status,
+			@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="10") int size, Model model) {
+		String query=PageSupport.query(q);
+		var filtered=transferService.getTransferHistory(userDetails.getUserId()).stream()
+				.filter(t->status==null||t.status()==status)
+				.filter(t->query.isEmpty()||t.referenceNumber().toLowerCase(Locale.ROOT).contains(query)
+						||t.beneficiaryName().toLowerCase(Locale.ROOT).contains(query)||t.destinationBank().toLowerCase(Locale.ROOT).contains(query)).toList();
+		var result=PageSupport.page(filtered,page,size);model.addAttribute("transfers",result.getContent());model.addAttribute("transfersPage",result);
+		model.addAttribute("query",q==null?"":q.trim());model.addAttribute("selectedStatus",status);model.addAttribute("transferStatuses",TransferStatus.values());
 		return "customer/transfers/history";
 	}
 

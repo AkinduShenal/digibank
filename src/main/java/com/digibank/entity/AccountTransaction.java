@@ -76,7 +76,7 @@ public class AccountTransaction extends BaseEntity {
 				counterpartyAccountMasked, description, occurredAt);
 	}
 
-	private AccountTransaction(BankAccount account, FundTransfer fundTransfer, String referenceNumber,
+	public AccountTransaction(BankAccount account, FundTransfer fundTransfer, String referenceNumber,
 			TransactionDirection direction, AccountTransactionType transactionType, BigDecimal amount,
 			BigDecimal balanceAfter, String counterpartyName, String counterpartyAccountMasked, String description,
 			LocalDateTime occurredAt) {

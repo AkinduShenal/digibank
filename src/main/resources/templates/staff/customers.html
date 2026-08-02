@@ -53,6 +53,11 @@
         </tbody>
       </table>
     </section>
+    <nav class="staff-pagination" th:if="${customersPage.totalPages > 1}">
+      <a class="staff-btn secondary" th:if="${customersPage.hasPrevious()}" th:href="@{/staff/customers(q=${query},status=${selectedStatus},page=${customersPage.number-1},size=${customersPage.size})}">Previous</a>
+      <span th:text="${'Page '+(customersPage.number+1)+' of '+customersPage.totalPages}">Page</span>
+      <a class="staff-btn secondary" th:if="${customersPage.hasNext()}" th:href="@{/staff/customers(q=${query},status=${selectedStatus},page=${customersPage.number+1},size=${customersPage.size})}">Next</a>
+    </nav>
   </main>
 </div>
 <div th:replace="~{fragments/staff-layout :: footer}"></div>

@@ -6,6 +6,7 @@ import com.digibank.dto.card.CardView;
 import com.digibank.enums.CardStatus;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 public interface CardManagementService {
 	CardRequestFormView getRequestForm(Long userId);
@@ -16,10 +17,14 @@ public interface CardManagementService {
 	void activate(Long userId, String actorUsername, String requestNumber, String transactionPin);
 	void blockByCustomer(Long userId, String actorUsername, String requestNumber, String transactionPin);
 	void reactivateByCustomer(Long userId, String actorUsername, String requestNumber, String transactionPin);
+	void updateSpendingLimit(Long userId, String actorUsername, String requestNumber, BigDecimal limit, String transactionPin);
+	void reportLostOrStolen(Long userId, String actorUsername, String requestNumber, String reason, String transactionPin);
 	List<CardView> getCardsForReview(CardStatus status);
 	CardView getCardForStaff(String requestNumber);
 	void approve(String actorUsername, String requestNumber, String note);
 	void reject(String actorUsername, String requestNumber, String reason);
 	void blockByStaff(String actorUsername, String requestNumber, String reason);
 	void reactivateByStaff(String actorUsername, String requestNumber, String note);
+	void cancelByStaff(String actorUsername, String requestNumber, String reason);
+	int expireDueCards();
 }

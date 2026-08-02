@@ -10,7 +10,8 @@ import java.util.List;
 public record LoanApplicationView(String applicationNumber, String customerNumber, String customerName,
 		String accountNumber, LoanType loanType, LoanStatus status, BigDecimal requestedAmount,
 		BigDecimal approvedAmount, BigDecimal annualInterestRate, int termMonths, BigDecimal monthlyInstallment,
-		BigDecimal monthlyIncome, String employmentStatus, String purpose, String reviewedBy,
+		BigDecimal monthlyIncome, String employmentStatus, String purpose, String supportingDocumentReference,
+		boolean supportingDocumentUploaded, String reviewedBy,
 		LocalDateTime reviewedAt, String reviewNote, LocalDateTime disbursedAt, LocalDateTime appliedAt,
 		List<LoanScheduleView> schedule) {
 }

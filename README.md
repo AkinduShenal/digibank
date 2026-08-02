@@ -15,6 +15,8 @@ DigiBank is a university group project for building a digital banking web applic
 - HTML, Tailwind CSS, custom CSS, and vanilla JavaScript
 - MySQL
 
+Design, traceability and final-report guidance are in the [`docs`](docs) directory.
+
 ## Database
 
 Default database name: `digibank_db`
@@ -44,6 +46,7 @@ environment variables before starting the application:
 export DIGIBANK_DEV_SEED_ENABLED=true
 export DIGIBANK_DEV_STAFF_PASSWORD='choose-a-strong-local-password'
 export DIGIBANK_DEV_ADMIN_PASSWORD='choose-another-strong-local-password'
+export DIGIBANK_CARD_SECURITY_KEY='use-a-long-unique-secret-outside-git'
 sh mvnw spring-boot:run
 ```
 
@@ -64,7 +67,7 @@ Customers can send money from `/customer/transfers/new`, view their own transfer
 account, sufficient available funds, and the customer's four-digit transaction PIN. The saved-beneficiary route
 also requires an active verified beneficiary and an amount within that beneficiary's limit.
 
-Customers may also make a one-time internal transfer without saving a beneficiary. After the complete 12-digit
+Customers may also transfer between their own accounts or make a one-time internal transfer without saving a beneficiary. After the complete 12-digit
 DigiBank account number is entered, the protected lookup confirms the eligible account holder's name. Partial,
 invalid, inactive and own-account lookups do not expose customer details. The backend repeats every account check
 when the transfer is submitted, and the direct recipient is not added to the beneficiary list.
@@ -74,6 +77,12 @@ transfers currently use a simulated successful settlement because the project ha
 they debit the source account and retain a complete local transfer record. Account rows are locked in a consistent
 order while transferring to protect balances from concurrent updates. Customers can access only their own transfer
 records, and PINs and full account numbers are never written to audit logs.
+
+Authorised staff can search and page through transfers at `/staff/transfers`. A completed transfer can be reversed
+once through a compensating transaction: the original record remains immutable, opposite ledger entries are
+created, balances are locked and updated atomically, both affected customers are notified, and the reason and staff
+username are audited. Internal reversals are rejected if the destination no longer has the funds. Migration `V17`
+adds the reversal metadata and ledger transaction type.
 
 Flyway migration `V6__create_fund_transfers.sql` creates the transfer table and
 `V7__allow_direct_internal_transfers.sql` enables one-time DigiBank recipients automatically when the application
@@ -100,7 +109,7 @@ The system is being developed module by module by six members.
 ## Loan Management
 
 Active customers can submit a loan application from `/customer/loans/new` for an eligible LKR account. The module
-supports personal, education, home and business loans, validates amounts from LKR 50,000 to LKR 5,000,000, allows
+supports personal, education, home, vehicle and business loans, validates amounts from LKR 50,000 to LKR 5,000,000, allows
 terms from 6 to 60 months, calculates a reducing-balance monthly installment, and limits that installment to 40% of
 the customer's declared monthly income. Customers can track the review status and view the repayment schedule.
 
@@ -109,6 +118,11 @@ the account is locked, the approved amount is credited, a loan-disbursement ledg
 schedule is generated, and the customer receives a notification. Rejections require a reason and also notify the
 customer. Both decisions are recorded in the audit log, and applications can only be decided once. Flyway migration
 `V9__create_loan_management.sql` creates the loan tables and extends account-ledger transaction types automatically.
+
+Applications accept a PDF, JPEG or PNG supporting document up to 5 MB. The backend verifies the file signature,
+uses a generated storage name outside the public web directory, and permits downloads only to the owning customer
+or authorised staff. Set `DIGIBANK_LOAN_DOCUMENT_STORAGE` to an absolute private directory in deployed environments;
+the local default `uploads/loan-documents` is ignored by Git. Migration `V18` stores only safe file metadata.
 
 Customers with a disbursed loan can pay the next unpaid installment from the loan detail page. Repayments require a
 four-digit transaction PIN, an active customer-owned LKR account and sufficient available/current balances. The
@@ -139,12 +153,21 @@ Payments support saved billers or one-time service references and require an act
 sufficient current and available balances, an amount from LKR 10.00 to LKR 1,000,000.00, and the customer's
 four-digit transaction PIN. A completed payment atomically debits the account, writes a `BILL_PAYMENT` statement
 entry, creates a customer notification and records an audit event. Customers can view payment history and receipts,
-manage saved billers, and can never access another customer's receipt or saved biller.
+create, edit and remove saved billers, and can never access another customer's receipt or saved biller.
 
 Bank staff and administrators can monitor the latest payments at `/staff/bill-payments`. Provider settlement is
 simulated because this academic project has no live utility-provider API; the local debit and banking records are
 fully completed. Flyway migration `V12__create_bill_payments.sql` creates the bill-payment and saved-biller tables
 and extends the account-ledger transaction types automatically when the application restarts.
+
+## Completed Requirement-Gap Features
+
+- `/customer/schedules` supports one-time/monthly transfers and bill payments with edit, cancel, automatic execution, audit events and notifications (`V14`).
+- Pending loan applications support secure document upload/download, edit/withdraw lifecycle and vehicle loans (`V15`, `V18`).
+- Card numbers are AES-GCM encrypted at rest with HMAC uniqueness; customers can manage spending limits and report lost/stolen cards, while staff can cancel and the system expires due cards (`V13`).
+- `/admin/dashboard` provides a searchable, paginated audit log. Friendly error pages prevent SQL and stack-trace exposure.
+- Password recovery uses hashed single-use tokens that expire after 30 minutes (`V16`). For production set `DIGIBANK_PASSWORD_RESET_SHOW_LINK=false` and connect an approved delivery provider.
+- Customer/staff customer, transfer, loan, card and bill lists provide search/filter controls and bounded pagination.
 
 ## Member 1 Customer And Account CRUD Mapping
 

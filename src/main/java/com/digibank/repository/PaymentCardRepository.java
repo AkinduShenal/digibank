@@ -17,8 +17,9 @@ public interface PaymentCardRepository extends JpaRepository<PaymentCard, Long> 
 	Optional<PaymentCard> findByRequestNumber(String requestNumber);
 	List<PaymentCard> findByStatusOrderByRequestedAtAsc(CardStatus status);
 	boolean existsByBankAccountIdAndCardTypeAndStatusIn(Long accountId, CardType type, Collection<CardStatus> statuses);
-	boolean existsByCardNumber(String cardNumber);
+	boolean existsByCardNumberHash(String cardNumberHash);
 	boolean existsByRequestNumber(String requestNumber);
+	List<PaymentCard> findByStatusInAndExpiryDateBefore(Collection<CardStatus> statuses, java.time.LocalDate date);
 
 	@Query(value = "select * from payment_cards where request_number = :requestNumber for update", nativeQuery = true)
 	Optional<PaymentCard> findByRequestNumberForUpdate(@Param("requestNumber") String requestNumber);

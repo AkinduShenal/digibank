@@ -109,6 +109,15 @@ class BillPaymentServiceImplTest {
 		verify(savedBillerRepository).save(biller);
 	}
 
+	@Test void customerCanUpdateOnlyOwnedActiveBillerAndAuditIsWritten() {
+		SavedBiller biller=new SavedBiller(customer,BillerProvider.CEB,"Home","ACC-12345");setId(biller,40L);
+		when(savedBillerRepository.findByIdAndCustomerIdAndStatus(40L,20L,SavedBillerStatus.ACTIVE)).thenReturn(Optional.of(biller));
+		SavedBillerRequest request=new SavedBillerRequest();request.setProvider(BillerProvider.NWSDB);request.setNickname("Water");request.setConsumerReference("WTR-98765");
+		var result=service.updateBiller(10L,"customer",40L,request);
+		assertEquals(BillerProvider.NWSDB,result.provider());assertEquals("Water",result.nickname());
+		assertEquals("WTR-98765",biller.getConsumerReference());verify(auditLogRepository).save(any(AuditLog.class));
+	}
+
 	private BillPaymentRequest newRequest(String amount) {
 		BillPaymentRequest request = new BillPaymentRequest(); request.setSourceAccountNumber("111122223333");
 		request.setSelectionType(BillerSelectionType.NEW_BILLER); request.setProvider(BillerProvider.CEB);

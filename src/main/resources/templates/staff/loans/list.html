@@ -7,12 +7,13 @@
 <div class="staff-layout"><div th:replace="~{fragments/staff-layout :: sidebar('loans')}"></div>
 <main class="staff-main"><div th:replace="~{fragments/staff-layout :: alerts}"></div>
   <section class="staff-page-head"><div><p class="staff-eyebrow">Credit operations</p><h1>Loan applications</h1><p>Review affordability, approve disbursements or reject ineligible applications.</p></div></section>
-  <form class="staff-filter" method="get" th:action="@{/staff/loans}"><label>Status</label><select name="status">
-    <option th:each="status : ${loanStatuses}" th:value="${status}" th:text="${status}" th:selected="${status == selectedStatus}"></option></select><button class="staff-btn primary" type="submit">Filter</button></form>
+  <form class="staff-filter" method="get" th:action="@{/staff/loans}"><label>Search<input name="q" th:value="${query}" placeholder="Application or customer"></label><label>Status<select name="status">
+    <option th:each="status : ${loanStatuses}" th:value="${status}" th:text="${status}" th:selected="${status == selectedStatus}"></option></select></label><button class="staff-btn primary" type="submit">Filter</button></form>
   <div class="staff-empty" th:if="${#lists.isEmpty(loans)}">No loan applications match this status.</div>
   <section class="staff-table-card" th:unless="${#lists.isEmpty(loans)}"><table><thead><tr><th>Application</th><th>Customer</th><th>Type</th><th>Amount</th><th>Installment</th><th>Status</th><th></th></tr></thead>
     <tbody><tr th:each="loan : ${loans}"><td class="mono" th:text="${loan.applicationNumber}">LON</td><td><strong th:text="${loan.customerName}">Name</strong><small th:text="${loan.customerNumber}">CUS</small></td>
       <td th:text="${loan.loanType.displayName}">Type</td><td th:text="${'LKR ' + #numbers.formatDecimal(loan.requestedAmount, 1, 2)}">0</td>
       <td th:text="${'LKR ' + #numbers.formatDecimal(loan.monthlyInstallment, 1, 2)}">0</td><td><em class="status-chip" th:classappend="${loan.status.name().toLowerCase()}" th:text="${loan.status}">STATUS</em></td>
       <td><a th:href="@{/staff/loans/{number}(number=${loan.applicationNumber})}">Review</a></td></tr></tbody></table></section>
+  <nav class="staff-pagination" th:if="${loansPage.totalPages>1}"><a class="staff-btn secondary" th:if="${loansPage.hasPrevious()}" th:href="@{/staff/loans(q=${query},status=${selectedStatus},page=${loansPage.number-1},size=${loansPage.size})}">Previous</a><span th:text="${'Page '+(loansPage.number+1)+' of '+loansPage.totalPages}"></span><a class="staff-btn secondary" th:if="${loansPage.hasNext()}" th:href="@{/staff/loans(q=${query},status=${selectedStatus},page=${loansPage.number+1},size=${loansPage.size})}">Next</a></nav>
 </main></div><div th:replace="~{fragments/staff-layout :: footer}"></div></body></html>

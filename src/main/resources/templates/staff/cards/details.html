@@ -11,6 +11,7 @@
     <dl class="loan-review-facts"><div><dt>Customer number</dt><dd th:text="*{customerNumber}">CUS</dd></div><div><dt>Linked account</dt><dd class="mono-value" th:text="*{accountNumber}">****</dd></div>
       <div><dt>Cardholder</dt><dd th:text="*{cardholderName}">NAME</dd></div><div><dt>Card number</dt><dd class="mono-value" th:text="*{maskedCardNumber}">Not issued</dd></div>
       <div><dt>Expiry</dt><dd th:text="*{expiryDate == null ? 'Not issued' : #temporals.format(expiryDate, 'MM/yyyy')}">date</dd></div><div><dt>Requested</dt><dd th:text="*{#temporals.format(requestedAt, 'dd MMM yyyy HH:mm')}">date</dd></div>
+      <div><dt>Spending limit</dt><dd th:text="*{'LKR ' + #numbers.formatDecimal(spendingLimit, 1, 2)}">LKR</dd></div>
       <div class="wide" th:if="*{reviewNote != null}"><dt>Review note</dt><dd th:text="*{reviewNote}">note</dd></div><div class="wide" th:if="*{blockReason != null}"><dt>Block reason</dt><dd th:text="*{blockReason}">reason</dd></div></dl></article>
     <article class="staff-panel decision-panel" th:if="*{status.name() == 'PENDING_REVIEW'}"><div class="panel-heading"><div><p class="staff-eyebrow">Decision</p><h2>Complete review</h2></div></div>
       <form th:action="@{/staff/cards/{number}/approve(number=*{requestNumber})}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
@@ -23,5 +24,6 @@
     <article class="staff-panel decision-panel" th:if="*{status.name() == 'BLOCKED'}"><div class="panel-heading"><div><p class="staff-eyebrow">Security action</p><h2>Reactivate card</h2></div></div>
       <form th:action="@{/staff/cards/{number}/reactivate(number=*{requestNumber})}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <label>Review note</label><textarea name="note" rows="3" maxlength="200" placeholder="Optional reactivation note"></textarea><button class="staff-btn primary" type="submit">Reactivate card</button></form></article>
+    <article class="staff-panel decision-panel" th:if="*{status.name() != 'CANCELLED' and status.name() != 'EXPIRED' and status.name() != 'REJECTED'}"><div class="panel-heading"><div><p class="staff-eyebrow">Permanent action</p><h2>Cancel card</h2></div></div><form th:action="@{/staff/cards/{number}/cancel(number=*{requestNumber})}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><label>Cancellation reason</label><textarea name="reason" minlength="5" maxlength="200" required></textarea><button class="staff-btn danger" type="submit">Cancel permanently</button></form></article>
   </section>
 </main></div><div th:replace="~{fragments/staff-layout :: footer}"></div></body></html>

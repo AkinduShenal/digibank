@@ -107,6 +107,16 @@ class LoanControllerTest {
 		assertEquals("LONTEST", loanService.approvedNumber);
 	}
 
+	@Test
+	void loanDocumentsAreDownloadedOnlyThroughTheCorrectRoleRoute() throws Exception {
+		mockMvc.perform(get("/customer/loans/LONTEST/document").with(user(customer)))
+				.andExpect(status().isOk()).andExpect(content().contentType("application/pdf"));
+		mockMvc.perform(get("/customer/loans/LONTEST/document").with(user(staff))).andExpect(status().isForbidden());
+		mockMvc.perform(get("/staff/loans/LONTEST/document").with(user(staff)))
+				.andExpect(status().isOk()).andExpect(content().contentType("application/pdf"));
+		mockMvc.perform(get("/staff/loans/LONTEST/document").with(user(customer))).andExpect(status().isForbidden());
+	}
+
 	private CustomUserDetails userDetails(String username, Role role, Long id) {
 		User user = new User(username, username + "@example.com", "password");
 		user.setRole(role);
@@ -141,10 +151,15 @@ class LoanControllerTest {
 					new BigDecimal("1000.00"))), LoanType.values());
 		}
 		@Override public LoanApplicationView apply(Long userId, String actor, LoanApplicationRequest request) { return loan(); }
+		@Override public LoanApplicationRequest getPendingApplicationForEdit(Long userId,String number){return new LoanApplicationRequest();}
+		@Override public void updatePendingApplication(Long userId,String actor,String number,LoanApplicationRequest request){}
+		@Override public void withdrawPendingApplication(Long userId,String actor,String number){}
 		@Override public List<LoanApplicationView> getCustomerLoans(Long userId) { return List.of(loan()); }
 		@Override public LoanApplicationView getCustomerLoan(Long userId, String number) { return loan(); }
 		@Override public List<LoanApplicationView> getLoansForReview(LoanStatus status) { return List.of(loan()); }
 		@Override public LoanApplicationView getLoanForStaff(String number) { return loan(); }
+		@Override public com.digibank.dto.loan.LoanDocumentDownload getCustomerDocument(Long id,String number){return new com.digibank.dto.loan.LoanDocumentDownload("doc.pdf","application/pdf","%PDF-".getBytes());}
+		@Override public com.digibank.dto.loan.LoanDocumentDownload getStaffDocument(String number){return new com.digibank.dto.loan.LoanDocumentDownload("doc.pdf","application/pdf","%PDF-".getBytes());}
 		@Override public void approveAndDisburse(String actor, String number, BigDecimal amount, String note) { approvedNumber = number; }
 		@Override public void reject(String actor, String number, String reason) { }
 		@Override public List<LoanAccountOption> getRepaymentAccounts(Long userId) { return getApplicationForm(userId).accounts(); }
@@ -154,7 +169,7 @@ class LoanControllerTest {
 			return new LoanApplicationView("LONTEST", "CUS100", "Test Customer", "********3333",
 					LoanType.PERSONAL, LoanStatus.PENDING_REVIEW, new BigDecimal("100000.00"), null,
 					new BigDecimal("12.00"), 12, new BigDecimal("8884.88"), new BigDecimal("50000.00"),
-					"Permanent employee", "Personal home improvements", null, null, null, null,
+					"Permanent employee", "Personal home improvements", "PAYSLIP-TEST-001", false, null, null, null, null,
 					LocalDateTime.of(2026, 8, 2, 10, 0), List.of(new LoanScheduleView(1,
 					LocalDate.of(2026, 9, 2), new BigDecimal("7884.88"), new BigDecimal("1000.00"),
 					new BigDecimal("8884.88"), RepaymentStatus.SCHEDULED, true, null, null)));
