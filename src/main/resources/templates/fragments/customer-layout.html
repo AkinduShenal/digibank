@@ -4,7 +4,7 @@
 <nav class="customer-topbar" th:fragment="topbar">
   <a class="customer-brand" th:href="@{/customer/dashboard}">
     <img th:src="@{/images/logo/logo.png}" alt="DigiBank logo">
-    <span>DigiBank</span>
+    <span><strong>DigiBank</strong><small>Online Banking</small></span>
   </a>
   <div class="customer-toplinks">
     <a th:href="@{/customer/dashboard}">Dashboard</a>
@@ -17,18 +17,19 @@
 </nav>
 
 <aside class="customer-sidebar" th:fragment="sidebar">
-  <a th:href="@{/customer/dashboard}">Overview</a>
-  <a th:href="@{/customer/profile}">My Profile</a>
-  <a th:href="@{/customer/transfers/new}">Send Money</a>
-  <a th:href="@{/customer/transfers}">Transfer History</a>
-  <a th:href="@{/customer/transactions}">Account Statement</a>
-  <a th:href="@{/customer/beneficiaries}">Beneficiaries</a>
-  <a th:href="@{/customer/loans}">Loans</a>
-  <a th:href="@{/customer/cards}">Cards</a>
-  <a th:href="@{/customer/bill-payments}">Bill Payments</a>
-  <a th:href="@{/customer/schedules}">Scheduled Payments</a>
-  <a th:href="@{/customer/notifications}">Notifications</a>
-  <span>Secure transfers, bill payments, cards and account notifications</span>
+  <div class="customer-menu-label">Personal workspace</div>
+  <a data-icon="⌂" th:href="@{/customer/dashboard}">Overview</a>
+  <a data-icon="◎" th:href="@{/customer/profile}">My Profile</a>
+  <a data-icon="↗" th:href="@{/customer/transfers/new}">Send Money</a>
+  <a data-icon="⇄" th:href="@{/customer/transfers}">Transfer History</a>
+  <a data-icon="▤" th:href="@{/customer/transactions}">Account Statement</a>
+  <a data-icon="☆" th:href="@{/customer/beneficiaries}">Beneficiaries</a>
+  <a data-icon="¤" th:href="@{/customer/loans}">Loans</a>
+  <a data-icon="▣" th:href="@{/customer/cards}">Cards</a>
+  <a data-icon="⌁" th:href="@{/customer/bill-payments}">Bill Payments</a>
+  <a data-icon="◷" th:href="@{/customer/schedules}">Scheduled Payments</a>
+  <a data-icon="◉" th:href="@{/customer/notifications}">Notifications</a>
+  <span class="customer-security-note">Secure transfers, bill payments, cards and account notifications</span>
 </aside>
 
 <div th:fragment="alerts">
@@ -40,6 +41,7 @@
   <span>DigiBank Online Banking</span>
   <span>Customer Portal</span>
   <span>Secure profile, card, transfer and statement access</span>
+  <script th:src="@{/js/ui-shell.js}"></script>
 </footer>
 </body>
 </html>

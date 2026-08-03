@@ -16,6 +16,22 @@ if (passwordToggle && passwordInput) {
 }
 
 if (loginForm) {
+	const refreshValidationState = () => {
+		if (loginInput.value.trim()) {
+			loginInput.classList.remove('err');
+		}
+		if (passwordInput.value) {
+			passwordInput.classList.remove('err');
+		}
+		if (loginInput.value.trim() && passwordInput.value) {
+			loginToast.className = 'toast';
+			loginToast.textContent = '';
+		}
+	};
+
+	loginInput.addEventListener('input', refreshValidationState);
+	passwordInput.addEventListener('input', refreshValidationState);
+
 	loginForm.addEventListener('submit', (event) => {
 		const missingLogin = !loginInput.value.trim();
 		const missingPassword = !passwordInput.value;
@@ -24,7 +40,7 @@ if (loginForm) {
 		if (missingLogin || missingPassword) {
 			event.preventDefault();
 			loginToast.className = 'toast show';
-			loginToast.textContent = 'Enter your username or email and password to continue.';
+			loginToast.textContent = 'Please complete both fields to continue.';
 		}
 	});
 }
