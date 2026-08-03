@@ -8,7 +8,22 @@
 <link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
 <link rel="stylesheet" th:href="@{/css/auth.css}">
 </head>
-<body>
+<body class="login-page">
+
+<div class="login-ambient" aria-hidden="true">
+  <span class="money-symbol">$</span>
+  <span class="money-symbol">$</span>
+  <span class="money-symbol">$</span>
+  <span class="money-symbol">$</span>
+  <span class="money-symbol">$</span>
+  <span class="money-symbol">$</span>
+  <span class="money-symbol">$</span>
+  <span class="money-symbol">$</span>
+  <span class="money-symbol">$</span>
+  <span class="money-symbol">$</span>
+  <span class="money-symbol">$</span>
+  <span class="money-symbol">$</span>
+</div>
 
 <div class="pillnav">
   <div class="pillnav-inner">
@@ -18,40 +33,28 @@
   </div>
 </div>
 
-<div class="wrap">
-  <div class="page-title">
-    <div class="brand-logo">
-      <img th:src="@{/images/logo/logo.png}" alt="DigiBank logo">
-    </div>
-    <h1>DigiBank</h1>
-    <p>Secure Online Banking</p>
-  </div>
+<main class="login-shell">
+  <section class="login-card login-card-compact">
+    <div class="login-form-panel">
+      <a class="login-brand login-brand-centered" th:href="@{/}">
+        <span><img th:src="@{/images/logo/logo.png}" alt="DigiBank logo"></span>
+        <strong>DigiBank</strong>
+      </a>
+      <div class="login-form-head">
+        <h1>Welcome back</h1>
+      </div>
 
-  <div class="notice">
-    <div class="ic">i</div>
-    <div>
-      <h3>Important Notice</h3>
-      <p>Only authorized DigiBank customers, staff and administrators should proceed. Your session is protected and monitored for security.</p>
-    </div>
-  </div>
-
-  <div class="panel">
-    <div class="panel-head">
-      <h2>Sign In to Your Account</h2>
-      <p>Use your username or email address</p>
-    </div>
-    <div class="panel-body">
       <div class="auth-alert error" th:if="${param.error}">
-        Invalid username/email or password.
+        We could not sign you in with those details. Please check them and try again.
       </div>
 	  <div class="auth-alert error" th:if="${param.disabled}">
-		This profile is awaiting verification or has been deactivated. Please contact DigiBank support.
+		This profile is awaiting verification or has been deactivated. Contact DigiBank support for help.
 	  </div>
       <div class="auth-alert error" th:if="${param.locked}">
-        This account is locked or suspended. Please contact DigiBank support.
+        This account is temporarily unavailable. Contact DigiBank support for help.
       </div>
       <div class="auth-alert ok" th:if="${param.logout}">
-        You have been signed out successfully.
+        You’re securely signed out.
       </div>
 
       <form id="loginForm" th:action="@{/login}" method="post" novalidate>
@@ -59,7 +62,6 @@
         <div class="field">
           <label for="username">Username or Email</label>
           <input type="text" id="username" name="username" placeholder="you@example.com" autocomplete="username">
-          <div class="errmsg">Enter your username or email address.</div>
         </div>
 
         <div class="field">
@@ -68,7 +70,6 @@
             <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password">
             <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password">Show</button>
           </div>
-          <div class="errmsg">Enter your password.</div>
         </div>
 
         <div class="row-between">
@@ -79,24 +80,16 @@
           <a class="forgot" th:href="@{/forgot-password}">Forgot password?</a>
         </div>
 
-        <button class="btn" type="submit">Sign In Securely</button>
-        <div class="toast" id="loginToast"></div>
+        <button class="btn login-submit" type="submit"><span>Sign In Securely</span><span aria-hidden="true">→</span></button>
+        <div class="toast" id="loginToast" role="status" aria-live="polite"></div>
       </form>
 
       <div class="signin-note">
-        Don't have an account? <a th:href="@{/open-account}">Open Account</a>
+        New to DigiBank? <a th:href="@{/open-account}">Open an account</a>
       </div>
     </div>
-  </div>
-</div>
-
-<footer>
-  <div class="foot-inner">
-    <span>256-bit SSL Encryption</span>
-    <span>Session Timeout: 30 minutes</span>
-    <span>24/7 Support</span>
-  </div>
-</footer>
+  </section>
+</main>
 
 <script th:src="@{/js/login.js}"></script>
 </body>
