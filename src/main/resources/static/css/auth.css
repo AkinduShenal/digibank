@@ -394,6 +394,38 @@ a {
 	line-height: 1;
 }
 
+.pw-toggle-icon {
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	right: 8px;
+	border-radius: 8px;
+}
+
+.pw-toggle-icon:hover {
+	background: rgba(14, 92, 151, 0.08);
+}
+
+.pw-toggle-icon svg {
+	width: 20px;
+	height: 20px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.8;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.pw-toggle-icon .eye-closed,
+.pw-toggle-icon[aria-pressed="true"] .eye-open {
+	display: none;
+}
+
+.pw-toggle-icon[aria-pressed="true"] .eye-closed {
+	display: block;
+}
+
 .row-between {
 	display: flex;
 	justify-content: space-between;

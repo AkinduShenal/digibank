@@ -56,9 +56,11 @@ public class DevelopmentAccessSeeder implements ApplicationRunner {
 			LOGGER.warn("Skipping {} development user seed because its credentials are incomplete.", seedUser.role());
 			return;
 		}
-		if (userRepository.existsByUsernameIgnoreCase(username) || userRepository.existsByEmailIgnoreCase(email)) {
-			LOGGER.info("Skipping {} development user seed because the username or email already exists.",
-					seedUser.role());
+		User existingUser = userRepository.findByUsernameIgnoreCase(username)
+				.or(() -> userRepository.findByEmailIgnoreCase(email))
+				.orElse(null);
+		if (existingUser != null) {
+			refreshExistingDevelopmentUser(existingUser, password, seedUser.role());
 			return;
 		}
 		User user = new User(username, email, passwordEncoder.encode(password));
@@ -68,6 +70,33 @@ public class DevelopmentAccessSeeder implements ApplicationRunner {
 		user.setAccountNonLocked(true);
 		userRepository.save(user);
 		LOGGER.info("Created development {} user with username '{}'.", seedUser.role(), username);
+	}
+
+	private void refreshExistingDevelopmentUser(User user, String password, Role expectedRole) {
+		if (user.getRole() != expectedRole) {
+			LOGGER.warn("Skipping {} development user refresh because the matching user has role {}.",
+					expectedRole, user.getRole());
+			return;
+		}
+		boolean changed = false;
+		if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+			user.setPasswordHash(passwordEncoder.encode(password));
+			changed = true;
+		}
+		if (!user.isEnabled()) {
+			user.setEnabled(true);
+			changed = true;
+		}
+		if (!user.isAccountNonLocked()) {
+			user.setAccountNonLocked(true);
+			changed = true;
+		}
+		if (changed) {
+			userRepository.save(user);
+			LOGGER.info("Refreshed local development credentials for {} user '{}'.", expectedRole, user.getUsername());
+			return;
+		}
+		LOGGER.info("Development {} user '{}' is ready.", expectedRole, user.getUsername());
 	}
 
 	private String trim(String value) {

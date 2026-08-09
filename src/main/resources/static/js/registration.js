@@ -40,13 +40,15 @@ function updateProgress() {
 	});
 }
 
-function goToStep(n) {
+function goToStep(n, keepToast = false) {
 	document.querySelectorAll('.step-panel').forEach((panel) => {
 		panel.hidden = Number.parseInt(panel.dataset.panel, 10) !== n;
 	});
 	currentStep = n;
 	updateProgress();
-	toast.className = 'toast';
+	if (!keepToast) {
+		toast.className = 'toast';
+	}
 	window.scrollTo({ top: document.querySelector('.panel').offsetTop - 20, behavior: 'smooth' });
 }
 
@@ -124,6 +126,10 @@ function validateStep(n) {
 	if (n === 1) {
 		if (!fieldValue('firstName') || !fieldValue('lastName') || !fieldValue('email') || !fieldValue('mobileNumber')) {
 			showToast('Please complete your personal details before continuing.');
+			return false;
+		}
+		if (!fieldValue('dateOfBirth')) {
+			showToast('Please enter your date of birth before continuing.');
 			return false;
 		}
 		if (!isAdultDate(fieldValue('dateOfBirth'))) {
@@ -209,10 +215,27 @@ if (passwordInput) {
 	updatePasswordStrength();
 }
 
+document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+	button.addEventListener('click', () => {
+		const input = document.getElementById(button.dataset.passwordToggle);
+		if (!input) {
+			return;
+		}
+		const showValue = input.type === 'password';
+		input.type = showValue ? 'text' : 'password';
+		button.setAttribute('aria-pressed', String(showValue));
+		button.setAttribute('aria-label', `${showValue ? 'Hide' : 'Show'} ${input.id.toLowerCase().includes('pin') ? 'transaction PIN' : 'password'}`);
+	});
+});
+
 if (form) {
 	form.addEventListener('submit', (event) => {
-		if (!validateStep(5)) {
-			event.preventDefault();
+		for (let step = 1; step <= totalSteps; step++) {
+			if (!validateStep(step)) {
+				event.preventDefault();
+				goToStep(step, true);
+				return;
+			}
 		}
 	});
 }

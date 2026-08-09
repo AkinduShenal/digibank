@@ -39,19 +39,19 @@ On macOS, `sh mvnw` also works when Gatekeeper blocks direct execution of the do
 
 ## Optional Development Staff And Admin Accounts
 
-No passwords are stored in source control. To create development-only staff and admin users, set the following
-environment variables before starting the application:
+The `dev` profile creates local demo staff and admin users automatically. The default credentials are
+`staff` / `Staff@123` and `admin` / `Admin@123`. Override them before starting the application when needed:
 
 ```bash
-export DIGIBANK_DEV_SEED_ENABLED=true
 export DIGIBANK_DEV_STAFF_PASSWORD='choose-a-strong-local-password'
 export DIGIBANK_DEV_ADMIN_PASSWORD='choose-another-strong-local-password'
 export DIGIBANK_CARD_SECURITY_KEY='use-a-long-unique-secret-outside-git'
 sh mvnw spring-boot:run
 ```
 
-The default development usernames are `staff` and `admin`. Existing users are never overwritten. The seeder is
-disabled outside the `dev` profile and remains disabled unless `DIGIBANK_DEV_SEED_ENABLED=true` is supplied.
+The default development usernames are `staff` and `admin`. Matching development staff/admin records are enabled,
+unlocked and updated to the configured local password when the application starts. The seeder is disabled outside
+the `dev` profile and can be disabled explicitly with `DIGIBANK_DEV_SEED_ENABLED=false`.
 
 New customer logins remain disabled while the customer is `PENDING_VERIFICATION`. Activating the initial account
 from the staff console verifies the customer, changes both records to `ACTIVE`, and enables login.

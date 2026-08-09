@@ -256,7 +256,13 @@
             </div>
             <div class="field">
               <label for="password">Password <span class="req">*</span></label>
-              <input id="password" type="password" th:field="*{password}" th:errorclass="err" autocomplete="new-password" placeholder="Password">
+              <div class="pw-wrap">
+                <input id="password" type="password" th:field="*{password}" th:errorclass="err" autocomplete="new-password" placeholder="Password">
+                <button type="button" class="pw-toggle pw-toggle-icon" data-password-toggle="password" aria-label="Show password" aria-pressed="false">
+                  <svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.25 12s3.5-6 9.75-6 9.75 6 9.75 6-3.5 6-9.75 6-9.75-6-9.75-6Z"/><circle cx="12" cy="12" r="2.75"/></svg>
+                  <svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18M10.6 6.12A9.8 9.8 0 0 1 12 6c6.25 0 9.75 6 9.75 6a16.7 16.7 0 0 1-2.05 2.7M6.2 7.2C3.67 9.04 2.25 12 2.25 12S5.75 18 12 18a9.6 9.6 0 0 0 3.1-.5M9.88 9.88a3 3 0 0 0 4.24 4.24"/></svg>
+                </button>
+              </div>
               <div class="password-rules">8-72 characters, uppercase, lowercase, number and special character.</div>
               <div class="strength-meter"><span class="strength-fill" id="strengthFill"></span></div>
               <span class="strength-label" id="strengthLabel">Enter a password</span>
@@ -264,18 +270,36 @@
             </div>
             <div class="field">
               <label for="confirmPassword">Confirm Password <span class="req">*</span></label>
-              <input id="confirmPassword" type="password" th:field="*{confirmPassword}" th:errorclass="err" autocomplete="new-password" placeholder="Confirm Password">
+              <div class="pw-wrap">
+                <input id="confirmPassword" type="password" th:field="*{confirmPassword}" th:errorclass="err" autocomplete="new-password" placeholder="Confirm Password">
+                <button type="button" class="pw-toggle pw-toggle-icon" data-password-toggle="confirmPassword" aria-label="Show confirm password" aria-pressed="false">
+                  <svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.25 12s3.5-6 9.75-6 9.75 6 9.75 6-3.5 6-9.75 6-9.75-6-9.75-6Z"/><circle cx="12" cy="12" r="2.75"/></svg>
+                  <svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18M10.6 6.12A9.8 9.8 0 0 1 12 6c6.25 0 9.75 6 9.75 6a16.7 16.7 0 0 1-2.05 2.7M6.2 7.2C3.67 9.04 2.25 12 2.25 12S5.75 18 12 18a9.6 9.6 0 0 0 3.1-.5M9.88 9.88a3 3 0 0 0 4.24 4.24"/></svg>
+                </button>
+              </div>
               <div class="errmsg" th:errors="*{confirmPassword}"></div>
             </div>
             <div class="field">
               <label for="transactionPin">4 Digit Transaction PIN <span class="req">*</span></label>
-              <input id="transactionPin" type="password" maxlength="4" inputmode="numeric" th:field="*{transactionPin}" th:errorclass="err" autocomplete="off" placeholder="2468">
+              <div class="pw-wrap">
+                <input id="transactionPin" type="password" maxlength="4" inputmode="numeric" th:field="*{transactionPin}" th:errorclass="err" autocomplete="off" placeholder="2468">
+                <button type="button" class="pw-toggle pw-toggle-icon" data-password-toggle="transactionPin" aria-label="Show transaction PIN" aria-pressed="false">
+                  <svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.25 12s3.5-6 9.75-6 9.75 6 9.75 6-3.5 6-9.75 6-9.75-6-9.75-6Z"/><circle cx="12" cy="12" r="2.75"/></svg>
+                  <svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18M10.6 6.12A9.8 9.8 0 0 1 12 6c6.25 0 9.75 6 9.75 6a16.7 16.7 0 0 1-2.05 2.7M6.2 7.2C3.67 9.04 2.25 12 2.25 12S5.75 18 12 18a9.6 9.6 0 0 0 3.1-.5M9.88 9.88a3 3 0 0 0 4.24 4.24"/></svg>
+                </button>
+              </div>
               <div class="hint">PIN will be securely encoded before storage.</div>
               <div class="errmsg" th:errors="*{transactionPin}"></div>
             </div>
             <div class="field">
               <label for="confirmTransactionPin">Confirm Transaction PIN <span class="req">*</span></label>
-              <input id="confirmTransactionPin" type="password" maxlength="4" inputmode="numeric" th:field="*{confirmTransactionPin}" th:errorclass="err" autocomplete="off" placeholder="2468">
+              <div class="pw-wrap">
+                <input id="confirmTransactionPin" type="password" maxlength="4" inputmode="numeric" th:field="*{confirmTransactionPin}" th:errorclass="err" autocomplete="off" placeholder="2468">
+                <button type="button" class="pw-toggle pw-toggle-icon" data-password-toggle="confirmTransactionPin" aria-label="Show confirm transaction PIN" aria-pressed="false">
+                  <svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.25 12s3.5-6 9.75-6 9.75 6 9.75 6-3.5 6-9.75 6-9.75-6-9.75-6Z"/><circle cx="12" cy="12" r="2.75"/></svg>
+                  <svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18M10.6 6.12A9.8 9.8 0 0 1 12 6c6.25 0 9.75 6 9.75 6a16.7 16.7 0 0 1-2.05 2.7M6.2 7.2C3.67 9.04 2.25 12 2.25 12S5.75 18 12 18a9.6 9.6 0 0 0 3.1-.5M9.88 9.88a3 3 0 0 0 4.24 4.24"/></svg>
+                </button>
+              </div>
               <div class="errmsg" th:errors="*{confirmTransactionPin}"></div>
             </div>
             <div class="field full">
