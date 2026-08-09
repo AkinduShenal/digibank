@@ -14,6 +14,7 @@ const depositHint = document.getElementById('depositHint');
 const passwordInput = document.getElementById('password');
 const strengthFill = document.getElementById('strengthFill');
 const strengthLabel = document.getElementById('strengthLabel');
+const obviousTransactionPins = new Set(['0000', '1111', '1234', '4321']);
 
 function latestAdultDate() {
 	const today = new Date();
@@ -178,6 +179,10 @@ function validateStep(n) {
 		}
 		if (!/^\d{4}$/.test(fieldValue('transactionPin')) || fieldValue('transactionPin') !== fieldValue('confirmTransactionPin')) {
 			showToast('Please enter matching 4-digit transaction PINs.');
+			return false;
+		}
+		if (obviousTransactionPins.has(fieldValue('transactionPin'))) {
+			showToast('Choose a less obvious transaction PIN. Avoid 0000, 1111, 1234 and 4321.');
 			return false;
 		}
 		if (!document.getElementById('termsAccepted').checked || !document.getElementById('privacyAccepted').checked) {
