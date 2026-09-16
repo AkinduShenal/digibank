@@ -50,6 +50,66 @@
 .schedule-row em.overdue{color:#b22b2b}.schedule-row em.paid{color:#087443}.repayment-form{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;padding:16px;background:#f2f8f5;border-top:1px solid #dce9e3}.repayment-form div{display:flex;flex-direction:column;gap:5px}.repayment-form label{font-size:12px;font-weight:800}.repayment-form input,.repayment-form select{border:1px solid #cad9d3;border-radius:10px;padding:10px;font:inherit}.payment-reference{display:flex;align-items:center;gap:12px;padding:10px 15px;background:#f7faf9;border-top:1px solid #e5ece9;font-size:12px}.payment-reference span,.payment-reference small{color:#6c7c76}
 @media(max-width:760px){.loan-grid,.loan-form{grid-template-columns:1fr}.loan-form .wide{grid-column:auto}}
 
+/* Loan details */
+.loan-overview-card {
+	margin-bottom: 24px;
+	padding: clamp(22px, 3vw, 32px);
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	background: linear-gradient(145deg, rgba(255,255,255,.99), rgba(247,251,254,.98));
+	box-shadow: var(--customer-shadow);
+}
+.loan-overview-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+.loan-overview-heading h2 { margin: 4px 0 0; color: var(--primary-dark); font: 800 clamp(24px, 3vw, 31px) Georgia, serif; }
+.loan-overview-heading > span { color: var(--text-secondary); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.loan-metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: hidden; border: 1px solid #dbe7ef; border-radius: 16px; background: #fff; }
+.loan-metric { display: grid; align-content: center; gap: 8px; min-height: 104px; padding: 18px 20px; border-right: 1px solid #e3ecf2; border-bottom: 1px solid #e3ecf2; }
+.loan-metric:nth-child(3n) { border-right: 0; }
+.loan-metric:nth-last-child(-n+3) { border-bottom: 0; }
+.loan-metric span, .loan-information-list > div > span { color: var(--text-secondary); font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.loan-metric strong { color: var(--primary-dark); font-size: clamp(16px, 1.6vw, 20px); overflow-wrap: anywhere; }
+.loan-metric.featured { background: linear-gradient(135deg, #f1f8fc, #f8fcfe); }
+.loan-metric.featured strong { color: var(--primary); font-size: clamp(19px, 2vw, 24px); }
+.loan-information-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+.loan-information-list > div { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 17px 18px; border: 1px solid #e0eaf0; border-radius: 14px; background: rgba(255,255,255,.82); }
+.loan-information-list > div:first-child { grid-column: 1 / -1; }
+.loan-information-list p { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; color: var(--text-primary); line-height: 1.55; overflow-wrap: anywhere; }
+.loan-information-list small { color: var(--text-secondary); font-size: 11px; font-weight: 700; }
+.document-link { display: inline-flex; align-items: center; min-height: 34px; padding: 7px 11px; border-radius: 9px; color: var(--primary); background: #e9f4fa; font-size: 12px; font-weight: 800; text-decoration: none; }
+.document-link:hover { background: #dceef8; }
+.loan-schedule-card { overflow: hidden; padding: 0; border: 1px solid var(--border); border-radius: 20px; background: rgba(255,255,255,.97); box-shadow: var(--customer-shadow); }
+.loan-schedule-card > .section-heading { margin: 0; padding: 24px 26px 18px; border-bottom: 1px solid var(--border); }
+.loan-schedule-card .section-description { margin: 7px 0 0; color: var(--text-secondary); font-size: 13px; }
+.loan-schedule-card .schedule-table { padding: 0 18px 18px; }
+.loan-schedule-card .schedule-row.head { margin-top: 14px; border-radius: 10px 10px 0 0; }
+.loan-schedule-card .schedule-item { overflow: hidden; border: 1px solid #e2ebf0; border-top: 0; background: #fff; }
+.loan-schedule-card .schedule-item:last-child { border-radius: 0 0 13px 13px; }
+.loan-schedule-card .schedule-row { border-top: 0; }
+.loan-schedule-card .schedule-item + .schedule-item { margin-top: 10px; border-top: 1px solid #e2ebf0; border-radius: 13px; }
+.loan-schedule-card .schedule-item + .schedule-item .schedule-row { border-radius: 13px 13px 0 0; }
+.loan-schedule-card .schedule-row strong { color: var(--primary-dark); }
+.loan-schedule-card .schedule-row em { justify-self: start; padding: 5px 9px; border-radius: 999px; background: #eaf6f1; text-transform: uppercase; }
+.loan-schedule-card .schedule-row em.paid { background: #ddf7e9; }
+.loan-schedule-card .schedule-row em.overdue { background: #fee8e8; }
+.loan-page-footer { display: flex; margin-top: 22px; }
+
+@media (max-width: 900px) {
+	.loan-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.loan-metric:nth-child(3n) { border-right: 1px solid #e3ecf2; }
+	.loan-metric:nth-child(2n) { border-right: 0; }
+	.loan-metric:nth-last-child(-n+3) { border-bottom: 1px solid #e3ecf2; }
+	.loan-metric:nth-last-child(-n+2) { border-bottom: 0; }
+}
+@media (max-width: 620px) {
+	.loan-overview-heading { align-items: flex-start; flex-direction: column; }
+	.loan-metric-grid, .loan-information-list { grid-template-columns: 1fr; }
+	.loan-metric, .loan-metric:nth-child(2n), .loan-metric:nth-child(3n) { min-height: 88px; border-right: 0; border-bottom: 1px solid #e3ecf2; }
+	.loan-metric:last-child { border-bottom: 0; }
+	.loan-information-list > div:first-child { grid-column: auto; }
+	.loan-schedule-card > .section-heading { padding: 21px 18px 16px; }
+	.loan-schedule-card .schedule-table { padding: 0 10px 12px; }
+}
+
 .transfer-form {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));

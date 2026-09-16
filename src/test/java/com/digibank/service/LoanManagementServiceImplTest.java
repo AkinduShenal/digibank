@@ -104,6 +104,18 @@ class LoanManagementServiceImplTest {
 	}
 
 	@Test
+	void customerCanSubmitLoanApplicationWithoutSupportingDocument() {
+		LoanApplicationRequest request = request("100000.00", "50000.00");
+		request.setSupportingDocumentReference(null);
+
+		var result = service.apply(10L, "customer", request);
+
+		assertEquals(LoanStatus.PENDING_REVIEW, result.status());
+		assertEquals(null, result.supportingDocumentReference());
+		verify(loanRepository).save(any(LoanApplication.class));
+	}
+
+	@Test
 	void unaffordableApplicationIsRejected() {
 		assertThrows(LoanException.class, () -> service.apply(10L, "customer", request("100000.00", "10000.00")));
 		verify(loanRepository, never()).save(any());

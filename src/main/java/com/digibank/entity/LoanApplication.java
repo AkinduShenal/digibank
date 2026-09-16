@@ -65,7 +65,7 @@ public class LoanApplication extends BaseEntity {
 	@Column(name = "purpose", nullable = false, length = 500)
 	private String purpose;
 
-	@Column(name = "supporting_document_reference", nullable = false, length = 255)
+	@Column(name = "supporting_document_reference", length = 255)
 	private String supportingDocumentReference;
 
 	@Column(name = "supporting_document_stored_name", length = 100)

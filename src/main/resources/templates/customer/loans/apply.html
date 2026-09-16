@@ -38,10 +38,10 @@
         <div class="loan-estimate"><strong>Affordability rule</strong><span>The estimated installment must not exceed 40% of your declared monthly income.</span></div>
       </section>
       <section class="loan-form-section">
-        <div class="workflow-heading"><span>3</span><div><h2>Purpose and documents</h2><p>Add a short explanation and upload the supporting document.</p></div></div>
+        <div class="workflow-heading"><span>3</span><div><h2>Purpose and documents</h2><p>Add a short explanation and optionally upload a supporting document.</p></div></div>
         <div class="loan-form-grid single">
           <div class="field"><label>Loan purpose</label><textarea rows="4" maxlength="500" th:field="*{purpose}" placeholder="Describe how the funds will be used"></textarea><small class="field-error" th:errors="*{purpose}"></small></div>
-          <div class="field"><label>Supporting document</label><input class="file-control" type="file" th:field="*{supportingDocument}" accept="application/pdf,image/jpeg,image/png" required><small class="field-error" th:errors="*{supportingDocumentReference}"></small><small class="field-help">PDF, JPEG or PNG only · Maximum 5 MB</small></div>
+          <div class="field"><label>Supporting document <span class="optional-label">(optional)</span></label><input class="file-control" type="file" th:field="*{supportingDocument}" accept="application/pdf,image/jpeg,image/png"><small class="field-error" th:errors="*{supportingDocumentReference}"></small><small class="field-help">PDF, JPEG or PNG only · Maximum 5 MB</small></div>
         </div>
       </section>
       <div class="form-actions loan-form-actions"><a class="btn btn-prev" th:href="@{/customer/loans}">Cancel</a><button class="btn btn-save" type="submit">Submit application</button></div>

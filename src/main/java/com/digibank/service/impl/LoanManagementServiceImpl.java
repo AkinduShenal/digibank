@@ -109,7 +109,8 @@ public class LoanManagementServiceImpl implements LoanManagementService {
 		BigDecimal installment = monthlyPayment(request.getRequestedAmount(), rate, request.getTermMonths());
 		validateAffordability(installment, request.getMonthlyIncome());
 		StoredLoanDocument document = documentStorage.store(request.getSupportingDocument());
-		String documentName = document == null ? bounded(request.getSupportingDocumentReference(), 255, "Supporting document reference") : document.originalFilename();
+		String documentName = document == null ? optionalBounded(request.getSupportingDocumentReference(), 255,
+				"Supporting document reference") : document.originalFilename();
 		LoanApplication loan = new LoanApplication(customer, account, applicationNumber(), request.getLoanType(),
 				money(request.getRequestedAmount()), rate, request.getTermMonths(), installment,
 				money(request.getMonthlyIncome()), bounded(request.getEmploymentStatus(), 80, "Employment status"),
@@ -143,7 +144,8 @@ public class LoanManagementServiceImpl implements LoanManagementService {
 		validateAffordability(installment,request.getMonthlyIncome());
 		StoredLoanDocument document=documentStorage.store(request.getSupportingDocument());
 		String oldStoredName=loan.getSupportingDocumentStoredName();
-		String documentName=document==null?bounded(request.getSupportingDocumentReference(),255,"Supporting document reference"):document.originalFilename();
+		String documentName=document==null?optionalBounded(request.getSupportingDocumentReference(),255,
+				"Supporting document reference"):document.originalFilename();
 		loan.revise(account,request.getLoanType(),money(request.getRequestedAmount()),rate,request.getTermMonths(),installment,
 				money(request.getMonthlyIncome()),bounded(request.getEmploymentStatus(),80,"Employment status"),
 				bounded(request.getPurpose(),500,"Loan purpose"),documentName);
@@ -388,10 +390,6 @@ public class LoanManagementServiceImpl implements LoanManagementService {
 		if (clean(request.getEmploymentStatus()) == null || clean(request.getPurpose()) == null) {
 			throw new LoanException("Employment status and loan purpose are required.");
 		}
-		if (clean(request.getSupportingDocumentReference()) == null
-				&& (request.getSupportingDocument() == null || request.getSupportingDocument().isEmpty())) {
-			throw new LoanException("Upload a supporting document.");
-		}
 	}
 
 	private LoanDocumentDownload document(LoanApplication loan) {
@@ -531,6 +529,14 @@ public class LoanManagementServiceImpl implements LoanManagementService {
 			throw new LoanException(label + " is required.");
 		}
 		if (cleaned.length() > maxLength) {
+			throw new LoanException(label + " cannot exceed " + maxLength + " characters.");
+		}
+		return cleaned;
+	}
+
+	private String optionalBounded(String value, int maxLength, String label) {
+		String cleaned = clean(value);
+		if (cleaned != null && cleaned.length() > maxLength) {
 			throw new LoanException(label + " cannot exceed " + maxLength + " characters.");
 		}
 		return cleaned;

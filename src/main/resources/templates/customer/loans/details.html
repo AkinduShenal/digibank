@@ -10,19 +10,24 @@
 <section class="customer-content" th:object="${loan}"><div th:replace="~{fragments/customer-layout :: alerts}"></div>
   <div class="welcome-band"><div><p class="eyebrow">Loan application</p><h1 th:text="*{loanType.displayName}">Loan</h1><span class="mono" th:text="*{applicationNumber}">LON</span></div>
     <em class="loan-status large" th:classappend="*{status.name().toLowerCase()}" th:text="*{status}">STATUS</em></div>
-  <div class="transaction-detail-card loan-details">
-    <div><span>Requested amount</span><strong th:text="*{'LKR ' + #numbers.formatDecimal(requestedAmount, 1, 2)}">0</strong></div>
-    <div><span>Approved amount</span><strong th:text="*{approvedAmount == null ? 'Pending review' : 'LKR ' + #numbers.formatDecimal(approvedAmount, 1, 2)}">Pending</strong></div>
-    <div><span>Interest rate</span><strong th:text="*{annualInterestRate + '% p.a.'}">0%</strong></div>
-    <div><span>Term</span><strong th:text="*{termMonths + ' months'}">0</strong></div>
-    <div><span>Estimated installment</span><strong th:text="*{'LKR ' + #numbers.formatDecimal(monthlyInstallment, 1, 2)}">0</strong></div>
-    <div><span>Disbursement account</span><strong class="mono" th:text="*{accountNumber}">****</strong></div>
-    <div class="wide"><span>Purpose</span><strong th:text="*{purpose}">Purpose</strong></div>
-    <div class="wide"><span>Supporting document</span><strong th:text="*{supportingDocumentReference}">Reference</strong><a th:if="*{supportingDocumentUploaded}" th:href="@{/customer/loans/{n}/document(n=*{applicationNumber})}">Download securely</a><small th:unless="*{supportingDocumentUploaded}">Legacy reference only</small></div>
-    <div class="wide" th:if="*{reviewNote != null}"><span>Bank review note</span><strong th:text="*{reviewNote}">Note</strong></div>
-  </div>
+  <section class="loan-overview-card">
+    <div class="loan-overview-heading"><div><p class="eyebrow">Application summary</p><h2>Loan overview</h2></div><span>All amounts are in LKR</span></div>
+    <div class="loan-metric-grid">
+      <div class="loan-metric featured"><span>Requested amount</span><strong th:text="*{'LKR ' + #numbers.formatDecimal(requestedAmount, 1, 2)}">0</strong></div>
+      <div class="loan-metric featured"><span>Approved amount</span><strong th:text="*{approvedAmount == null ? 'Pending review' : 'LKR ' + #numbers.formatDecimal(approvedAmount, 1, 2)}">Pending</strong></div>
+      <div class="loan-metric"><span>Interest rate</span><strong th:text="*{annualInterestRate + '% p.a.'}">0%</strong></div>
+      <div class="loan-metric"><span>Loan term</span><strong th:text="*{termMonths + ' months'}">0</strong></div>
+      <div class="loan-metric"><span>Estimated installment</span><strong th:text="*{'LKR ' + #numbers.formatDecimal(monthlyInstallment, 1, 2)}">0</strong></div>
+      <div class="loan-metric"><span>Disbursement account</span><strong class="mono" th:text="*{accountNumber}">****</strong></div>
+    </div>
+    <div class="loan-information-list">
+      <div><span>Loan purpose</span><p th:text="*{purpose}">Purpose</p></div>
+      <div><span>Supporting document</span><p><strong th:text="*{supportingDocumentReference ?: 'Not provided'}">Not provided</strong><a class="document-link" th:if="*{supportingDocumentUploaded}" th:href="@{/customer/loans/{n}/document(n=*{applicationNumber})}">Download document</a><small th:if="*{!supportingDocumentUploaded and supportingDocumentReference != null}">Legacy reference only</small></p></div>
+      <div th:if="*{reviewNote != null}"><span>Bank review note</span><p th:text="*{reviewNote}">Note</p></div>
+    </div>
+  </section>
   <div class="form-actions" th:if="*{status.name() == 'PENDING_REVIEW'}"><a class="btn btn-prev" th:href="@{/customer/loans/{n}/edit(n=*{applicationNumber})}">Edit application</a><form th:action="@{/customer/loans/{n}/withdraw(n=*{applicationNumber})}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="btn btn-danger" type="submit">Withdraw application</button></form></div>
-  <section class="statement-card" th:if="*{!#lists.isEmpty(schedule)}"><div class="section-heading"><div><p class="eyebrow">Repayment plan</p><h2>Installment schedule</h2></div></div>
+  <section class="statement-card loan-schedule-card" th:if="*{!#lists.isEmpty(schedule)}"><div class="section-heading"><div><p class="eyebrow">Repayment plan</p><h2>Installment schedule</h2><p class="section-description">Review due dates, payment amounts and completed installments.</p></div></div>
     <div class="schedule-table"><div class="schedule-row head"><span>No.</span><span>Due date</span><span>Principal</span><span>Interest</span><span>Total</span><span>Status</span></div>
       <div class="schedule-item" th:each="row : *{schedule}"><div class="schedule-row"><span th:text="${row.installmentNumber}">1</span><span th:text="${#temporals.format(row.dueDate, 'dd MMM yyyy')}">date</span>
         <span th:text="${#numbers.formatDecimal(row.principalAmount, 1, 2)}">0</span><span th:text="${#numbers.formatDecimal(row.interestAmount, 1, 2)}">0</span>
@@ -35,6 +40,6 @@
           <button class="btn btn-save" type="submit" th:text="${'Pay LKR ' + #numbers.formatDecimal(row.totalAmount, 1, 2)}">Pay installment</button></form>
       </div></div>
   </section>
-  <a class="btn btn-prev" th:href="@{/customer/loans}">Back to loans</a>
+  <div class="loan-page-footer"><a class="btn btn-prev" th:href="@{/customer/loans}">← Back to loans</a></div>
 </section></main><div th:replace="~{fragments/customer-layout :: footer}"></div>
 </body></html>
