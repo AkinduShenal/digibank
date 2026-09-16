@@ -17,6 +17,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -52,6 +53,7 @@ public class CustomerRegistrationRequest {
 	@NotNull(message = "Date of birth is required.")
 	@Past(message = "Date of birth must be in the past.")
 	@Adult
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
 	private LocalDate dateOfBirth;
 
 	@NotNull(message = "Gender is required.")

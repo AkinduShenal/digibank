@@ -8,6 +8,7 @@
 <link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
 <link rel="stylesheet" th:href="@{/css/auth.css}">
 <link rel="stylesheet" th:href="@{/css/customer.css}">
+<script defer th:src="@{/js/account-numbers.js}"></script>
 </head>
 <body class="customer-shell">
 <div th:replace="~{fragments/customer-layout :: topbar}"></div>
@@ -59,11 +60,13 @@
       <article class="info-card wide">
         <h2>Account Summary</h2>
         <div class="account-list">
-          <a th:each="account : *{accounts}" th:href="@{/customer/accounts/{accountNumber}(accountNumber=${account.accountNumber})}">
-            <span th:text="${account.accountType}">SAVINGS</span>
-            <strong th:text="${account.maskedAccountNumber}">********9012</strong>
+          <div class="account-list-item" th:each="account : *{accounts}">
+            <a th:href="@{/customer/accounts/{accountNumber}(accountNumber=${account.accountNumber})}"
+               th:aria-label="${'View ' + account.accountType + ' account ending ' + #strings.substring(account.accountNumber, #strings.length(account.accountNumber) - 4)}"
+               th:text="${account.accountType}">SAVINGS</a>
+            <span th:replace="~{fragments/customer-layout :: accountNumber(${account.accountNumber}, ${account.maskedAccountNumber})}"></span>
             <em th:text="${account.accountStatus}">PENDING_ACTIVATION</em>
-          </a>
+          </div>
         </div>
       </article>
     </div>

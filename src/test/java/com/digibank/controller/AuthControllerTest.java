@@ -13,6 +13,8 @@ import com.digibank.security.SecurityConfig;
 import com.digibank.service.CustomerRegistrationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -24,11 +26,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -105,6 +110,38 @@ class AuthControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(view().name("auth/open-account"))
 				.andExpect(model().attributeHasFieldErrors("registrationRequest", "email"));
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"en-US", "en-GB", "si-LK"})
+	void validationRetryPreservesBrowserCompatibleDateOfBirth(String languageTag) throws Exception {
+		var result = mockMvc.perform(validRegistrationPost("2004-11-16", "weak", "weak")
+						.locale(Locale.forLanguageTag(languageTag))
+						.with(SecurityMockMvcRequestPostProcessors.csrf()))
+				.andExpect(status().isOk())
+				.andExpect(model().attributeHasFieldErrors("registrationRequest", "password"))
+				.andReturn();
+		var dateInput = Pattern.compile("<input[^>]*id=\"dateOfBirth\"[^>]*value=\"([^\"]*)\"")
+				.matcher(result.getResponse().getContentAsString());
+		assertTrue(dateInput.find());
+		assertEquals("2004-11-16", dateInput.group(1));
+
+		assertFalse(registrationService.called);
+		mockMvc.perform(validRegistrationPost("2004-11-16", "Password@123", "Password@123")
+						.locale(Locale.forLanguageTag(languageTag))
+						.with(SecurityMockMvcRequestPostProcessors.csrf()))
+				.andExpect(redirectedUrl("/registration-success"));
+		assertTrue(registrationService.called);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"", "not-a-date", "2004-02-30"})
+	void missingOrInvalidDateOfBirthRejectsRegistration(String dateOfBirth) throws Exception {
+		mockMvc.perform(validRegistrationPost(dateOfBirth, "Password@123", "Password@123")
+						.with(SecurityMockMvcRequestPostProcessors.csrf()))
+				.andExpect(status().isOk())
+				.andExpect(model().attributeHasFieldErrors("registrationRequest", "dateOfBirth"));
+		assertFalse(registrationService.called);
 	}
 
 	@Test

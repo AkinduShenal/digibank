@@ -40,13 +40,15 @@ function updateProgress() {
 	});
 }
 
-function goToStep(n) {
+function goToStep(n, keepToast = false) {
 	document.querySelectorAll('.step-panel').forEach((panel) => {
 		panel.hidden = Number.parseInt(panel.dataset.panel, 10) !== n;
 	});
 	currentStep = n;
 	updateProgress();
-	toast.className = 'toast';
+	if (!keepToast) {
+		toast.className = 'toast';
+	}
 	window.scrollTo({ top: document.querySelector('.panel').offsetTop - 20, behavior: 'smooth' });
 }
 
@@ -124,6 +126,11 @@ function validateStep(n) {
 	if (n === 1) {
 		if (!fieldValue('firstName') || !fieldValue('lastName') || !fieldValue('email') || !fieldValue('mobileNumber')) {
 			showToast('Please complete your personal details before continuing.');
+			return false;
+		}
+		if (!fieldValue('dateOfBirth')) {
+			showToast('Please enter your complete date of birth before continuing.');
+			dobInput.focus();
 			return false;
 		}
 		if (!isAdultDate(fieldValue('dateOfBirth'))) {
@@ -211,8 +218,15 @@ if (passwordInput) {
 
 if (form) {
 	form.addEventListener('submit', (event) => {
-		if (!validateStep(5)) {
-			event.preventDefault();
+		for (let step = 1; step <= totalSteps; step++) {
+			if (!validateStep(step)) {
+				event.preventDefault();
+				goToStep(step, true);
+				if (step === 1 && !fieldValue('dateOfBirth')) {
+					dobInput.focus({ preventScroll: true });
+				}
+				return;
+			}
 		}
 	});
 }

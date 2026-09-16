@@ -34,6 +34,21 @@
   <div class="auth-alert error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 </div>
 
+<span th:fragment="accountNumber(number, maskedNumber)" class="account-number" data-account-number
+      th:attr="data-number=${number},data-masked-number=${maskedNumber}">
+  <strong class="account-number-text" data-account-number-text th:id="${'account-number-' + number}"
+          th:text="${maskedNumber}">********9012</strong>
+  <button class="account-visibility-toggle" type="button" data-account-number-toggle
+          th:attr="aria-controls=${'account-number-' + number}" aria-label="Show full account number"
+          title="Show full account number" aria-pressed="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/>
+      <circle cx="12" cy="12" r="3"/>
+      <path class="account-eye-slash" d="m3 3 18 18"/>
+    </svg>
+  </button>
+</span>
+
 <footer class="customer-footer" th:fragment="footer">
   <span>DigiBank Online Banking</span>
   <span>Customer Portal</span>

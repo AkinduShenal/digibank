@@ -8,6 +8,7 @@
 <link rel="apple-touch-icon" th:href="@{/images/logo/logo.png}">
 <link rel="stylesheet" th:href="@{/css/auth.css}">
 <link rel="stylesheet" th:href="@{/css/customer.css}">
+<script defer th:src="@{/js/account-numbers.js}"></script>
 </head>
 <body class="customer-shell">
 <div th:replace="~{fragments/customer-layout :: topbar}"></div>
@@ -41,7 +42,7 @@
       <article class="info-card">
         <h2>Account Summary</h2>
         <div class="kv"><span>Type</span><strong th:text="*{accountType}">SAVINGS</strong></div>
-        <div class="kv"><span>Account Number</span><strong th:text="*{maskedAccountNumber}">********9012</strong></div>
+        <div class="kv account-number-row"><span>Account Number</span><span th:replace="~{fragments/customer-layout :: accountNumber(*{accountNumber}, *{maskedAccountNumber})}"></span></div>
         <div class="kv"><span>Status</span><strong class="status-pill" th:text="*{accountStatus}">PENDING_ACTIVATION</strong></div>
         <div class="kv"><span>Branch</span><strong th:text="*{branchCode}">COL001</strong></div>
         <div class="kv"><span>Currency</span><strong th:text="*{currencyCode}">LKR</strong></div>
