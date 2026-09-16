@@ -19,8 +19,15 @@
     <div class="welcome-band">
       <div>
         <p class="eyebrow">Account Details</p>
-        <h1 th:text="*{maskedAccountNumber}">********9012</h1>
-        <span class="mono">Full account number is intentionally protected on this page.</span>
+        <div class="account-heading-line" data-account-text-visibility>
+          <h1 data-account-number-text th:text="*{maskedAccountNumber}"
+              th:attr="data-masked-number=*{maskedAccountNumber},data-full-number=*{accountNumber}">********9012</h1>
+          <button class="account-eye-button heading-eye" type="button" data-account-text-toggle
+                  aria-pressed="false" aria-label="Show full account number" title="Show account number">
+            <span class="eye-shape" aria-hidden="true"></span>
+          </button>
+        </div>
+        <span class="mono" data-account-visibility-help>Click the eye icon to view the full account number.</span>
       </div>
       <a class="btn btn-prev" th:href="@{/customer/dashboard}">Back</a>
     </div>

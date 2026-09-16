@@ -162,7 +162,8 @@ and extends the account-ledger transaction types automatically when the applicat
 
 ## Completed Requirement-Gap Features
 
-- `/customer/schedules` supports one-time/monthly transfers and bill payments with edit, cancel, automatic execution, audit events and notifications (`V14`).
+- Member 3 manages scheduled fund transfers at `/customer/transfers/schedules`; Member 6 manages scheduled bills at `/customer/bill-payments/schedules`. Each workspace has its own create form, list, details, edit and cancellation actions. Both support one-time/monthly execution, audit events and notifications (`V14`). Existing schedules are retained, and old `/customer/schedules/{reference}` links redirect to the correct workspace.
+- Scheduled amounts, next payment dates, repeat settings, end dates and descriptions can be edited before execution. Account/recipient changes require cancelling and creating a new schedule. Cancellation preserves history; processing, completed, failed and cancelled schedules are read-only. Update/cancel operations lock the same schedule row as the executor to prevent concurrent changes while a payment runs.
 - Pending loan applications support secure document upload/download, edit/withdraw lifecycle and vehicle loans (`V15`, `V18`).
 - Card numbers are AES-GCM encrypted at rest with HMAC uniqueness; customers can manage spending limits and report lost/stolen cards, while staff can cancel and the system expires due cards (`V13`).
 - `/admin/dashboard` provides a searchable, paginated audit log. Friendly error pages prevent SQL and stack-trace exposure.

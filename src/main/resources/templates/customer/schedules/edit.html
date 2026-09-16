@@ -1,1 +1,28 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Edit Schedule - DigiBank</title><link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/customer.css}"></head><body class="customer-shell"><div th:replace="~{fragments/customer-layout :: topbar}"></div><main class="customer-layout"><div th:replace="~{fragments/customer-layout :: sidebar}"></div><section class="customer-content"><div class="welcome-band"><div><p class="eyebrow">Payment automation</p><h1>Edit schedule</h1><span th:text="${reference}"></span></div></div><form class="profile-form management-card" th:action="@{/customer/schedules/{r}/edit(r=${reference})}" th:object="${updateRequest}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><div class="form-grid"><label>Amount<input type="number" min="0.01" max="1000000" step="0.01" th:field="*{amount}" required></label><label>Recurrence<select th:field="*{recurrence}"><option value="ONCE">One time</option><option value="MONTHLY">Monthly</option></select></label><label>Next execution<input type="datetime-local" th:field="*{nextExecutionAt}" required></label><label>End date<input type="date" th:field="*{endDate}"></label><label>Description<input th:field="*{description}" maxlength="140"></label></div><div class="form-actions"><a class="btn btn-prev" th:href="@{/customer/schedules/{r}(r=${reference})}">Back</a><button class="btn btn-save" type="submit">Save changes</button></div></form></section></main><div th:replace="~{fragments/customer-layout :: footer}"></div></body></html>
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit schedule - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/customer.css}">
+  <link rel="stylesheet" th:href="@{/css/schedules.css}">
+  <script defer th:src="@{/js/schedules.js}"></script>
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout"><div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+<section class="customer-content schedule-workspace">
+<div th:replace="~{fragments/customer-layout :: alerts}"></div>
+
+<nav class="schedule-breadcrumb"><a th:href="@{${basePath}}" th:text="${scheduleTitle}"></a><span aria-hidden="true">/</span><span>Edit schedule</span></nav>
+<div class="welcome-band"><div><p class="eyebrow" th:text="${scheduleTitle}"></p><h1 th:text="${'Edit scheduled ' + itemLabel}"></h1><p class="schedule-reference" th:text="${schedule.reference}"></p></div></div>
+<div class="management-card"><dl class="schedule-facts"><div><dt>From account</dt><dd th:text="${schedule.sourceAccount}"></dd></div><div><dt th:text="${isTransfer ? 'Recipient' : 'Biller'}"></dt><dd th:text="${schedule.destination}"></dd></div><div><dt>Status</dt><dd th:text="${#strings.capitalize(#strings.toLowerCase(schedule.status.name()))}"></dd></div></dl><p class="schedule-help">Update the amount, next payment, repeat setting or description. To change the account or recipient, cancel this schedule and create a new one.</p></div>
+<form class="management-card schedule-editor" th:if="${schedule.status.name() == 'SCHEDULED'}" th:action="@{${basePath + '/' + schedule.reference + '/edit'}}" th:object="${updateRequest}" method="post" data-schedule-form>
+  <div th:replace="~{customer/schedules/fields :: errors}"></div>
+  <div class="schedule-section-title"><div><h2>Payment settings</h2><p>Changes apply to the next payment and future repeats.</p></div></div>
+  <div th:replace="~{customer/schedules/fields :: timing}"></div>
+  <div class="form-actions"><a class="btn btn-prev" th:href="@{${basePath + '/' + schedule.reference}}">Discard changes</a><button class="btn btn-save" type="submit">Save changes</button></div>
+</form>
+<div class="schedule-notice" th:unless="${schedule.status.name() == 'SCHEDULED'}">This schedule can no longer be edited. <a th:href="@{${basePath + '/' + schedule.reference}}">View details</a></div>
+</section></main><div th:replace="~{fragments/customer-layout :: footer}"></div>
+</body></html>

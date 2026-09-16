@@ -10,14 +10,14 @@ import java.time.LocalDateTime;
 
 public class ScheduledPaymentRequest {
 	@NotNull private ScheduledPaymentType paymentType;
-	@NotBlank private String sourceAccountNumber;
+	@NotBlank(message = "Select a source account.") private String sourceAccountNumber;
 	@NotNull @DecimalMin("0.01") @DecimalMax("1000000.00") @Digits(integer = 7, fraction = 2)
 	private BigDecimal amount;
-	@NotNull private ScheduleRecurrence recurrence = ScheduleRecurrence.ONCE;
-	@NotNull @Future @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") private LocalDateTime nextExecutionAt;
+	@NotNull(message = "Choose a repeat setting.") private ScheduleRecurrence recurrence = ScheduleRecurrence.ONCE;
+	@NotNull(message = "Choose the next payment date and time.") @Future(message = "Payment date and time must be in the future.") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") private LocalDateTime nextExecutionAt;
 	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) private LocalDate endDate;
 	@Size(max = 140) private String description;
-	@NotBlank @Pattern(regexp = "\\d{4}") private String transactionPin;
+	@NotBlank(message = "Enter your transaction PIN.") @Pattern(regexp = "\\d{4}", message = "Transaction PIN must contain four digits.") private String transactionPin;
 	private TransferRecipientType transferRecipientType;
 	private Long beneficiaryId;
 	private String destinationAccountNumber;

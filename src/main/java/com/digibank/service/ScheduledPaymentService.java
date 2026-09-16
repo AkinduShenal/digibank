@@ -6,6 +6,7 @@ import java.util.List;
 public interface ScheduledPaymentService {
 	ScheduledPaymentView create(Long userId, String actorUsername, ScheduledPaymentRequest request);
 	List<ScheduledPaymentView> list(Long userId);
+	List<ScheduledPaymentView> list(Long userId, com.digibank.enums.ScheduledPaymentType type);
 	ScheduledPaymentView get(Long userId, String reference);
 	ScheduledPaymentUpdateRequest getUpdateRequest(Long userId, String reference);
 	void update(Long userId, String actorUsername, String reference, ScheduledPaymentUpdateRequest request);

@@ -16,7 +16,7 @@
     <div th:replace="~{fragments/customer-layout :: alerts}"></div>
     <div class="welcome-band">
       <div><p class="eyebrow">Secure transfer</p><h1>Send money</h1><span class="mono">Use a saved beneficiary or enter another customer's DigiBank account number.</span></div>
-      <a class="btn btn-prev" th:href="@{/customer/transfers}">Transfer history</a>
+      <div class="welcome-actions"><a class="btn btn-prev" th:href="@{/customer/transfers}">Transfer history</a><a class="btn btn-prev" th:href="@{/customer/transfers/schedules/new}">Schedule a transfer</a></div>
     </div>
 
     <div class="empty-state" th:if="${#lists.isEmpty(transferForm.accounts)}">
@@ -29,71 +29,61 @@
     <form id="transferForm" class="edit-card transfer-form" th:unless="${#lists.isEmpty(transferForm.accounts)}"
           th:action="@{/customer/transfers}" th:object="${transferRequest}" method="post">
       <div class="form-error" th:if="${#fields.hasGlobalErrors()}" th:each="error : ${#fields.globalErrors()}" th:text="${error}">Transfer failed.</div>
-      <label>From account
-        <select th:field="*{sourceAccountNumber}" required>
-          <option value="">Select an account</option>
-          <option th:each="account : ${transferForm.accounts}" th:value="${account.accountNumber}"
-                  th:text="${account.maskedAccountNumber + ' · ' + account.accountType + ' · LKR ' + #numbers.formatDecimal(account.availableBalance, 1, 2)}">Account</option>
-        </select>
-        <em th:errors="*{sourceAccountNumber}"></em>
-      </label>
+      <section class="transfer-form-section transfer-wide">
+        <div class="workflow-heading"><span>1</span><div><h2>Choose the source account</h2><p>Select the account that the money should come from.</p></div></div>
+        <div class="transfer-section-grid single">
+          <div class="transfer-field account-select-field" data-account-select-visibility><label for="sourceAccountNumber">From account</label>
+            <select id="sourceAccountNumber" th:field="*{sourceAccountNumber}" required>
+              <option value="">Select an account</option>
+              <option th:each="account : ${transferForm.accounts}" th:value="${account.accountNumber}"
+                      th:attr="data-full-number=${account.accountNumber},data-masked-number=${account.maskedAccountNumber}"
+                      th:text="${account.maskedAccountNumber + ' · ' + account.accountType + ' · LKR ' + #numbers.formatDecimal(account.availableBalance, 1, 2)}">Account</option>
+            </select>
+            <span class="account-number-view"><span data-account-display>Select an account to view its number</span><button class="account-eye-button" type="button" data-account-select-toggle aria-pressed="false" aria-label="Show selected account number" title="Show account number" disabled><span class="eye-shape" aria-hidden="true"></span></button></span>
+            <em th:errors="*{sourceAccountNumber}"></em>
+          </div>
+        </div>
+      </section>
 
-      <fieldset class="recipient-selector transfer-wide">
-        <legend>Send to</legend>
-        <label class="recipient-choice">
-          <input type="radio" th:field="*{recipientType}" value="SAVED_BENEFICIARY">
-          <span><strong>Saved beneficiary</strong><small>Choose from your verified beneficiary list</small></span>
-        </label>
-        <label class="recipient-choice">
-          <input type="radio" th:field="*{recipientType}" value="OWN_ACCOUNT">
-          <span><strong>Between my accounts</strong><small>Move money to another active account you own</small></span>
-        </label>
-        <label class="recipient-choice">
-          <input type="radio" th:field="*{recipientType}" value="DIGIBANK_ACCOUNT">
-          <span><strong>DigiBank account number</strong><small>One-time transfer without saving a beneficiary</small></span>
-        </label>
-        <em th:errors="*{recipientType}"></em>
-      </fieldset>
+      <section class="transfer-form-section transfer-wide">
+        <div class="workflow-heading"><span>2</span><div><h2>Choose the recipient</h2><p>Send to a saved beneficiary, your own account, or another DigiBank customer.</p></div></div>
+        <div class="transfer-section-grid">
+          <fieldset class="recipient-selector transfer-wide">
+            <legend>Send to</legend>
+            <label class="recipient-choice"><input type="radio" th:field="*{recipientType}" value="SAVED_BENEFICIARY"><span><strong>Saved beneficiary</strong><small>Choose from your verified beneficiary list</small></span></label>
+            <label class="recipient-choice"><input type="radio" th:field="*{recipientType}" value="OWN_ACCOUNT"><span><strong>Between my accounts</strong><small>Move money to another active account you own</small></span></label>
+            <label class="recipient-choice"><input type="radio" th:field="*{recipientType}" value="DIGIBANK_ACCOUNT"><span><strong>DigiBank account number</strong><small>One-time transfer without saving a beneficiary</small></span></label>
+            <em th:errors="*{recipientType}"></em>
+          </fieldset>
 
-      <label id="savedBeneficiaryPanel">Verified beneficiary
-        <select id="beneficiaryId" th:field="*{beneficiaryId}">
-          <option value="">Select a beneficiary</option>
-          <option th:each="beneficiary : ${transferForm.beneficiaries}" th:value="${beneficiary.id}"
-                  th:text="${beneficiary.name + ' · ' + beneficiary.bankName + ' · ' + beneficiary.maskedAccountNumber}">Beneficiary</option>
-        </select>
-        <em th:errors="*{beneficiaryId}"></em>
-      </label>
+          <label id="savedBeneficiaryPanel" class="transfer-wide">Verified beneficiary
+            <select id="beneficiaryId" th:field="*{beneficiaryId}"><option value="">Select a beneficiary</option><option th:each="beneficiary : ${transferForm.beneficiaries}" th:value="${beneficiary.id}" th:text="${beneficiary.name + ' · ' + beneficiary.bankName + ' · ' + beneficiary.maskedAccountNumber}">Beneficiary</option></select>
+            <em th:errors="*{beneficiaryId}"></em>
+          </label>
 
-      <label id="ownAccountPanel">My destination account
-        <select id="ownDestinationAccountNumber" th:field="*{ownDestinationAccountNumber}">
-          <option value="">Select destination account</option>
-          <option th:each="account : ${transferForm.accounts}" th:value="${account.accountNumber}"
-                  th:text="${account.maskedAccountNumber + ' · ' + account.accountType}">Account</option>
-        </select>
-      </label>
+          <div id="ownAccountPanel" class="transfer-field transfer-wide account-select-field" data-account-select-visibility><label for="ownDestinationAccountNumber">My destination account</label>
+            <select id="ownDestinationAccountNumber" th:field="*{ownDestinationAccountNumber}"><option value="">Select destination account</option><option th:each="account : ${transferForm.accounts}" th:value="${account.accountNumber}" th:attr="data-full-number=${account.accountNumber},data-masked-number=${account.maskedAccountNumber}" th:text="${account.maskedAccountNumber + ' · ' + account.accountType}">Account</option></select>
+            <span class="account-number-view"><span data-account-display>Select an account to view its number</span><button class="account-eye-button" type="button" data-account-select-toggle aria-pressed="false" aria-label="Show selected account number" title="Show account number" disabled><span class="eye-shape" aria-hidden="true"></span></button></span>
+          </div>
 
-      <label id="directAccountPanel">Recipient DigiBank account number
-        <input id="destinationAccountNumber" type="text" inputmode="numeric" maxlength="12" autocomplete="off"
-               th:field="*{destinationAccountNumber}" placeholder="Enter the 12-digit account number">
-        <span id="accountLookupStatus" class="account-lookup-status" role="status" aria-live="polite">
-          Enter the full account number to confirm the account holder.
-        </span>
-        <em th:errors="*{destinationAccountNumber}"></em>
-      </label>
-      <label>Amount (LKR)
-        <input type="number" min="0.01" step="0.01" th:field="*{amount}" placeholder="0.00" required>
-        <em th:errors="*{amount}"></em>
-      </label>
-      <label>Transaction PIN
-        <input type="password" inputmode="numeric" maxlength="4" autocomplete="off" th:field="*{transactionPin}" placeholder="4-digit PIN" required>
-        <em th:errors="*{transactionPin}"></em>
-      </label>
-      <label class="transfer-description">Description (optional)
-        <input type="text" maxlength="140" th:field="*{description}" placeholder="Rent, invoice or personal note">
-        <em th:errors="*{description}"></em>
-      </label>
-      <div class="beneficiary-help">The receiver is verified again when you confirm. Direct account transfers do not save the receiver as a beneficiary.</div>
-      <div class="form-actions">
+          <div id="directAccountPanel" class="transfer-field transfer-wide"><label for="destinationAccountNumber">Recipient DigiBank account number</label>
+            <span class="account-input-wrap"><input id="destinationAccountNumber" type="password" inputmode="numeric" maxlength="12" autocomplete="off" data-account-number-input th:field="*{destinationAccountNumber}" placeholder="Enter the 12-digit account number"><button class="account-eye-button input-eye" type="button" data-account-input-toggle aria-pressed="false" aria-label="Show recipient account number" title="Show account number"><span class="eye-shape" aria-hidden="true"></span></button></span>
+            <span id="accountLookupStatus" class="account-lookup-status" role="status" aria-live="polite">Enter the full account number to confirm the account holder.</span>
+            <em th:errors="*{destinationAccountNumber}"></em>
+          </div>
+        </div>
+      </section>
+
+      <section class="transfer-form-section transfer-wide">
+        <div class="workflow-heading"><span>3</span><div><h2>Payment details</h2><p>Enter the amount, PIN and an optional reference.</p></div></div>
+        <div class="transfer-section-grid">
+          <label>Amount (LKR)<input type="number" min="0.01" step="0.01" th:field="*{amount}" placeholder="0.00" required><em th:errors="*{amount}"></em></label>
+          <label>Transaction PIN<input type="password" inputmode="numeric" maxlength="4" autocomplete="off" th:field="*{transactionPin}" placeholder="4-digit PIN" required><em th:errors="*{transactionPin}"></em></label>
+          <label class="transfer-description">Description (optional)<input type="text" maxlength="140" th:field="*{description}" placeholder="Rent, invoice or personal note"><em th:errors="*{description}"></em></label>
+        </div>
+        <div class="beneficiary-help">The receiver is verified again when you confirm. Direct account transfers do not save the receiver as a beneficiary.</div>
+      </section>
+      <div class="form-actions transfer-actions">
         <button class="btn btn-gotologin" type="submit">Confirm transfer</button>
         <a class="btn btn-prev" th:href="@{/customer/dashboard}">Cancel</a>
       </div>

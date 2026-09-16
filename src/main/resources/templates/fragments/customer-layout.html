@@ -22,12 +22,13 @@
   <a data-icon="◎" th:href="@{/customer/profile}">My Profile</a>
   <a data-icon="↗" th:href="@{/customer/transfers/new}">Send Money</a>
   <a data-icon="⇄" th:href="@{/customer/transfers}">Transfer History</a>
+  <a data-icon="◷" th:href="@{/customer/transfers/schedules}">Scheduled Transfers</a>
   <a data-icon="▤" th:href="@{/customer/transactions}">Account Statement</a>
   <a data-icon="☆" th:href="@{/customer/beneficiaries}">Beneficiaries</a>
   <a data-icon="¤" th:href="@{/customer/loans}">Loans</a>
   <a data-icon="▣" th:href="@{/customer/cards}">Cards</a>
   <a data-icon="⌁" th:href="@{/customer/bill-payments}">Bill Payments</a>
-  <a data-icon="◷" th:href="@{/customer/schedules}">Scheduled Payments</a>
+  <a data-icon="◷" th:href="@{/customer/bill-payments/schedules}">Scheduled Bills</a>
   <a data-icon="◉" th:href="@{/customer/notifications}">Notifications</a>
   <span class="customer-security-note">Secure transfers, bill payments, cards and account notifications</span>
 </aside>
@@ -41,6 +42,7 @@
   <span>DigiBank Online Banking</span>
   <span>Customer Portal</span>
   <span>Secure profile, card, transfer and statement access</span>
+  <script th:src="@{/js/account-visibility.js}"></script>
   <script th:src="@{/js/ui-shell.js}"></script>
 </footer>
 </body>

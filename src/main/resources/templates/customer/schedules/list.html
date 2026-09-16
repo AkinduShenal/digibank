@@ -1,6 +1,29 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Scheduled Payments - DigiBank</title><link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/customer.css}"></head>
-<body class="customer-shell"><div th:replace="~{fragments/customer-layout :: topbar}"></div><main class="customer-layout"><div th:replace="~{fragments/customer-layout :: sidebar}"></div><section class="customer-content"><div th:replace="~{fragments/customer-layout :: alerts}"></div>
-<div class="welcome-band"><div><p class="eyebrow">Payment automation</p><h1>Scheduled payments</h1><span>Review recurring transfers and bill payments from one secure place.</span></div><a class="btn btn-save" th:href="@{/customer/schedules/new}">New schedule</a></div>
-<div class="empty-state" th:if="${#lists.isEmpty(schedules)}"><h2>No scheduled payments yet</h2><p>Create a one-time or monthly payment.</p></div>
-<div class="management-card" th:unless="${#lists.isEmpty(schedules)}"><div class="table-wrap"><table><thead><tr><th>Reference</th><th>Type / destination</th><th>Next payment</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody><tr th:each="item:${schedules}"><td th:text="${item.reference}"></td><td><strong th:text="${item.paymentType}"></strong><small th:text="${item.destination}"></small></td><td th:text="${#temporals.format(item.nextExecutionAt,'dd MMM yyyy HH:mm')}"></td><td th:text="${'LKR '+item.amount}"></td><td><span class="status-pill" th:text="${item.status}"></span></td><td><a class="btn btn-prev" th:href="@{/customer/schedules/{r}(r=${item.reference})}">View</a></td></tr></tbody></table></div></div>
-</section></main><div th:replace="~{fragments/customer-layout :: footer}"></div></body></html>
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scheduled payments - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/customer.css}">
+  <link rel="stylesheet" th:href="@{/css/schedules.css}">
+  <script defer th:src="@{/js/schedules.js}"></script>
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout"><div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+<section class="customer-content schedule-workspace">
+<div th:replace="~{fragments/customer-layout :: alerts}"></div>
+
+<nav class="schedule-breadcrumb"><a th:href="@{${modulePath}}" th:text="${isTransfer ? 'Transfer history' : 'Bill payments'}"></a><span aria-hidden="true">/</span><span th:text="${scheduleTitle}"></span></nav>
+<div class="welcome-band"><div><p class="eyebrow" th:text="${isTransfer ? 'Fund transfers' : 'Bill payments'}"></p><h1 th:text="${scheduleTitle}"></h1><p>Plan ahead, change upcoming payments or cancel a schedule before it runs.</p></div><a class="btn btn-save" th:href="@{${basePath + '/new'}}" th:text="${isTransfer ? '+ Schedule a transfer' : '+ Schedule a bill payment'}"></a></div>
+<div class="schedule-notice">Payments run at the scheduled time in Sri Lanka time. Keep enough funds in your account for each payment.</div>
+<div class="empty-state" th:if="${#lists.isEmpty(schedules)}"><h2 th:text="${isTransfer ? 'No scheduled transfers yet' : 'No scheduled bills yet'}"></h2><p>Create a one-time or monthly schedule. You can edit its amount and timing before it runs.</p><a class="btn btn-save" th:href="@{${basePath + '/new'}}" th:text="${'Schedule a ' + itemLabel}"></a></div>
+<div class="schedule-list" th:unless="${#lists.isEmpty(schedules)}">
+  <article class="management-card schedule-item" th:each="item : ${schedules}">
+    <div class="schedule-item-heading"><div><p class="eyebrow" th:text="${item.recurrence.name() == 'MONTHLY' ? 'Monthly payment' : 'One-time payment'}"></p><h2 th:text="${item.destination}"></h2><small class="schedule-reference" th:text="${item.reference}"></small></div><span class="schedule-status" th:attr="data-status=${item.status}" th:text="${#strings.capitalize(#strings.toLowerCase(item.status.name()))}"></span></div>
+    <dl class="schedule-facts"><div><dt>Amount</dt><dd th:text="${'LKR ' + #numbers.formatDecimal(item.amount, 1, 'COMMA', 2, 'POINT')}"></dd></div><div><dt th:text="${item.status.name() == 'SCHEDULED' ? 'Next payment' : 'Scheduled date'}"></dt><dd th:text="${#temporals.format(item.nextExecutionAt, 'dd MMM yyyy, HH:mm')}"></dd></div><div><dt>From account</dt><dd th:text="${item.sourceAccount}"></dd></div></dl>
+    <div class="schedule-actions"><a class="btn btn-prev" th:href="@{${basePath + '/' + item.reference}}">View details</a><a class="btn btn-save" th:if="${item.status.name() == 'SCHEDULED'}" th:href="@{${basePath + '/' + item.reference + '/edit'}}">Edit schedule</a><form th:if="${item.status.name() == 'SCHEDULED'}" th:action="@{${basePath + '/' + item.reference + '/cancel'}}" method="post" data-cancel-schedule><button class="btn schedule-cancel" type="submit">Cancel schedule</button></form></div>
+  </article>
+</div>
+</section></main><div th:replace="~{fragments/customer-layout :: footer}"></div>
+</body></html>

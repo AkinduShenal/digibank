@@ -41,7 +41,17 @@
       <article class="info-card">
         <h2>Account Summary</h2>
         <div class="kv"><span>Type</span><strong th:text="*{accountType}">SAVINGS</strong></div>
-        <div class="kv"><span>Account Number</span><strong th:text="*{maskedAccountNumber}">********9012</strong></div>
+        <div class="kv" data-account-text-visibility>
+          <span>Account Number</span>
+          <span class="account-inline-value">
+            <strong data-account-number-text th:text="*{maskedAccountNumber}"
+                    th:attr="data-masked-number=*{maskedAccountNumber},data-full-number=*{accountNumber}">********9012</strong>
+            <button class="account-eye-button compact-eye" type="button" data-account-text-toggle
+                    aria-pressed="false" aria-label="Show full account number" title="Show account number">
+              <span class="eye-shape" aria-hidden="true"></span>
+            </button>
+          </span>
+        </div>
         <div class="kv"><span>Status</span><strong class="status-pill" th:text="*{accountStatus}">PENDING_ACTIVATION</strong></div>
         <div class="kv"><span>Branch</span><strong th:text="*{branchCode}">COL001</strong></div>
         <div class="kv"><span>Currency</span><strong th:text="*{currencyCode}">LKR</strong></div>

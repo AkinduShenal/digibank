@@ -12,7 +12,7 @@
   <div th:replace="~{fragments/customer-layout :: sidebar}"></div>
   <section class="customer-content">
     <div th:replace="~{fragments/customer-layout :: alerts}"></div>
-    <div class="welcome-band"><div><p class="eyebrow">Activity</p><h1>Transfer history</h1><span>Search and filter your transfers</span></div><a class="btn btn-gotologin" th:href="@{/customer/transfers/new}">Send money</a></div>
+    <div class="welcome-band"><div><p class="eyebrow">Activity</p><h1>Transfer history</h1><span>Search and filter your transfers</span></div><div class="welcome-actions"><a class="btn btn-prev" th:href="@{/customer/transfers/schedules}">Scheduled transfers</a><a class="btn btn-gotologin" th:href="@{/customer/transfers/new}">Send money</a></div></div>
     <form class="list-filter" method="get"><input name="q" th:value="${query}" placeholder="Reference, recipient or bank"><select name="status"><option value="">All statuses</option><option th:each="s:${transferStatuses}" th:value="${s}" th:text="${s}" th:selected="${s==selectedStatus}"></option></select><button class="btn btn-save">Filter</button></form>
     <div class="empty-state" th:if="${#lists.isEmpty(transfers)}"><h2>No transfers yet</h2><p>Your completed transfers will appear here.</p></div>
     <section class="transfer-history" th:unless="${#lists.isEmpty(transfers)}">

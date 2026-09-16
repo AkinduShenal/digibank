@@ -1,0 +1,10 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org"><body>
+<div th:fragment="errors" class="auth-alert error" role="alert" th:if="${#fields.hasAnyErrors()}"><strong>Please check the following details:</strong><ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li></ul></div>
+<div th:fragment="timing" class="schedule-fields">
+  <label>Amount (LKR)<input type="number" th:field="*{amount}" th:attr="min=${isTransfer ? '0.01' : '10.00'}" max="1000000" step="0.01" required placeholder="0.00" th:errorclass="invalid"><small class="field-error" th:errors="*{amount}"></small></label>
+  <label>Repeat<select th:field="*{recurrence}" required><option value="ONCE">One time</option><option value="MONTHLY">Every month</option></select><small class="field-error" th:errors="*{recurrence}"></small></label>
+  <label>Next payment date and time<input type="datetime-local" th:field="*{nextExecutionAt}" required th:errorclass="invalid"><small>Sri Lanka time (UTC+05:30)</small><small class="field-error" th:errors="*{nextExecutionAt}"></small></label>
+  <label data-monthly-end>Stop after (optional)<input type="date" th:field="*{endDate}" th:errorclass="invalid"><small>Leave empty to repeat until you cancel.</small><small class="field-error" th:errors="*{endDate}"></small></label>
+  <label class="schedule-wide">Description (optional)<input th:field="*{description}" maxlength="140" placeholder="e.g. Monthly household payment" th:errorclass="invalid"><small class="field-error" th:errors="*{description}"></small></label>
+</div>
+</body></html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Choose a schedule - DigiBank</title>
+  <link rel="icon" type="image/png" th:href="@{/images/logo/logo.png}">
+  <link rel="stylesheet" th:href="@{/css/auth.css}"><link rel="stylesheet" th:href="@{/css/customer.css}">
+  <link rel="stylesheet" th:href="@{/css/schedules.css}">
+  <script defer th:src="@{/js/schedules.js}"></script>
+</head>
+<body class="customer-shell">
+<div th:replace="~{fragments/customer-layout :: topbar}"></div>
+<main class="customer-layout"><div th:replace="~{fragments/customer-layout :: sidebar}"></div>
+<section class="customer-content schedule-workspace">
+<div th:replace="~{fragments/customer-layout :: alerts}"></div>
+
+<div class="welcome-band"><div><p class="eyebrow">Plan ahead</p><h1>Schedule a payment</h1><p>Manage transfers and bills in their own workspaces.</p></div></div>
+<div class="schedule-choice-grid">
+  <article class="management-card"><span class="schedule-symbol" aria-hidden="true">↗</span><h2>Fund transfers</h2><p>Send money to your own accounts, another DigiBank customer or a saved beneficiary.</p><a class="btn btn-save" th:href="@{/customer/transfers/schedules}">Manage scheduled transfers →</a></article>
+  <article class="management-card"><span class="schedule-symbol" aria-hidden="true">▤</span><h2>Bill payments</h2><p>Plan electricity, water, mobile and internet payments with your chosen biller.</p><a class="btn btn-save" th:href="@{/customer/bill-payments/schedules}">Manage scheduled bills →</a></article>
+</div>
+</section></main><div th:replace="~{fragments/customer-layout :: footer}"></div>
+</body></html>
