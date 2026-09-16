@@ -545,6 +545,30 @@
 	color: var(--text-primary);
 }
 
+.welcome-band--action {
+	flex-wrap: wrap;
+}
+
+.welcome-band--action > div {
+	flex: 1 1 280px;
+	min-width: 0;
+}
+
+.welcome-band--action h1 {
+	font-size: clamp(30px, 3vw, 38px);
+	margin-bottom: 10px;
+}
+
+.welcome-band--action .welcome-description {
+	margin: 0;
+	color: var(--text-secondary);
+	line-height: 1.6;
+}
+
+.welcome-band--action > .btn {
+	flex: none;
+}
+
 .mono {
 	display: inline-block;
 	margin-top: 10px;
@@ -710,6 +734,43 @@
 	justify-content: center;
 	width: 100%;
 	margin-top: 24px;
+}
+
+.customer-shell .btn-save {
+	justify-content: center;
+	min-height: 48px;
+	background: var(--primary);
+	border: 1px solid var(--primary);
+	color: var(--white);
+	box-shadow: 0 4px 10px rgba(15, 51, 45, 0.14);
+	line-height: 1.4;
+}
+
+.customer-shell .btn-save:hover {
+	background: var(--primary-dark);
+	border-color: var(--primary-dark);
+	box-shadow: 0 6px 14px rgba(15, 51, 45, 0.2);
+}
+
+.customer-shell .btn-save:focus-visible {
+	outline: 3px solid var(--primary);
+	outline-offset: 4px;
+}
+
+.customer-shell .btn-save:active {
+	box-shadow: none;
+}
+
+.customer-shell .btn-save:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+	box-shadow: none;
+}
+
+.btn-icon {
+	width: 20px;
+	height: 20px;
+	flex: none;
 }
 
 .customer-shell .btn-gotologin,
@@ -1114,6 +1175,14 @@
 }
 
 @media (max-width: 620px) {
+	.welcome-band--action > div {
+		flex-basis: auto;
+	}
+
+	.welcome-band--action > .btn {
+		width: 100%;
+	}
+
 	.customer-topbar,
 	.welcome-band,
 	.welcome-actions,

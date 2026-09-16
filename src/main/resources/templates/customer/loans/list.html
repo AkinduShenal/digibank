@@ -11,8 +11,11 @@
 <main class="customer-layout"><div th:replace="~{fragments/customer-layout :: sidebar}"></div>
   <section class="customer-content">
     <div th:replace="~{fragments/customer-layout :: alerts}"></div>
-    <div class="welcome-band"><div><p class="eyebrow">Borrowing</p><h1>My loans</h1><span>Track applications and repayment plans</span></div>
-      <a class="btn btn-save" th:href="@{/customer/loans/new}">Apply for a loan</a></div>
+    <div class="welcome-band welcome-band--action"><div><p class="eyebrow">Borrowing</p><h1>My loans</h1><p class="welcome-description">Track your loan applications and repayment plans.</p></div>
+      <a class="btn btn-save" th:href="@{/customer/loans/new}">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Apply for a loan
+      </a></div>
     <div class="empty-state" th:if="${#lists.isEmpty(loans)}"><h2>No loan applications</h2><p>Your submitted applications will appear here.</p></div>
     <div class="loan-grid" th:unless="${#lists.isEmpty(loans)}">
       <a class="loan-card" th:each="loan : ${loans}" th:href="@{/customer/loans/{number}(number=${loan.applicationNumber})}">

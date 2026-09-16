@@ -6,8 +6,11 @@
 <body class="customer-shell"><div th:replace="~{fragments/customer-layout :: topbar}"></div>
 <main class="customer-layout"><div th:replace="~{fragments/customer-layout :: sidebar}"></div>
 <section class="customer-content"><div th:replace="~{fragments/customer-layout :: alerts}"></div>
-  <div class="welcome-band"><div><p class="eyebrow">Card services</p><h1>My cards</h1><span>Request, activate and securely manage your DigiBank cards</span></div>
-    <a class="btn btn-save" th:href="@{/customer/cards/new}">Request a card</a></div>
+  <div class="welcome-band welcome-band--action"><div><p class="eyebrow">Card services</p><h1>My cards</h1><p class="welcome-description">Request, activate and securely manage your DigiBank cards.</p></div>
+    <a class="btn btn-save" th:href="@{/customer/cards/new}">
+      <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"/></svg>
+      Request a card
+    </a></div>
   <div class="empty-state" th:if="${#lists.isEmpty(cards)}"><h2>No card requests</h2><p>Your cards and submitted requests will appear here.</p></div>
   <div class="payment-card-grid" th:unless="${#lists.isEmpty(cards)}">
     <article class="payment-card-tile" th:each="card : ${cards}">
